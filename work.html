@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Selected identity, campaign, packaging, and digital work by Raheem."
+    />
+    <meta name="theme-color" content="#141414" />
+    <title>Selected Work — Raheem</title>
+    <link
+      rel="preload"
+      href="overused_grotesk/fonts/variable/OverusedGrotesk-VF.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="styles.css?v=20260810-24" />
+  </head>
+  <body class="work-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <div class="corner-mark corner-mark--top-left" aria-hidden="true">Ra</div>
+    <div class="corner-mark corner-mark--top-right" aria-hidden="true">he</div>
+    <div class="corner-mark corner-mark--bottom-left" aria-hidden="true">e</div>
+    <div class="corner-mark corner-mark--bottom-right" aria-hidden="true">m</div>
+
+    <header class="site-header" aria-label="Primary navigation">
+      <nav class="site-nav">
+        <a class="is-current" href="work.html" aria-current="page">
+          / WORK <span aria-hidden="true">W</span>
+        </a>
+        <a href="index.html#about">/ ABOUT <span aria-hidden="true">A</span></a>
+        <a href="index.html#contact">/ CONTACT <span aria-hidden="true">C</span></a>
+      </nav>
+    </header>
+
+    <main id="main" class="work-main">
+      <header class="work-hero">
+        <p class="work-eyebrow">/ ARCHIVE <span>2026</span></p>
+        <h1>Selected work</h1>
+      </header>
+
+      <section class="work-archive" data-view="grid" aria-labelledby="work-filter-title">
+        <h2 id="work-filter-title" class="visually-hidden">Filter selected work</h2>
+        <div class="work-toolbar">
+          <div class="work-filters" role="group" aria-label="Filter projects by discipline">
+            <button class="work-filter is-active" type="button" data-filter="all" aria-pressed="true">All</button>
+            <button class="work-filter" type="button" data-filter="identity" aria-pressed="false">Brand Identity</button>
+            <button class="work-filter" type="button" data-filter="campaign" aria-pressed="false">Campaign</button>
+            <button class="work-filter" type="button" data-filter="digital" aria-pressed="false">Digital</button>
+            <button class="work-filter" type="button" data-filter="direction" aria-pressed="false">Art Direction</button>
+            <button class="work-filter" type="button" data-filter="packaging" aria-pressed="false">Packaging</button>
+          </div>
+          <div class="work-view-toggle" role="group" aria-label="Choose work view">
+            <button class="work-view-button is-active" type="button" data-view-button="grid" aria-pressed="true">Grid view</button>
+            <button class="work-view-button" type="button" data-view-button="details" aria-pressed="false">Detailed info</button>
+          </div>
+        </div>
+
+        <div class="work-grid" aria-live="polite"></div>
+        <div class="work-details-list" role="list" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script src="work.js?v=20260810-24"></script>
+  </body>
+</html>

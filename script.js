@@ -56,6 +56,9 @@ track.innerHTML = Array.from({ length: copies }, (_, copyIndex) => projects
           ${copyIndex === 1 ? "" : 'aria-hidden="true"'}
         >
           <div class="project-card project-card--${project.style}">
+            <div class="project-card__media">
+              ${project.image ? `<img src="${project.image}" alt="${project.imageAlt ?? project.title}" />` : ""}
+            </div>
             <div class="project-card__meta">
               <div class="project-card__tags">
                 ${project.tags.map((tag) => `<span>${tag}</span>`).join("")}
@@ -79,8 +82,8 @@ const FRAME_DURATION = 1000 / 60;
 const FRICTION_PER_FRAME = 0.875;
 const MAX_VELOCITY = 3.6;
 const STOP_SPEED = 0.008;
-const META_REVEAL_SPEED = 1.25;
-const META_REVEAL_IDLE = 28;
+const META_REVEAL_SPEED = 1.6;
+const META_REVEAL_IDLE = 112;
 let currentOffset = 0;
 let railVelocity = 0;
 let sequenceStride = 1;
@@ -98,7 +101,6 @@ let frameLagVelocity = 0;
 let motionDirection = "left";
 let metadataHidden = false;
 let lastMotionInputTime = 0;
-let revealTimer = null;
 let gyroTargetX = 0;
 let gyroTargetY = 0;
 let gyroX = 0;
@@ -107,29 +109,20 @@ let gyroPresenceTarget = 0;
 let gyroPresence = 0;
 const modulo = (value, divisor) => ((value % divisor) + divisor) % divisor;
 const clamp = (value, minimum, maximum) => Math.min(Math.max(value, minimum), maximum);
-const clearRevealState = () => {
-    if (revealTimer !== null) {
-        window.clearTimeout(revealTimer);
-        revealTimer = null;
-    }
-    stage.classList.remove("reveal-from-left", "reveal-from-right");
-};
 const beginMotion = (offsetDelta, now = performance.now()) => {
     if (reducedMotion.matches || Math.abs(offsetDelta) < 0.01)
         return;
     motionDirection = offsetDelta > 0 ? "left" : "right";
     lastMotionInputTime = now;
     metadataHidden = true;
-    clearRevealState();
     stage.classList.add("is-moving");
-    stage.style.setProperty("--meta-hide-x", motionDirection === "left" ? "8px" : "-8px");
+    stage.style.setProperty("--meta-hide-x", motionDirection === "left" ? "12px" : "-12px");
 };
 const revealMetadata = () => {
     if (reducedMotion.matches || isDragging || !metadataHidden)
         return;
     metadataHidden = false;
     stage.classList.remove("is-moving");
-    clearRevealState();
 };
 const compileShader = (gl, type, source) => {
     const shader = gl.createShader(type);
@@ -269,8 +262,6 @@ const renderFramePhysics = (deltaTime) => {
     frameLagVelocity += (lagTarget - frameLag) * 0.095 * frameScale;
     frameLagVelocity *= Math.pow(0.7, frameScale);
     frameLag += frameLagVelocity * frameScale;
-    const compression = clamp(Math.abs(railVelocity) * 0.18 + Math.abs(frameLagVelocity) * 0.08, 0, 0.32);
-    const frameScaleY = 1 - compression;
     const stageBounds = stage.getBoundingClientRect();
     const stageCenter = stageBounds.left + stageBounds.width / 2;
     const cursorX = stageCenter + gyroX * stageBounds.width / 2;
@@ -284,15 +275,12 @@ const renderFramePhysics = (deltaTime) => {
         const edgeWeight = 1 - Math.min(Math.abs(stagePosition), 1) * 0.12;
         const inertiaX = frameLag * 9 * edgeWeight;
         const inertiaY = frameLag * 1.05;
-        const lift = -Math.abs(frameLag) * 0.65 * edgeWeight;
-        const depth = proximity * 4.5;
-        const gyroRotateX = -gyroY * (1.65 + proximity * 0.42);
-        const gyroRotateY = gyroX * 2.1 + localDirection * proximity * 1.25;
+        const depth = proximity * 2.5;
+        const gyroRotateX = -gyroY * (1.1 + proximity * 0.25);
+        const gyroRotateY = gyroX * 1.4 + localDirection * proximity * 0.65;
         shell.style.setProperty("--card-inertia-x", `${inertiaX}px`);
         shell.style.setProperty("--card-inertia-y", `${inertiaY}deg`);
-        shell.style.setProperty("--card-lift", `${lift}px`);
         shell.style.setProperty("--card-depth", `${depth}px`);
-        shell.style.setProperty("--frame-scale-y", String(frameScaleY));
         shell.style.setProperty("--card-gyro-x", `${gyroRotateX}deg`);
         shell.style.setProperty("--card-gyro-y", `${gyroRotateY}deg`);
     });
@@ -301,8 +289,8 @@ const renderRail = (timestamp) => {
     animationFrame = null;
     const deltaTime = clamp(timestamp - lastFrameTime || FRAME_DURATION, 4, 34);
     lastFrameTime = timestamp;
-    const gyroEase = 1 - Math.exp(-deltaTime / 165);
-    const presenceEase = 1 - Math.exp(-deltaTime / 120);
+    const gyroEase = 1 - Math.exp(-deltaTime / 190);
+    const presenceEase = 1 - Math.exp(-deltaTime / 150);
     gyroX += (gyroTargetX - gyroX) * gyroEase;
     gyroY += (gyroTargetY - gyroY) * gyroEase;
     gyroPresence += (gyroPresenceTarget - gyroPresence) * presenceEase;
@@ -319,8 +307,8 @@ const renderRail = (timestamp) => {
     const phase = modulo(currentOffset, sequenceStride);
     const centeredStart = (stage.clientWidth - groupWidth) / 2;
     const railX = centeredStart - sequenceStride - phase;
-    const gyroRailX = gyroX * 2.2;
-    const gyroRailY = gyroY * 1.6;
+    const gyroRailX = gyroX * 1.2;
+    const gyroRailY = gyroY * 0.8;
     root.style.setProperty("--rail-x", `${railX}px`);
     root.style.setProperty("--gyro-rail-x", `${gyroRailX}px`);
     root.style.setProperty("--gyro-rail-y", `${gyroRailY}px`);
@@ -466,7 +454,7 @@ window.addEventListener("resize", () => {
     requestRender();
 });
 reducedMotion.addEventListener("change", () => {
-    stage.classList.remove("is-moving", "reveal-from-left", "reveal-from-right");
+    stage.classList.remove("is-moving");
     metadataHidden = false;
     railVelocity = 0;
     frameLag = 0;
@@ -482,9 +470,7 @@ reducedMotion.addEventListener("change", () => {
     shells.forEach((shell) => {
         shell.style.removeProperty("--card-inertia-x");
         shell.style.removeProperty("--card-inertia-y");
-        shell.style.removeProperty("--card-lift");
         shell.style.removeProperty("--card-depth");
-        shell.style.removeProperty("--frame-scale-y");
         shell.style.removeProperty("--card-gyro-x");
         shell.style.removeProperty("--card-gyro-y");
     });
