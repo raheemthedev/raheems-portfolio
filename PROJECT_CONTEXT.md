@@ -72,10 +72,17 @@ The Work page has:
 
 ### Grid view
 
-- Two columns on desktop and one column on mobile.
+- A 12-column editorial composition on desktop with alternating wide, portrait, compact, and offset project blocks.
+- Filtering recomposes the visible cards so category views do not retain empty layout gaps.
+- The grid becomes a single-column sequence on mobile while preserving varied image proportions.
 - Empty image areas use black, grey, and off-white tonal blocks for now.
 - No horizontal width-expansion interaction is applied in Grid view.
 - Cards remain image-ready through the optional `image` and `imageAlt` fields in `work.ts`.
+
+### Footer
+
+- Both pages use a shared oversized footer treatment adapted to the portfolio's dark palette and Overused Grotesk typography.
+- The footer includes a prominent email call-to-action, location and service context, compact navigation, a back-to-top link, and an oversized Raheem wordmark.
 
 ### Detailed info view
 

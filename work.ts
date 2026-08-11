@@ -112,6 +112,22 @@ const projectMarkup = (project: ArchiveProject) => {
 
 workGrid.innerHTML = archiveProjects.map(projectMarkup).join("");
 
+const gridLayouts = [
+  "work-card--wide-left",
+  "work-card--tall-right",
+  "work-card--compact-left",
+  "work-card--wide-right",
+  "work-card--mid-left",
+  "work-card--offset-right",
+] as const;
+
+const composeGrid = (visibleCards: HTMLElement[]) => {
+  workCards.forEach((card) => card.classList.remove(...gridLayouts));
+  visibleCards.forEach((card, index) => {
+    card.classList.add(gridLayouts[index % gridLayouts.length]);
+  });
+};
+
 const galleryFrameMarkup = (project: ArchiveProject, index: number) => {
   const image = project.gallery?.[index] ?? project.image;
   const content = image
@@ -241,6 +257,8 @@ const filterProjects = (filter: string) => {
     item.hidden = !shouldShow;
     if (shouldShow) item.classList.add("is-visible");
   });
+
+  composeGrid(workCards.filter((card) => !card.hidden));
 };
 
 const setView = (view: "grid" | "details") => {
@@ -274,3 +292,4 @@ viewButtons.forEach((button) => {
 });
 
 revealCards();
+composeGrid(workCards);

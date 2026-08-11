@@ -91,6 +91,20 @@ const projectMarkup = (project) => {
   `;
 };
 workGrid.innerHTML = archiveProjects.map(projectMarkup).join("");
+const gridLayouts = [
+    "work-card--wide-left",
+    "work-card--tall-right",
+    "work-card--compact-left",
+    "work-card--wide-right",
+    "work-card--mid-left",
+    "work-card--offset-right",
+];
+const composeGrid = (visibleCards) => {
+    workCards.forEach((card) => card.classList.remove(...gridLayouts));
+    visibleCards.forEach((card, index) => {
+        card.classList.add(gridLayouts[index % gridLayouts.length]);
+    });
+};
 const galleryFrameMarkup = (project, index) => {
     const image = project.gallery?.[index] ?? project.image;
     const content = image
@@ -208,6 +222,7 @@ const filterProjects = (filter) => {
         if (shouldShow)
             item.classList.add("is-visible");
     });
+    composeGrid(workCards.filter((card) => !card.hidden));
 };
 const setView = (view) => {
     workArchive.dataset.view = view;
@@ -236,3 +251,4 @@ viewButtons.forEach((button) => {
     });
 });
 revealCards();
+composeGrid(workCards);
