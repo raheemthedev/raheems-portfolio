@@ -75,6 +75,15 @@ track.innerHTML = Array.from({ length: copies }, (_, copyIndex) => projects
 year.textContent = String(new Date().getFullYear());
 const shells = [...track.querySelectorAll(".project-shell")];
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const siteLoader = document.querySelector(".site-loader");
+const loaderWord = siteLoader?.querySelector(".site-loader__word") ?? null;
+const loaderPieces = [...document.querySelectorAll("[data-loader-piece]")];
+const cornerTargets = [
+    document.querySelector(".corner-mark--top-left"),
+    document.querySelector(".corner-mark--top-right"),
+    document.querySelector(".corner-mark--bottom-left"),
+    document.querySelector(".corner-mark--bottom-right"),
+];
 shells.forEach((shell, index) => {
     shell.style.setProperty("--card-order", String(index % projects.length));
 });
@@ -109,6 +118,199 @@ let gyroPresenceTarget = 0;
 let gyroPresence = 0;
 const modulo = (value, divisor) => ((value % divisor) + divisor) % divisor;
 const clamp = (value, minimum, maximum) => Math.min(Math.max(value, minimum), maximum);
+const wait = (duration) => new Promise((resolve) => window.setTimeout(resolve, duration));
+const finishSiteLoader = async (fadeDuration = 140) => {
+    document.body.classList.remove("is-loader-active");
+    if (!siteLoader)
+        return;
+    if (fadeDuration <= 0 || !("animate" in siteLoader)) {
+        siteLoader.remove();
+        return;
+    }
+    try {
+        const fade = siteLoader.animate([{ opacity: 1 }, { opacity: 0 }], { duration: fadeDuration, easing: "ease-out", fill: "forwards" });
+        await fade.finished;
+    }
+    catch {
+        // Removing the loader is more important than preserving the final fade.
+    }
+    siteLoader.remove();
+};
+const runSiteLoader = async () => {
+    const panelTop = siteLoader?.querySelector(".site-loader__panel--top");
+    const panelRight = siteLoader?.querySelector(".site-loader__panel--right");
+    const panelBottom = siteLoader?.querySelector(".site-loader__panel--bottom");
+    const panelLeft = siteLoader?.querySelector(".site-loader__panel--left");
+    const siteHeader = document.querySelector(".site-header");
+    const statement = document.querySelector(".statement");
+    const scrollCue = document.querySelector(".scroll-cue");
+    const panelsReady = panelTop && panelRight && panelBottom && panelLeft;
+    const targetsReady = cornerTargets.every((target) => target !== null);
+    if (!siteLoader ||
+        !("animate" in siteLoader) ||
+        !loaderWord ||
+        loaderPieces.length !== 4 ||
+        !panelsReady ||
+        !targetsReady) {
+        await finishSiteLoader(0);
+        return;
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    try {
+        await document.fonts.ready;
+    }
+    catch {
+        // Continue with the fallback font metrics if font loading is unavailable.
+    }
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    if (reducedMotion.matches) {
+        await wait(500);
+        await finishSiteLoader(320);
+        return;
+    }
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const isCompact = viewportWidth <= 800;
+    const windowWidthRatio = isCompact ? 0.8 : 0.48;
+    const windowHeightRatio = isCompact ? 0.56 : 0.58;
+    const windowFrame = {
+        left: viewportWidth * ((1 - windowWidthRatio) / 2),
+        right: viewportWidth * ((1 + windowWidthRatio) / 2),
+        top: viewportHeight * ((1 - windowHeightRatio) / 2),
+        bottom: viewportHeight * ((1 + windowHeightRatio) / 2),
+    };
+    const horizontalOffset = isCompact ? 14 : clamp(viewportWidth * 0.023, 22, 38);
+    const topOffset = isCompact ? 18 : clamp(viewportHeight * 0.034, 24, 38);
+    const bottomOffset = isCompact ? 14 : clamp(viewportHeight * 0.02, 14, 24);
+    const midpointCenters = [
+        { x: windowFrame.left - horizontalOffset, y: windowFrame.top - topOffset },
+        { x: windowFrame.right + horizontalOffset, y: windowFrame.top - topOffset },
+        { x: windowFrame.left - horizontalOffset, y: windowFrame.bottom + bottomOffset },
+        { x: windowFrame.right + horizontalOffset, y: windowFrame.bottom + bottomOffset },
+    ];
+    const pieceGeometry = loaderPieces.map((piece, index) => {
+        const pieceBounds = piece.getBoundingClientRect();
+        const targetBounds = cornerTargets[index].getBoundingClientRect();
+        const startCenter = {
+            x: pieceBounds.left + pieceBounds.width / 2,
+            y: pieceBounds.top + pieceBounds.height / 2,
+        };
+        const targetCenter = {
+            x: targetBounds.left + targetBounds.width / 2,
+            y: targetBounds.top + targetBounds.height / 2,
+        };
+        const targetScale = targetBounds.height / Math.max(pieceBounds.height, 1);
+        return {
+            startCenter,
+            targetCenter,
+            midpointCenter: midpointCenters[index],
+            targetScale,
+            midpointScale: targetScale * 1.06,
+        };
+    });
+    const phaseOneDuration = 920;
+    const phaseTwoDuration = 1040;
+    const phaseOneEasing = "cubic-bezier(0.62, 0, 0.16, 1)";
+    const phaseTwoEasing = "cubic-bezier(0.76, 0, 0.24, 1)";
+    await wait(520);
+    const phaseOnePanels = [
+        panelTop.animate([
+            { height: "50vh" },
+            { height: `${windowFrame.top}px` },
+        ], { duration: phaseOneDuration, easing: phaseOneEasing, fill: "forwards" }),
+        panelBottom.animate([
+            { height: "50vh" },
+            { height: `${viewportHeight - windowFrame.bottom}px` },
+        ], { duration: phaseOneDuration, easing: phaseOneEasing, fill: "forwards" }),
+        panelLeft.animate([
+            { top: "50vh", bottom: "50vh", width: "50vw" },
+            {
+                top: `${windowFrame.top}px`,
+                bottom: `${viewportHeight - windowFrame.bottom}px`,
+                width: `${windowFrame.left}px`,
+            },
+        ], { duration: phaseOneDuration, easing: phaseOneEasing, fill: "forwards" }),
+        panelRight.animate([
+            { top: "50vh", bottom: "50vh", width: "50vw" },
+            {
+                top: `${windowFrame.top}px`,
+                bottom: `${viewportHeight - windowFrame.bottom}px`,
+                width: `${viewportWidth - windowFrame.right}px`,
+            },
+        ], { duration: phaseOneDuration, easing: phaseOneEasing, fill: "forwards" }),
+    ];
+    const phaseOnePieces = loaderPieces.map((piece, index) => {
+        const geometry = pieceGeometry[index];
+        return piece.animate([
+            { transform: "translate3d(0, 0, 0) scale(1)", opacity: 1 },
+            {
+                transform: `translate3d(${geometry.midpointCenter.x - geometry.startCenter.x}px, ${geometry.midpointCenter.y - geometry.startCenter.y}px, 0) scale(${geometry.midpointScale})`,
+                opacity: 0.62,
+            },
+        ], { duration: phaseOneDuration, easing: phaseOneEasing, fill: "forwards" });
+    });
+    await Promise.all([...phaseOnePanels, ...phaseOnePieces].map((animation) => animation.finished));
+    await wait(240);
+    const phaseTwoPanels = [
+        panelTop.animate([{ height: `${windowFrame.top}px` }, { height: "0px" }], { duration: phaseTwoDuration, easing: phaseTwoEasing, fill: "forwards" }),
+        panelBottom.animate([{ height: `${viewportHeight - windowFrame.bottom}px` }, { height: "0px" }], { duration: phaseTwoDuration, easing: phaseTwoEasing, fill: "forwards" }),
+        panelLeft.animate([
+            {
+                top: `${windowFrame.top}px`,
+                bottom: `${viewportHeight - windowFrame.bottom}px`,
+                width: `${windowFrame.left}px`,
+            },
+            { top: "0px", bottom: "0px", width: "0px" },
+        ], { duration: phaseTwoDuration, easing: phaseTwoEasing, fill: "forwards" }),
+        panelRight.animate([
+            {
+                top: `${windowFrame.top}px`,
+                bottom: `${viewportHeight - windowFrame.bottom}px`,
+                width: `${viewportWidth - windowFrame.right}px`,
+            },
+            { top: "0px", bottom: "0px", width: "0px" },
+        ], { duration: phaseTwoDuration, easing: phaseTwoEasing, fill: "forwards" }),
+    ];
+    const phaseTwoPieces = loaderPieces.map((piece, index) => {
+        const geometry = pieceGeometry[index];
+        return piece.animate([
+            {
+                transform: `translate3d(${geometry.midpointCenter.x - geometry.startCenter.x}px, ${geometry.midpointCenter.y - geometry.startCenter.y}px, 0) scale(${geometry.midpointScale})`,
+                opacity: 0.62,
+            },
+            {
+                transform: `translate3d(${geometry.targetCenter.x - geometry.startCenter.x}px, ${geometry.targetCenter.y - geometry.startCenter.y}px, 0) scale(${geometry.targetScale})`,
+                opacity: 1,
+            },
+        ], { duration: phaseTwoDuration, easing: phaseTwoEasing, fill: "forwards" });
+    });
+    await wait(540);
+    const landingAnimations = [];
+    if (siteHeader) {
+        landingAnimations.push(siteHeader.animate([
+            { opacity: 0, translate: "0 -12px" },
+            { opacity: 1, translate: "0 0" },
+        ], { duration: 620, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }));
+    }
+    if (statement) {
+        landingAnimations.push(statement.animate([
+            { opacity: 0, translate: "0 22px" },
+            { opacity: 1, translate: "0 0" },
+        ], { duration: 760, delay: 80, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }));
+    }
+    landingAnimations.push(stage.animate([
+        { opacity: 0, clipPath: "inset(48% 0 48% 0 round 14px)" },
+        { opacity: 1, clipPath: "inset(0% 0 0% 0 round 0px)" },
+    ], { duration: 900, delay: 150, easing: "cubic-bezier(0.16, 1, 0.3, 1)", fill: "forwards" }));
+    if (scrollCue) {
+        landingAnimations.push(scrollCue.animate([
+            { opacity: 0, translate: "0 12px" },
+            { opacity: 1, translate: "0 0" },
+        ], { duration: 560, delay: 320, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }));
+    }
+    await Promise.all([...phaseTwoPanels, ...phaseTwoPieces, ...landingAnimations].map((animation) => animation.finished));
+    await finishSiteLoader();
+};
 const beginMotion = (offsetDelta, now = performance.now()) => {
     if (reducedMotion.matches || Math.abs(offsetDelta) < 0.01)
         return;
@@ -478,3 +680,4 @@ reducedMotion.addEventListener("change", () => {
 });
 measureRail();
 renderRail(performance.now());
+void runSiteLoader().catch(() => finishSiteLoader(0));

@@ -24,25 +24,30 @@ This file is a handoff for another model or developer continuing the portfolio. 
 - `script.ts` / `script.js` — homepage wheel, inertia, metadata, gyro, and shader behavior.
 - `work.ts` / `work.js` — Work page project data, rendering, filtering, view switching, gallery movement, and hover slowdown.
 - `overused_grotesk/` — local Overused Grotesk font files for the main UI.
-- `Albertus Nova/` — local Albertus Nova font files; the Thin cut is used for the footer wordmark.
+- `marcellus/` — local Marcellus Regular font and OFL license used for the footer wordmark and fixed corner text.
+- `Albertus Nova/` — legacy local Albertus Nova font files retained as unused reference assets.
 - `reference/` — drop all screenshots, bug captures, and visual references here for future review.
 - `reference/Screenshot 2026-08-10 at 6.18.59 PM.png` — visual reference for each Detailed info project row.
 - `reference/landing page.png` — earlier landing-page reference.
 - `reference/footer mine.png` / `reference/footer.png` — footer layout references.
+- `reference/1.png` / `reference/2.png` — loader opening and fractured-wordmark references.
+- `reference/thebug.png` — bug reference showing the loader midpoint incorrectly positioned too low.
 
 ## Shared visual system
 
-- Primary UI font: Overused Grotesk. Footer wordmark font: Albertus Nova Thin, with Albertus Nova Light available as the less-light alternative.
+- Primary UI font: Overused Grotesk. Footer wordmark and fixed corner text: Marcellus Regular.
 - Landing background: `#f4f4f1`.
-- Work page background: `#141414`.
-- Preserve the fixed corner text: `Ra`, `he`, `e`, `m`.
-- Preserve the centered navigation and its current context on both pages.
+- Work page background: `#f4f4f1`, matching the homepage paper background. Its footer remains `#101010`.
+- Preserve the fixed corner text: `Ra`, `he`, `e`, `m`. It uses a white `mix-blend-mode: difference` treatment so it automatically inverts against light, dark, image, and tonal backgrounds.
+- Preserve the centered navigation and its current context on both pages. It is fixed, uses `mix-blend-mode: difference`, and must remain stationary while the page scrolls.
 - The UI uses responsive `clamp()` sizing so it remains proportionally useful at browser zoom levels such as 70–80%, not only at 100%.
 - Asset query revisions in `index.html` and `work.html` are used to bypass stale localhost/browser caches. Increment the revision after visible CSS or JavaScript changes.
 
 ## Homepage state
 
 The homepage contains a horizontal project wheel inside `.project-stage`.
+
+On initial page load, a full-screen loader begins with a centered Marcellus `Raheem` wordmark on black. The word fractures into `Ra`, `he`, `e`, and `m` around a truly viewport-centered, initially empty paper window. After a short blank-window hold, the window expands; landing content does not begin entering until the expansion is substantially underway. The navigation and landing statement then fade in, the project lens opens vertically, and the four fragments travel to and hand off seamlessly to the permanent corner marks. Preserve the reference sequence in `reference/1.png` and `reference/2.png`, avoid the bottom-heavy positioning shown in `reference/thebug.png`, and keep the motion staged and smooth rather than abrupt.
 
 Current behavior:
 
@@ -86,7 +91,7 @@ The Work page has:
 
 - Both pages use a shared footer based on `reference/footer mine.png`: compact contact information at the top-left, two small link columns at the top-right, and a large cream `RAHEEM` wordmark.
 - Desktop footer geometry is locked to the reference image's `1002 × 507` aspect ratio and proportional coordinates; do not casually change its gutters, text positions, wordmark baseline, or footer-rule spacing.
-- The wordmark uses the locally stored Albertus Nova Light font to match the reference; Albertus Nova Thin remains available if a future direction explicitly calls for thinner strokes.
+- The wordmark and fixed corner text use the locally stored Marcellus Regular font.
 - The top-left `Ra` corner mark links back to `index.html` on both pages.
 
 ### Detailed info view

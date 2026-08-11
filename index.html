@@ -16,9 +16,38 @@
       type="font/woff2"
       crossorigin
     />
-    <link rel="stylesheet" href="styles.css?v=20260811-4" />
+    <link
+      rel="preload"
+      href="marcellus/Marcellus-Regular.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <link rel="stylesheet" href="styles.css?v=20260811-13" />
+    <noscript>
+      <style>
+        body.is-loader-active { height: auto; overflow: auto; }
+        .site-loader { display: none; }
+        body.is-loader-active > .corner-mark { opacity: 1; }
+        body.is-loader-active .site-header,
+        body.is-loader-active .statement,
+        body.is-loader-active .project-stage,
+        body.is-loader-active .scroll-cue { opacity: 1; }
+        body.is-loader-active .project-stage { clip-path: none; }
+      </style>
+    </noscript>
   </head>
-  <body>
+  <body class="is-loader-active">
+    <div class="site-loader" aria-hidden="true">
+      <div class="site-loader__panel site-loader__panel--top"></div>
+      <div class="site-loader__panel site-loader__panel--right"></div>
+      <div class="site-loader__panel site-loader__panel--bottom"></div>
+      <div class="site-loader__panel site-loader__panel--left"></div>
+      <p class="site-loader__word" aria-label="Raheem">
+        <span data-loader-piece="ra">Ra</span><span data-loader-piece="he">he</span><span data-loader-piece="e">e</span><span data-loader-piece="m">m</span>
+      </p>
+    </div>
+
     <a class="skip-link" href="#main">Skip to content</a>
 
     <a class="corner-mark corner-mark--top-left corner-mark--home" href="index.html" aria-label="Go to homepage">Ra</a>
@@ -99,6 +128,6 @@
       </section>
     </main>
 
-    <script src="script.js?v=20260811-4"></script>
+    <script src="script.js?v=20260811-13"></script>
   </body>
 </html>
