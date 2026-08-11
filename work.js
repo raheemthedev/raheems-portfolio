@@ -70,7 +70,7 @@ const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)
 if (!workArchive || !workGrid || !workDetailsList || filterButtons.length === 0 || viewButtons.length === 0) {
     throw new Error("Work archive markup is incomplete.");
 }
-const projectMarkup = (project) => {
+const projectMarkup = (project, index) => {
     const media = project.image
         ? `<img src="${project.image}" alt="${project.imageAlt ?? project.title}" />`
         : `<div class="work-card__blank" aria-hidden="true"></div>`;
@@ -83,26 +83,37 @@ const projectMarkup = (project) => {
     </div>
   `;
     return `
-    <article class="work-card work-card--${project.style}" data-category="${project.category}">
+    <article class="work-card work-card--${project.style}" data-category="${project.category}" style="--project-order: ${index};">
       ${project.href
         ? `<a href="${project.href}" aria-label="View ${project.title}">${content}</a>`
         : `<div class="work-card__inner">${content}</div>`}
     </article>
   `;
 };
-workGrid.innerHTML = archiveProjects.map(projectMarkup).join("");
+workGrid.innerHTML = `
+  <div class="work-grid__column" data-grid-column="0">
+    ${archiveProjects.map(projectMarkup).join("")}
+  </div>
+  <div class="work-grid__column" data-grid-column="1"></div>
+`;
 const gridLayouts = [
-    "work-card--wide-left",
-    "work-card--tall-right",
-    "work-card--compact-left",
-    "work-card--wide-right",
-    "work-card--mid-left",
-    "work-card--offset-right",
+    "work-card--landscape",
+    "work-card--portrait",
+    "work-card--compact",
+    "work-card--square",
+    "work-card--portrait",
+    "work-card--landscape",
 ];
 const composeGrid = (visibleCards) => {
     workCards.forEach((card) => card.classList.remove(...gridLayouts));
+    workGrid.classList.toggle("is-single", visibleCards.length === 1);
+    const columns = [...workGrid.querySelectorAll(".work-grid__column")];
+    columns.forEach((column) => {
+        [...column.children].forEach((child) => column.removeChild(child));
+    });
     visibleCards.forEach((card, index) => {
         card.classList.add(gridLayouts[index % gridLayouts.length]);
+        columns[index % columns.length]?.append(card);
     });
 };
 const galleryFrameMarkup = (project, index) => {

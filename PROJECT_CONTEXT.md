@@ -23,13 +23,16 @@ This file is a handoff for another model or developer continuing the portfolio. 
 - `styles.css` — shared styles for both pages and all responsive behavior.
 - `script.ts` / `script.js` — homepage wheel, inertia, metadata, gyro, and shader behavior.
 - `work.ts` / `work.js` — Work page project data, rendering, filtering, view switching, gallery movement, and hover slowdown.
-- `overused_grotesk/` — local Overused Grotesk font files.
-- `Screenshot 2026-08-10 at 6.18.59 PM.png` — visual reference for each Detailed info project row.
-- `landing page.png` — earlier landing-page reference.
+- `overused_grotesk/` — local Overused Grotesk font files for the main UI.
+- `Albertus Nova/` — local Albertus Nova font files; the Thin cut is used for the footer wordmark.
+- `reference/` — drop all screenshots, bug captures, and visual references here for future review.
+- `reference/Screenshot 2026-08-10 at 6.18.59 PM.png` — visual reference for each Detailed info project row.
+- `reference/landing page.png` — earlier landing-page reference.
+- `reference/footer mine.png` / `reference/footer.png` — footer layout references.
 
 ## Shared visual system
 
-- Primary font: Overused Grotesk.
+- Primary UI font: Overused Grotesk. Footer wordmark font: Albertus Nova Thin, with Albertus Nova Light available as the less-light alternative.
 - Landing background: `#f4f4f1`.
 - Work page background: `#141414`.
 - Preserve the fixed corner text: `Ra`, `he`, `e`, `m`.
@@ -72,7 +75,7 @@ The Work page has:
 
 ### Grid view
 
-- A 12-column editorial composition on desktop with alternating wide, portrait, compact, and offset project blocks.
+- A balanced two-column masonry-style composition on desktop with alternating landscape, portrait, square, and compact project blocks.
 - Filtering recomposes the visible cards so category views do not retain empty layout gaps.
 - The grid becomes a single-column sequence on mobile while preserving varied image proportions.
 - Empty image areas use black, grey, and off-white tonal blocks for now.
@@ -81,12 +84,14 @@ The Work page has:
 
 ### Footer
 
-- Both pages use a shared oversized footer treatment adapted to the portfolio's dark palette and Overused Grotesk typography.
-- The footer includes a prominent email call-to-action, location and service context, compact navigation, a back-to-top link, and an oversized Raheem wordmark.
+- Both pages use a shared footer based on `reference/footer mine.png`: compact contact information at the top-left, two small link columns at the top-right, and a large cream `RAHEEM` wordmark.
+- Desktop footer geometry is locked to the reference image's `1002 × 507` aspect ratio and proportional coordinates; do not casually change its gutters, text positions, wordmark baseline, or footer-rule spacing.
+- The wordmark uses the locally stored Albertus Nova Light font to match the reference; Albertus Nova Thin remains available if a future direction explicitly calls for thinner strokes.
+- The top-left `Ra` corner mark links back to `index.html` on both pages.
 
 ### Detailed info view
 
-Each project is a full-width row modeled on `Screenshot 2026-08-10 at 6.18.59 PM.png`.
+Each project is a full-width row modeled on `reference/Screenshot 2026-08-10 at 6.18.59 PM.png`.
 
 Each row contains:
 
