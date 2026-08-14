@@ -125,9 +125,13 @@ const MAX_VELOCITY = 3.6;
 const STOP_SPEED = 0.008;
 const META_REVEAL_SPEED = 1.6;
 const META_REVEAL_IDLE = 112;
+const AUTO_SCROLL_SPEED = 0.022;
+const AUTO_SCROLL_HOVER_SPEED = 0.0008;
+const AUTO_SCROLL_EASE = 760;
 
 let currentOffset = 0;
 let railVelocity = 0;
+let autoScrollVelocity = reducedMotion.matches ? 0 : AUTO_SCROLL_SPEED;
 let sequenceStride = 1;
 let groupWidth = 1;
 let tileWidth = 1;
@@ -143,6 +147,7 @@ let frameLagVelocity = 0;
 let motionDirection: "left" | "right" = "left";
 let metadataHidden = false;
 let lastMotionInputTime = 0;
+let isStageHovered = false;
 let gyroTargetX = 0;
 let gyroTargetY = 0;
 let gyroX = 0;
@@ -640,8 +645,16 @@ const renderRail = (timestamp: number) => {
   gyroY += (gyroTargetY - gyroY) * gyroEase;
   gyroPresence += (gyroPresenceTarget - gyroPresence) * presenceEase;
 
+  const autoScrollTarget = reducedMotion.matches
+    ? 0
+    : isStageHovered
+      ? AUTO_SCROLL_HOVER_SPEED
+      : AUTO_SCROLL_SPEED;
+  const autoScrollEase = 1 - Math.exp(-deltaTime / AUTO_SCROLL_EASE);
+  autoScrollVelocity += (autoScrollTarget - autoScrollVelocity) * autoScrollEase;
+
   if (!isDragging && !reducedMotion.matches) {
-    currentOffset += railVelocity * deltaTime;
+    currentOffset += (railVelocity + autoScrollVelocity) * deltaTime;
     railVelocity *= Math.pow(FRICTION_PER_FRAME, deltaTime / FRAME_DURATION);
 
     if (Math.abs(railVelocity) < STOP_SPEED) {
@@ -689,7 +702,14 @@ const renderRail = (timestamp: number) => {
   const framePhysicsMoving =
     Math.abs(frameLag) > 0.001 ||
     Math.abs(frameLagVelocity) > 0.001;
-  const needsMotionFrame = !isDragging && speed > 0;
+  const autoScrollMoving =
+    !reducedMotion.matches &&
+    !isDragging &&
+    (
+      Math.abs(autoScrollVelocity) > 0.0001 ||
+      Math.abs(autoScrollTarget - autoScrollVelocity) > 0.0001
+    );
+  const needsMotionFrame = !isDragging && (speed > 0 || autoScrollMoving);
 
   if (needsMotionFrame || gyroMoving || framePhysicsMoving) {
     animationFrame = requestAnimationFrame(renderRail);
@@ -795,6 +815,16 @@ track.addEventListener("pointerup", finishDrag);
 track.addEventListener("pointercancel", finishDrag);
 track.addEventListener("dragstart", (event) => event.preventDefault());
 
+stage.addEventListener("pointerenter", () => {
+  isStageHovered = true;
+  requestRender();
+});
+
+stage.addEventListener("pointerleave", () => {
+  isStageHovered = false;
+  requestRender();
+});
+
 const resetGyro = () => {
   gyroTargetX = 0;
   gyroTargetY = 0;
@@ -850,6 +880,7 @@ reducedMotion.addEventListener("change", () => {
   stage.classList.remove("is-moving");
   metadataHidden = false;
   railVelocity = 0;
+  autoScrollVelocity = reducedMotion.matches ? 0 : AUTO_SCROLL_SPEED;
   frameLag = 0;
   frameLagVelocity = 0;
   gyroTargetX = 0;

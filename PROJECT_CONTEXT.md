@@ -52,6 +52,8 @@ On initial page load, a full-screen loader begins with a centered Marcellus `Rah
 Current behavior:
 
 - Wheel and drag scrolling with inertia.
+- The homepage project rail drifts left at a slow passive pace by default and eases to an almost complete stop while hovered.
+- Passive rail motion does not hide project metadata or trigger the stronger user-scroll inertia treatment; only wheel, drag, and keyboard input do that.
 - Subtle cursor-driven gyro/parallax across the landing page and project frames.
 - WebGL shader layer retained.
 - Project metadata hides while the wheel moves and returns before motion fully settles.
