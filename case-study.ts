@@ -75,8 +75,12 @@ content.innerHTML = `
       <p class="case-study-hero__number">${project.number}</p>
     </div>
     <div class="case-study-hero__visual">
-      <img src="reference/casestudy.png" alt="${project.title} project process preview" />
-      <span class="case-study-hero__visual-note">temporary project preview / replace with final media</span>
+      <div class="case-study-hero__visual-grid" aria-label="${project.title} visual preview">
+        <div class="case-study-hero__frame case-study-hero__frame--dark"><strong>01</strong><span>direction</span></div>
+        <div class="case-study-hero__frame case-study-hero__frame--orange"><strong>02</strong><span>identity</span></div>
+        <div class="case-study-hero__frame case-study-hero__frame--green"><strong>03</strong><span>system</span></div>
+        <div class="case-study-hero__frame case-study-hero__frame--light"><strong>04</strong><span>digital</span></div>
+      </div>
     </div>
   </header>
 
@@ -91,7 +95,7 @@ content.innerHTML = `
   <section class="case-study-media-stack" aria-label="Project process images">
     <div class="case-study-media case-study-media--dark"><span>/ 01 — DIRECTION</span><strong>Find the point of view.</strong></div>
     <div class="case-study-media-grid"><div class="case-study-media case-study-media--light"><span>/ 02 — SYSTEM</span><strong>Build the language.</strong></div><div class="case-study-media case-study-media--mid"><span>/ 03 — EXPRESSION</span><strong>Give it room to move.</strong></div></div>
-    <div class="case-study-media case-study-media--image"><img src="reference/casestudy.png" alt="${project.title} visual process reference" /></div>
+    <div class="case-study-media case-study-media--image"><span>/ 04 — APPLICATION</span><strong>Make the system useful.</strong><b class="case-study-media__shape" aria-hidden="true"></b></div>
   </section>
 
   <section class="case-study-process" aria-labelledby="case-study-process-title">

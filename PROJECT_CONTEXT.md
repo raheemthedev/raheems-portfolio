@@ -120,9 +120,9 @@ The Work page has:
 ## Case-study page
 
 - `case-study.html` now follows the sparse title, overview, full-width stacked media, process, and next-project structure of the Nothin Utopia case-study reference while using the portfolio's own design system.
-- The large first visual currently uses `reference/casestudy.png` as a temporary static process preview. Replace it with the project GIF when the final media is ready.
+- The case-study hero and process visuals are coded tonal panels and geometric frames so they can be replaced directly with real GIFs, images, or videos later; no reference screenshot is rendered into the page.
 - Project-specific placeholder copy is selected in `case-study.ts` from the `project` query parameter.
-- The footer does not display the reference video. Its `RAHEEM` letters reproduce the reference interaction in code: each hovered letter collapses and elastically returns, while the full wordmark reveals upward when the footer enters view.
+- The footer does not display the reference video. Its `RAHEEM` letters reproduce the recording in code: the hovered letter compresses vertically toward the shared baseline while the other letters remain fixed, then smoothly returns on pointer leave.
 - `reference/favicon.png` is the favicon on every HTML page.
 
 ### Footer

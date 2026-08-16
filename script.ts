@@ -145,6 +145,7 @@ let lastPointerX = 0;
 let lastPointerTime = 0;
 let pointerVelocity = 0;
 let dragDistance = 0;
+let pointerDownLink: HTMLAnchorElement | null = null;
 let frameLag = 0;
 let frameLagVelocity = 0;
 let motionDirection: "left" | "right" = "left";
@@ -192,6 +193,7 @@ const runSiteLoader = async () => {
   const panelLeft = siteLoader?.querySelector<HTMLElement>(".site-loader__panel--left");
   const siteHeader = document.querySelector<HTMLElement>(".site-header");
   const statement = document.querySelector<HTMLElement>(".statement");
+  const heroCta = document.querySelector<HTMLElement>(".hero-cta");
   const scrollCue = document.querySelector<HTMLElement>(".scroll-cue");
   const panelsReady = panelTop && panelRight && panelBottom && panelLeft;
   const targetsReady = cornerTargets.every((target): target is HTMLElement => target !== null);
@@ -379,7 +381,8 @@ const runSiteLoader = async () => {
     );
   });
 
-  await wait(540);
+  await Promise.all([...phaseTwoPanels, ...phaseTwoPieces].map((animation) => animation.finished));
+  await wait(120);
 
   const landingAnimations: Animation[] = [];
   if (siteHeader) {
@@ -400,6 +403,15 @@ const runSiteLoader = async () => {
       { duration: 760, delay: 80, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" },
     ));
   }
+  if (heroCta) {
+    landingAnimations.push(heroCta.animate(
+      [
+        { opacity: 0, translate: "0 12px" },
+        { opacity: 1, translate: "0 0" },
+      ],
+      { duration: 500, delay: 250, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" },
+    ));
+  }
   landingAnimations.push(stage.animate(
     [
       { opacity: 0, clipPath: "inset(48% 0 48% 0 round 14px)" },
@@ -417,9 +429,7 @@ const runSiteLoader = async () => {
     ));
   }
 
-  await Promise.all(
-    [...phaseTwoPanels, ...phaseTwoPieces, ...landingAnimations].map((animation) => animation.finished),
-  );
+  await Promise.all(landingAnimations.map((animation) => animation.finished));
   await finishSiteLoader();
 };
 
@@ -780,6 +790,9 @@ track.addEventListener("pointerdown", (event) => {
   lastPointerTime = performance.now();
   pointerVelocity = 0;
   dragDistance = 0;
+  pointerDownLink = event.target instanceof Element
+    ? event.target.closest<HTMLAnchorElement>(".project-card")
+    : null;
   railVelocity = 0;
   track.setPointerCapture(event.pointerId);
 });
@@ -819,21 +832,20 @@ const finishDrag = (event: PointerEvent) => {
     track.releasePointerCapture(event.pointerId);
   }
 
+  const destination = pointerDownLink?.href ?? null;
+  pointerDownLink = null;
   requestRender();
+
+  if (event.type === "pointerup" && dragDistance <= 10 && destination) {
+    window.location.href = destination;
+  }
 };
 
 track.addEventListener("pointerup", finishDrag);
 track.addEventListener("pointercancel", finishDrag);
 track.addEventListener("dragstart", (event) => event.preventDefault());
 track.addEventListener("click", (event) => {
-  const target = event.target instanceof Element
-    ? event.target.closest<HTMLAnchorElement>(".project-card")
-    : null;
-  if (!target) return;
-
-  event.preventDefault();
-  if (dragDistance > 10) return;
-  window.location.assign(target.href);
+  if (dragDistance > 10) event.preventDefault();
 });
 
 stage.addEventListener("pointerenter", () => {

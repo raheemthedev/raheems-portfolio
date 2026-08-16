@@ -29,57 +29,46 @@ document.addEventListener("keydown", (event) => {
     event.preventDefault();
     link.click();
 });
-const footerWordmarks = [...document.querySelectorAll(".portfolio-footer__wordmark")];
 const footerReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const footerWordmarks = [...document.querySelectorAll(".portfolio-footer__wordmark")];
 footerWordmarks.forEach((wordmark) => {
     const letters = [...wordmark.querySelectorAll("span")];
     if (letters.length === 0)
         return;
-    const reveal = () => {
-        letters.forEach((letter, index) => {
-            const animation = letter.animate([
-                { transform: "translateY(120%)" },
-                { transform: "translateY(0)" },
-            ], {
-                duration: 1050,
-                delay: 120 + index * 42,
-                easing: "cubic-bezier(0.76, 0, 0.24, 1)",
-                fill: "forwards",
-            });
-            void animation.finished.then(() => {
-                letter.style.transform = "translateY(0)";
-                animation.cancel();
-            }).catch(() => undefined);
-        });
-    };
-    if (!footerReducedMotion.matches && "IntersectionObserver" in window) {
-        letters.forEach((letter) => {
-            letter.style.transform = "translateY(120%)";
-        });
-        const observer = new IntersectionObserver((entries) => {
-            if (!entries.some((entry) => entry.isIntersecting))
-                return;
-            observer.disconnect();
-            reveal();
-        }, { threshold: 0.18 });
-        observer.observe(wordmark);
-    }
     letters.forEach((letter) => {
         letter.addEventListener("pointerenter", () => {
             if (footerReducedMotion.matches)
                 return;
             letter.getAnimations().forEach((animation) => animation.cancel());
-            letter.animate([
-                { transform: "scale(1)", offset: 0 },
-                { transform: "scale(0.05)", offset: 0.3 },
-                { transform: "scale(1.16)", offset: 0.58 },
-                { transform: "scale(0.92)", offset: 0.74 },
-                { transform: "scale(1.05)", offset: 0.88 },
-                { transform: "scale(1)", offset: 1 },
+            const animation = letter.animate([
+                { transform: "scaleY(1)" },
+                { transform: "scaleY(0.24)" },
             ], {
-                duration: 1900,
-                easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+                duration: 420,
+                easing: "cubic-bezier(0.76, 0, 0.24, 1)",
+                fill: "forwards",
             });
+            void animation.finished.then(() => {
+                letter.style.transform = "scaleY(0.24)";
+                animation.cancel();
+            }).catch(() => undefined);
+        });
+        letter.addEventListener("pointerleave", () => {
+            if (footerReducedMotion.matches)
+                return;
+            letter.getAnimations().forEach((animation) => animation.cancel());
+            const animation = letter.animate([
+                { transform: "scaleY(0.24)" },
+                { transform: "scaleY(1)" },
+            ], {
+                duration: 720,
+                easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+                fill: "forwards",
+            });
+            void animation.finished.then(() => {
+                letter.style.transform = "scaleY(1)";
+                animation.cancel();
+            }).catch(() => undefined);
         });
     });
 });
