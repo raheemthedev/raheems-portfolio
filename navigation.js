@@ -35,40 +35,48 @@ footerWordmarks.forEach((wordmark) => {
     const letters = [...wordmark.querySelectorAll("span")];
     if (letters.length === 0)
         return;
-    letters.forEach((letter) => {
-        letter.addEventListener("pointerenter", () => {
-            if (footerReducedMotion.matches)
-                return;
-            letter.getAnimations().forEach((animation) => animation.cancel());
-            const animation = letter.animate([
-                { transform: "scaleY(1)" },
-                { transform: "scaleY(0.24)" },
-            ], {
-                duration: 420,
-                easing: "cubic-bezier(0.76, 0, 0.24, 1)",
-                fill: "forwards",
-            });
-            void animation.finished.then(() => {
-                letter.style.transform = "scaleY(0.24)";
-                animation.cancel();
-            }).catch(() => undefined);
+    const currentScales = letters.map(() => 1);
+    const targetScales = letters.map(() => 1);
+    let animationFrame = null;
+    const renderWave = () => {
+        animationFrame = null;
+        let isSettled = true;
+        letters.forEach((letter, index) => {
+            const difference = targetScales[index] - currentScales[index];
+            currentScales[index] += difference * 0.2;
+            if (Math.abs(difference) > 0.002)
+                isSettled = false;
+            letter.style.setProperty("--footer-letter-scale", currentScales[index].toFixed(4));
         });
-        letter.addEventListener("pointerleave", () => {
-            if (footerReducedMotion.matches)
-                return;
-            letter.getAnimations().forEach((animation) => animation.cancel());
-            const animation = letter.animate([
-                { transform: "scaleY(0.24)" },
-                { transform: "scaleY(1)" },
-            ], {
-                duration: 720,
-                easing: "cubic-bezier(0.16, 1, 0.3, 1)",
-                fill: "forwards",
-            });
-            void animation.finished.then(() => {
-                letter.style.transform = "scaleY(1)";
-                animation.cancel();
-            }).catch(() => undefined);
+        if (!isSettled)
+            animationFrame = requestAnimationFrame(renderWave);
+    };
+    const requestWaveRender = () => {
+        if (animationFrame === null)
+            animationFrame = requestAnimationFrame(renderWave);
+    };
+    const resetWave = () => {
+        targetScales.fill(1);
+        requestWaveRender();
+    };
+    wordmark.addEventListener("pointermove", (event) => {
+        if (footerReducedMotion.matches)
+            return;
+        const letterCenters = letters.map((letter) => {
+            const bounds = letter.getBoundingClientRect();
+            return bounds.left + bounds.width / 2;
         });
+        const influenceWidth = letterCenters.length > 1
+            ? (letterCenters[letterCenters.length - 1] - letterCenters[0]) / (letterCenters.length - 1)
+            : wordmark.getBoundingClientRect().width;
+        letters.forEach((_letter, index) => {
+            const distance = Math.abs(event.clientX - letterCenters[index]);
+            const normalizedDistance = distance / Math.max(influenceWidth, 1);
+            const influence = Math.exp(-0.5 * Math.pow(normalizedDistance / 0.58, 2));
+            targetScales[index] = 1 - influence * 0.58;
+        });
+        requestWaveRender();
     });
+    wordmark.addEventListener("pointerleave", resetWave);
+    footerReducedMotion.addEventListener("change", resetWave);
 });

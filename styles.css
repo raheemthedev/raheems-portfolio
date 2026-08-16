@@ -296,8 +296,8 @@ body.is-loader-active .project-stage {
   height: clamp(328px, 37.7%, 370px);
   overflow: hidden;
   transform: translateY(-50%);
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1512 350' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M0 16 Q756 124 1512 16 L1512 333 Q756 289 0 333 Z'/%3E%3C/svg%3E");
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1512 350' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M0 16 Q756 124 1512 16 L1512 333 Q756 289 0 333 Z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1512 350' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M0 16 Q756 124 1512 16 L1512 349 Q756 317 0 349 Z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1512 350' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M0 16 Q756 124 1512 16 L1512 349 Q756 317 0 349 Z'/%3E%3C/svg%3E");
   -webkit-mask-position: center;
   mask-position: center;
   -webkit-mask-repeat: no-repeat;
@@ -313,6 +313,7 @@ body.is-loader-active .project-stage {
   position: absolute;
   inset: 0;
   z-index: 0;
+  display: block;
   width: 100%;
   height: 100%;
   opacity: 0.08;
@@ -1664,7 +1665,7 @@ body.is-loader-active .project-stage {
 .featured-work {
   position: relative;
   padding: clamp(90px, 8vw, 190px) clamp(20px, 2vw, 42px) clamp(100px, 10vw, 230px);
-  overflow: hidden;
+  overflow: visible;
   background: #080808;
   color: #f4f4f1;
 }
@@ -1873,19 +1874,26 @@ body.is-loader-active .project-stage {
   z-index: 1;
   display: flex;
   align-items: flex-end;
-  justify-content: space-between;
+  justify-content: center;
   overflow: hidden;
   color: #f7f7f4;
-  font-size: 22.3vw;
+  font-size: 23.8vw;
   line-height: 0.69;
   letter-spacing: 0;
   text-align: left;
 }
 
 .portfolio-footer__wordmark span {
+  --footer-letter-scale: 1;
   display: inline-block;
+  line-height: 0.82;
+  transform: scaleY(var(--footer-letter-scale));
   transform-origin: 50% 100%;
   will-change: transform;
+}
+
+.portfolio-footer__wordmark span + span {
+  margin-left: -0.055em;
 }
 
 .portfolio-footer__base {
@@ -2859,7 +2867,7 @@ body.is-loader-active .project-stage {
     bottom: 76px;
     left: 12px;
     margin: 0;
-    font-size: 21.5vw;
+    font-size: 23.5vw;
     line-height: 0.7;
     letter-spacing: 0;
   }

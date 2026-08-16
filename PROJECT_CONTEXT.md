@@ -122,7 +122,9 @@ The Work page has:
 - `case-study.html` now follows the sparse title, overview, full-width stacked media, process, and next-project structure of the Nothin Utopia case-study reference while using the portfolio's own design system.
 - The case-study hero and process visuals are coded tonal panels and geometric frames so they can be replaced directly with real GIFs, images, or videos later; no reference screenshot is rendered into the page.
 - Project-specific placeholder copy is selected in `case-study.ts` from the `project` query parameter.
-- The footer does not display the reference video. Its `RAHEEM` letters reproduce the recording in code: the hovered letter compresses vertically toward the shared baseline while the other letters remain fixed, then smoothly returns on pointer leave.
+- The footer does not display the reference video. Its `RAHEEM` wordmark reproduces the recording in code with a pointer-driven compression wave: the closest letter shortens most, neighboring letters react progressively, and the full word smoothly settles back on pointer leave.
+- The homepage WebGL texture fades to transparent at the top and bottom edges to prevent fractional canvas pixels from creating horizontal seams beneath the moving project frames.
+- The bottom SVG lens curve extends almost to the full stage height so the moving frames and shader remain covered at fractional viewport widths.
 - `reference/favicon.png` is the favicon on every HTML page.
 
 ### Footer

@@ -400,7 +400,8 @@ const createShaderRenderer = (canvas) => {
       float grain = hash(floor(gl_FragCoord.xy * 0.55) + floor(u_time * 3.0));
       float energy = clamp(abs(u_velocity), 0.0, 1.0);
       float tone = 0.42 + drift * 0.022 + (grain - 0.5) * (0.024 + energy * 0.018);
-      float alpha = inside_card * (0.28 + energy * 0.08);
+      float vertical_guard = smoothstep(0.0, 0.018, uv.y) * (1.0 - smoothstep(0.982, 1.0, uv.y));
+      float alpha = inside_card * vertical_guard * (0.28 + energy * 0.08);
 
       gl_FragColor = vec4(vec3(tone), alpha);
     }
