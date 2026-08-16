@@ -9,6 +9,7 @@ This file is a handoff for another model or developer continuing the portfolio. 
 - Local preview: `python3 -m http.server 8000 --bind 127.0.0.1`
 - Homepage: `http://127.0.0.1:8000/`
 - Work page: `http://127.0.0.1:8000/work.html`
+- Case-study template: `http://127.0.0.1:8000/case-study.html?project=01`
 - Install dependencies: `npm install`
 - Compile TypeScript: `npm run build`
 - Validate generated JavaScript: `node --check script.js && node --check work.js`
@@ -18,11 +19,15 @@ This file is a handoff for another model or developer continuing the portfolio. 
 
 ## File map
 
-- `index.html` — landing page, homepage project wheel, About, and Contact sections.
+- `index.html` — landing page, homepage project wheel, and Contact footer.
+- `about.html` — dedicated white About page with introduction, Experience, capabilities, My Stash, and footer.
 - `work.html` — dedicated Work archive with Grid and Detailed info modes.
+- `case-study.html` — reusable project-process page populated from the `project` query parameter.
 - `styles.css` — shared styles for both pages and all responsive behavior.
 - `script.ts` / `script.js` — homepage wheel, inertia, metadata, gyro, and shader behavior.
 - `work.ts` / `work.js` — Work page project data, rendering, filtering, view switching, gallery movement, and hover slowdown.
+- `case-study.ts` / `case-study.js` — project-specific case-study copy and reusable case-study rendering.
+- `navigation.ts` / `navigation.js` — shared `W`, `A`, and `C` keyboard navigation for all pages.
 - `overused_grotesk/` — local Overused Grotesk font files for the main UI.
 - `marcellus/` — local Marcellus Regular font and OFL license used for the footer wordmark and fixed corner text.
 - `Albertus Nova/` — legacy local Albertus Nova font files retained as unused reference assets.
@@ -39,7 +44,9 @@ This file is a handoff for another model or developer continuing the portfolio. 
 - Landing background: `#f4f4f1`.
 - Work page background: `#f4f4f1`, matching the homepage paper background. Its footer remains `#101010`.
 - Preserve the fixed corner text: `Ra`, `he`, `e`, `m`. It uses a white `mix-blend-mode: difference` treatment so it automatically inverts against light, dark, image, and tonal backgrounds.
-- Preserve the centered navigation and its current context on both pages. It is fixed, uses `mix-blend-mode: difference`, and must remain stationary while the page scrolls.
+- Preserve the centered navigation and its current context on every page. It is fixed, uses `mix-blend-mode: difference`, and must remain stationary while the page scrolls.
+- The navigation and all four permanent corner marks use the maximum interface z-index so they remain above page content and media.
+- Keyboard shortcuts mirror the visible menu: `W` opens Work, `A` opens About, and `C` follows the current page's Contact link. Shortcuts must not fire while typing or using modifier keys.
 - The UI uses responsive `clamp()` sizing so it remains proportionally useful at browser zoom levels such as 70–80%, not only at 100%.
 - Asset query revisions in `index.html` and `work.html` are used to bypass stale localhost/browser caches. Increment the revision after visible CSS or JavaScript changes.
 
@@ -47,12 +54,13 @@ This file is a handoff for another model or developer continuing the portfolio. 
 
 The homepage contains a horizontal project wheel inside `.project-stage`.
 
-On initial page load, a full-screen loader begins with a centered Marcellus `Raheem` wordmark on black. The word fractures into `Ra`, `he`, `e`, and `m` around a truly viewport-centered, initially empty paper window. After a short blank-window hold, the window expands; landing content does not begin entering until the expansion is substantially underway. The navigation and landing statement then fade in, the project lens opens vertically, and the four fragments travel to and hand off seamlessly to the permanent corner marks. Preserve the reference sequence in `reference/1.png` and `reference/2.png`, avoid the bottom-heavy positioning shown in `reference/thebug.png`, and keep the motion staged and smooth rather than abrupt.
+On the first homepage visit in a browser session, a full-screen loader begins with a centered Marcellus `Raheem` wordmark on black. The word fractures into `Ra`, `he`, `e`, and `m` around a truly viewport-centered, initially empty paper window. After a short blank-window hold, the window expands; landing content does not begin entering until the expansion is substantially underway. The navigation and landing statement then fade in, the project lens opens vertically, and the four fragments travel to and hand off seamlessly to the permanent corner marks. The `raheem-loader-seen` session-storage flag prevents the loader from replaying when `Ra` is used to return home. Preserve the reference sequence in `reference/1.png` and `reference/2.png`, avoid the bottom-heavy positioning shown in `reference/thebug.png`, and keep the motion staged and smooth rather than abrupt.
 
 Current behavior:
 
 - Wheel and drag scrolling with inertia.
 - The homepage project rail drifts left at a slow passive pace by default and eases to an almost complete stop while hovered.
+- The rail renders four complete project sequences and measures its loop period from real element offsets to prevent an empty interval at the wrap point.
 - Passive rail motion does not hide project metadata or trigger the stronger user-scroll inertia treatment; only wheel, drag, and keyboard input do that.
 - Subtle cursor-driven gyro/parallax across the landing page and project frames.
 - WebGL shader layer retained.
@@ -60,6 +68,7 @@ Current behavior:
 - Frames use an SVG lens mask at the top and bottom.
 - No frame-height compression or animated lens compression is present. Do not reintroduce compression unless explicitly requested.
 - Project cards are image-ready through optional `image` and `imageAlt` properties in `script.ts`.
+- Clicking a homepage rail card opens the matching `case-study.html?project=NN` page; drag gestures are distance-checked so they do not trigger navigation.
 - Project content is still placeholder content.
 
 Important homepage preferences:
@@ -68,6 +77,21 @@ Important homepage preferences:
 - Avoid cursor-following white highlights or white-light hover effects.
 - Avoid excessive sway or heavy scrolling.
 - Keep the work wheel responsive and visually centered across zoom and viewport changes.
+
+### About page
+
+- `about.html` is a dedicated page opened by `/ ABOUT` in the navigation; the expanded About content must not be placed on the landing page.
+- The About page uses a pure white background.
+- Its main composition follows `reference/about-sec.png`: an oversized lowercase `about me` title, a two-column biography and portrait area, and an oversized `my experience` heading above ruled experience rows.
+- It contains the existing studio introduction and an Experience list; the page ends with the shared footer after Experience.
+
+### Homepage availability section
+
+- The landing page includes a ruled availability/editorial section immediately after the project rail and before the footer, based on `reference/about-sec 2.png`.
+- Its text arrangement follows `reference/edit about.png`: `/ HEY THERE` appears first with the supporting copy directly beneath it, followed by `/ AVAILABILITY`, the large statement, and the email link. All content shares one left edge.
+- The slash-prefixed labels use the portfolio's established label styling, and the section keeps its top and bottom rules on desktop and mobile.
+- The capabilities block intentionally uses a neutral grey image placeholder until a real portrait or studio image is supplied.
+- `My Stash` is a process-focused collection built from the portfolio's typography, palette, motion language, and pinned creative notes.
 
 ## Dedicated Work page
 
@@ -88,6 +112,15 @@ The Work page has:
 - Empty image areas use black, grey, and off-white tonal blocks for now.
 - No horizontal width-expansion interaction is applied in Grid view.
 - Cards remain image-ready through the optional `image` and `imageAlt` fields in `work.ts`.
+- Every Grid card, Detailed info gallery frame, and `See Full Case` action opens `case-study.html?project=NN`.
+
+## Case-study page
+
+- `case-study.html` follows the supplied `reference/casestudy.png` structure while using the portfolio's paper background, type, navigation, corner marks, and shared footer.
+- The large first visual currently uses `reference/casestudy.png` as a temporary static process preview. Replace it with the project GIF when the final media is ready.
+- Project-specific placeholder copy is selected in `case-study.ts` from the `project` query parameter.
+- The shared footer reveals `reference/footer video.mp4` as a muted animated texture on hover or keyboard focus.
+- `reference/favicon.png` is the favicon on every HTML page.
 
 ### Footer
 

@@ -70,7 +70,9 @@ const projects: Project[] = [
   },
 ];
 
-const copies = 3;
+// Keep several complete sequences in the rail so a fractional viewport or zoom
+// never reaches the end of the rendered track while the loop is being wrapped.
+const copies = 4;
 
 track.innerHTML = Array.from({ length: copies }, (_, copyIndex) =>
   projects
@@ -81,7 +83,7 @@ track.innerHTML = Array.from({ length: copies }, (_, copyIndex) =>
           role="listitem"
           ${copyIndex === 1 ? "" : 'aria-hidden="true"'}
         >
-          <div class="project-card project-card--${project.style}">
+          <a class="project-card project-card--${project.style}" href="case-study.html?project=${encodeURIComponent(project.number)}" aria-label="View project ${project.number} case study" ${copyIndex === 1 ? "" : 'tabindex="-1"'}>
             <div class="project-card__media">
               ${project.image ? `<img src="${project.image}" alt="${project.imageAlt ?? project.title}" />` : ""}
             </div>
@@ -94,7 +96,7 @@ track.innerHTML = Array.from({ length: copies }, (_, copyIndex) =>
                 <span>${project.number} / TODO</span>
               </div>
             </div>
-          </div>
+          </a>
         </article>
       `,
     )
@@ -114,6 +116,23 @@ const cornerTargets = [
   document.querySelector<HTMLElement>(".corner-mark--bottom-left"),
   document.querySelector<HTMLElement>(".corner-mark--bottom-right"),
 ];
+
+const loaderSessionKey = "raheem-loader-seen";
+const hasSeenLoader = () => {
+  try {
+    return window.sessionStorage.getItem(loaderSessionKey) === "1";
+  } catch {
+    return false;
+  }
+};
+
+const markLoaderSeen = () => {
+  try {
+    window.sessionStorage.setItem(loaderSessionKey, "1");
+  } catch {
+    // Storage can be unavailable in privacy-restricted contexts.
+  }
+};
 
 shells.forEach((shell, index) => {
   shell.style.setProperty("--card-order", String(index % projects.length));
@@ -142,6 +161,7 @@ let isDragging = false;
 let lastPointerX = 0;
 let lastPointerTime = 0;
 let pointerVelocity = 0;
+let dragDistance = 0;
 let frameLag = 0;
 let frameLagVelocity = 0;
 let motionDirection: "left" | "right" = "left";
@@ -162,6 +182,7 @@ const clamp = (value: number, minimum: number, maximum: number) =>
 const wait = (duration: number) => new Promise<void>((resolve) => window.setTimeout(resolve, duration));
 
 const finishSiteLoader = async (fadeDuration = 140) => {
+  markLoaderSeen();
   document.body.classList.remove("is-loader-active");
   if (!siteLoader) return;
 
@@ -593,7 +614,13 @@ const measureRail = () => {
   const styles = getComputedStyle(track);
   railGap = Number.parseFloat(styles.columnGap || styles.gap) || 0;
   tileWidth = firstTile.getBoundingClientRect().width;
-  sequenceStride = projects.length * (tileWidth + railGap);
+  const nextSequenceTile = shells[projects.length];
+  const measuredStride = nextSequenceTile
+    ? nextSequenceTile.offsetLeft - firstTile.offsetLeft
+    : 0;
+  sequenceStride = measuredStride > 0
+    ? measuredStride
+    : projects.length * (tileWidth + railGap);
   groupWidth = sequenceStride - railGap;
   shaderRenderer?.resize();
 };
@@ -770,6 +797,7 @@ track.addEventListener("pointerdown", (event) => {
   lastPointerX = event.clientX;
   lastPointerTime = performance.now();
   pointerVelocity = 0;
+  dragDistance = 0;
   railVelocity = 0;
   track.setPointerCapture(event.pointerId);
 });
@@ -782,6 +810,7 @@ track.addEventListener("pointermove", (event) => {
   const railDelta = -(event.clientX - lastPointerX);
 
   pointerVelocity = railDelta / elapsed;
+  dragDistance += Math.abs(railDelta);
   railVelocity = pointerVelocity;
   currentOffset += railDelta;
   beginMotion(railDelta, now);
@@ -814,6 +843,10 @@ const finishDrag = (event: PointerEvent) => {
 track.addEventListener("pointerup", finishDrag);
 track.addEventListener("pointercancel", finishDrag);
 track.addEventListener("dragstart", (event) => event.preventDefault());
+track.addEventListener("click", (event) => {
+  if (dragDistance <= 6) return;
+  event.preventDefault();
+});
 
 stage.addEventListener("pointerenter", () => {
   isStageHovered = true;
@@ -905,4 +938,9 @@ reducedMotion.addEventListener("change", () => {
 
 measureRail();
 renderRail(performance.now());
-void runSiteLoader().catch(() => finishSiteLoader(0));
+
+if (hasSeenLoader()) {
+  void finishSiteLoader(0);
+} else {
+  void runSiteLoader().catch(() => finishSiteLoader(0));
+}

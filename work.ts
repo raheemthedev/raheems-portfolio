@@ -88,6 +88,7 @@ if (!workArchive || !workGrid || !workDetailsList || filterButtons.length === 0 
 }
 
 const projectMarkup = (project: ArchiveProject, index: number) => {
+  const caseStudyHref = `case-study.html?project=${encodeURIComponent(project.number)}`;
   const media = project.image
     ? `<img src="${project.image}" alt="${project.imageAlt ?? project.title}" />`
     : `<div class="work-card__blank" aria-hidden="true"></div>`;
@@ -103,9 +104,7 @@ const projectMarkup = (project: ArchiveProject, index: number) => {
 
   return `
     <article class="work-card work-card--${project.style}" data-category="${project.category}" style="--project-order: ${index};">
-      ${project.href
-        ? `<a href="${project.href}" aria-label="View ${project.title}">${content}</a>`
-        : `<div class="work-card__inner">${content}</div>`}
+      <a href="${caseStudyHref}" aria-label="View ${project.title} case study">${content}</a>
     </article>
   `;
 };
@@ -145,7 +144,8 @@ const galleryFrameMarkup = (project: ArchiveProject, index: number) => {
     ? `<img src="${image}" alt="${project.imageAlt ?? project.title} — frame ${index + 1}" />`
     : `<div class="work-card__blank" aria-hidden="true"></div>`;
 
-  return `<div class="work-gallery__frame" style="--frame-index: ${index};">${content}</div>`;
+  const caseStudyHref = `case-study.html?project=${encodeURIComponent(project.number)}`;
+  return `<a class="work-gallery__frame" href="${caseStudyHref}" aria-label="View ${project.title} case study frame ${index + 1}" style="--frame-index: ${index};">${content}</a>`;
 };
 
 const detailRowMarkup = (project: ArchiveProject) => {
@@ -162,7 +162,7 @@ const detailRowMarkup = (project: ArchiveProject) => {
         <div class="work-detail-row__tags">
           ${[project.discipline, ...project.services.slice(0, 2)].map((tag) => `<span>${tag}</span>`).join("")}
         </div>
-        <button class="work-detail-row__case" type="button">See Full Case <span aria-hidden="true">↗</span></button>
+        <a class="work-detail-row__case" href="case-study.html?project=${encodeURIComponent(project.number)}">See Full Case <span aria-hidden="true">↗</span></a>
       </div>
       <div class="work-detail-row__intro">
         <h3><strong>${project.title}:</strong> visual language for a distinct point of view.</h3>

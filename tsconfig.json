@@ -7,5 +7,5 @@
     "noEmitOnError": true,
     "removeComments": false
   },
-  "files": ["script.ts", "work.ts"]
+  "files": ["script.ts", "work.ts", "case-study.ts", "navigation.ts"]
 }
