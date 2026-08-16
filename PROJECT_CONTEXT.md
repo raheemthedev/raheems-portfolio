@@ -54,7 +54,7 @@ This file is a handoff for another model or developer continuing the portfolio. 
 
 The homepage contains a horizontal project wheel inside `.project-stage`.
 
-On the first homepage visit in a browser session, a full-screen loader begins with a centered Marcellus `Raheem` wordmark on black. The word fractures into `Ra`, `he`, `e`, and `m` around a truly viewport-centered, initially empty paper window. After a short blank-window hold, the window expands; landing content does not begin entering until the expansion is substantially underway. The navigation and landing statement then fade in, the project lens opens vertically, and the four fragments travel to and hand off seamlessly to the permanent corner marks. The `raheem-loader-seen` session-storage flag prevents the loader from replaying when `Ra` is used to return home. Preserve the reference sequence in `reference/1.png` and `reference/2.png`, avoid the bottom-heavy positioning shown in `reference/thebug.png`, and keep the motion staged and smooth rather than abrupt.
+On every homepage load, a full-screen loader begins with a centered Marcellus `Raheem` wordmark on black. The word fractures into `Ra`, `he`, `e`, and `m` around a truly viewport-centered, initially empty paper window. After a short blank-window hold, the window expands; landing content does not begin entering until the expansion is substantially underway. The navigation and landing statement then fade in, the project lens opens vertically, and the four fragments travel to and hand off seamlessly to the permanent corner marks. Preserve the reference sequence in `reference/1.png` and `reference/2.png`, avoid the bottom-heavy positioning shown in `reference/thebug.png`, and keep the motion staged and smooth rather than abrupt.
 
 Current behavior:
 
@@ -69,6 +69,9 @@ Current behavior:
 - No frame-height compression or animated lens compression is present. Do not reintroduce compression unless explicitly requested.
 - Project cards are image-ready through optional `image` and `imageAlt` properties in `script.ts`.
 - Clicking a homepage rail card opens the matching `case-study.html?project=NN` page; drag gestures are distance-checked so they do not trigger navigation.
+- The landing statement, project-frame width/height, metadata, fixed marks, and scroll cue use viewport-relative sizing so they retain their intended physical scale when browser zoom changes.
+- A pill CTA follows the landing statement and links to the homepage Featured Work section.
+- The homepage Featured Work section uses a black, asymmetric editorial grid based on `reference/nothin home page.png`.
 - Project content is still placeholder content.
 
 Important homepage preferences:
@@ -116,16 +119,16 @@ The Work page has:
 
 ## Case-study page
 
-- `case-study.html` follows the supplied `reference/casestudy.png` structure while using the portfolio's paper background, type, navigation, corner marks, and shared footer.
+- `case-study.html` now follows the sparse title, overview, full-width stacked media, process, and next-project structure of the Nothin Utopia case-study reference while using the portfolio's own design system.
 - The large first visual currently uses `reference/casestudy.png` as a temporary static process preview. Replace it with the project GIF when the final media is ready.
 - Project-specific placeholder copy is selected in `case-study.ts` from the `project` query parameter.
-- The shared footer reveals `reference/footer video.mp4` as a muted animated texture on hover or keyboard focus.
+- The footer does not display the reference video. Its `RAHEEM` letters reproduce the reference interaction in code: each hovered letter collapses and elastically returns, while the full wordmark reveals upward when the footer enters view.
 - `reference/favicon.png` is the favicon on every HTML page.
 
 ### Footer
 
-- Both pages use a shared footer based on `reference/footer mine.png`: compact contact information at the top-left, two small link columns at the top-right, and a large cream `RAHEEM` wordmark.
-- Desktop footer geometry is locked to the reference image's `1002 × 507` aspect ratio and proportional coordinates; do not casually change its gutters, text positions, wordmark baseline, or footer-rule spacing.
+- The homepage Contact target includes a black perspective/capabilities section based on `reference/nothing before footer.png`, immediately followed by the shared footer.
+- The shared footer follows `reference/nothin footer.png`: large contact statement and pill actions at top-left, social links at right, an oversized `RAHEEM` wordmark along the bottom, and a compact credit line.
 - The wordmark and fixed corner text use the locally stored Marcellus Regular font.
 - The top-left `Ra` corner mark links back to `index.html` on both pages.
 

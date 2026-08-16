@@ -117,23 +117,6 @@ const cornerTargets = [
   document.querySelector<HTMLElement>(".corner-mark--bottom-right"),
 ];
 
-const loaderSessionKey = "raheem-loader-seen";
-const hasSeenLoader = () => {
-  try {
-    return window.sessionStorage.getItem(loaderSessionKey) === "1";
-  } catch {
-    return false;
-  }
-};
-
-const markLoaderSeen = () => {
-  try {
-    window.sessionStorage.setItem(loaderSessionKey, "1");
-  } catch {
-    // Storage can be unavailable in privacy-restricted contexts.
-  }
-};
-
 shells.forEach((shell, index) => {
   shell.style.setProperty("--card-order", String(index % projects.length));
 });
@@ -182,7 +165,6 @@ const clamp = (value: number, minimum: number, maximum: number) =>
 const wait = (duration: number) => new Promise<void>((resolve) => window.setTimeout(resolve, duration));
 
 const finishSiteLoader = async (fadeDuration = 140) => {
-  markLoaderSeen();
   document.body.classList.remove("is-loader-active");
   if (!siteLoader) return;
 
@@ -844,8 +826,14 @@ track.addEventListener("pointerup", finishDrag);
 track.addEventListener("pointercancel", finishDrag);
 track.addEventListener("dragstart", (event) => event.preventDefault());
 track.addEventListener("click", (event) => {
-  if (dragDistance <= 6) return;
+  const target = event.target instanceof Element
+    ? event.target.closest<HTMLAnchorElement>(".project-card")
+    : null;
+  if (!target) return;
+
   event.preventDefault();
+  if (dragDistance > 10) return;
+  window.location.assign(target.href);
 });
 
 stage.addEventListener("pointerenter", () => {
@@ -938,9 +926,4 @@ reducedMotion.addEventListener("change", () => {
 
 measureRail();
 renderRail(performance.now());
-
-if (hasSeenLoader()) {
-  void finishSiteLoader(0);
-} else {
-  void runSiteLoader().catch(() => finishSiteLoader(0));
-}
+void runSiteLoader().catch(() => finishSiteLoader(0));
