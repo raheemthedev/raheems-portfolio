@@ -123,8 +123,7 @@ The Work page has:
 - The case-study hero and process visuals are coded tonal panels and geometric frames so they can be replaced directly with real GIFs, images, or videos later; no reference screenshot is rendered into the page.
 - Project-specific placeholder copy is selected in `case-study.ts` from the `project` query parameter.
 - The footer does not display the reference video. Its `RAHEEM` wordmark reproduces the recording in code with a pointer-driven compression wave: the closest letter shortens most, neighboring letters react progressively, and the full word smoothly settles back on pointer leave.
-- The homepage WebGL texture fades to transparent at the top and bottom edges to prevent fractional canvas pixels from creating horizontal seams beneath the moving project frames.
-- The bottom SVG lens curve extends almost to the full stage height so the moving frames and shader remain covered at fractional viewport widths.
+- The homepage Work scroller rendering, fixed desktop frame sizing, metadata spacing, shader, rail physics, and drag/click handling are restored from commit `46c6509` (`Add case study flow and portfolio interaction polish`). Later loader, footer, navigation, and page-section work remains intact.
 - `reference/favicon.png` is the favicon on every HTML page.
 
 ### Footer
