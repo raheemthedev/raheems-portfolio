@@ -145,6 +145,7 @@ let lastPointerX = 0;
 let lastPointerTime = 0;
 let pointerVelocity = 0;
 let dragDistance = 0;
+let pointerDownLink: HTMLAnchorElement | null = null;
 let frameLag = 0;
 let frameLagVelocity = 0;
 let motionDirection: "left" | "right" = "left";
@@ -789,6 +790,9 @@ track.addEventListener("pointerdown", (event) => {
   lastPointerTime = performance.now();
   pointerVelocity = 0;
   dragDistance = 0;
+  pointerDownLink = event.target instanceof Element
+    ? event.target.closest<HTMLAnchorElement>(".project-card")
+    : null;
   railVelocity = 0;
   track.setPointerCapture(event.pointerId);
 });
@@ -828,15 +832,20 @@ const finishDrag = (event: PointerEvent) => {
     track.releasePointerCapture(event.pointerId);
   }
 
+  const destination = pointerDownLink?.href ?? null;
+  pointerDownLink = null;
   requestRender();
+
+  if (event.type === "pointerup" && dragDistance <= 6 && destination) {
+    window.location.assign(destination);
+  }
 };
 
 track.addEventListener("pointerup", finishDrag);
 track.addEventListener("pointercancel", finishDrag);
 track.addEventListener("dragstart", (event) => event.preventDefault());
 track.addEventListener("click", (event) => {
-  if (dragDistance <= 6) return;
-  event.preventDefault();
+  if (dragDistance > 6) event.preventDefault();
 });
 
 stage.addEventListener("pointerenter", () => {
