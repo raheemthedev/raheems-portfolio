@@ -165,6 +165,115 @@ const clamp = (value: number, minimum: number, maximum: number) =>
 
 const wait = (duration: number) => new Promise<void>((resolve) => window.setTimeout(resolve, duration));
 
+const heroContactCta = document.querySelector<HTMLElement>(".hero-cta");
+const heroCtaIdleLabel = heroContactCta?.querySelector<HTMLElement>(".hero-cta__label--idle") ?? null;
+const heroCtaEmailLabel = heroContactCta?.querySelector<HTMLElement>(".hero-cta__label--email") ?? null;
+
+const splitCtaLabel = (label: HTMLElement) => {
+  const text = label.textContent ?? "";
+  label.textContent = "";
+  label.setAttribute("aria-hidden", "true");
+
+  return Array.from(text).map((character) => {
+    const span = document.createElement("span");
+    span.className = `hero-cta__char${character === " " ? " hero-cta__char--space" : ""}`;
+    span.textContent = character === " " ? "\u00a0" : character;
+    label.append(span);
+    return span;
+  });
+};
+
+if (heroContactCta && heroCtaIdleLabel && heroCtaEmailLabel) {
+  const idleCharacters = splitCtaLabel(heroCtaIdleLabel);
+  const emailCharacters = splitCtaLabel(heroCtaEmailLabel);
+  const ctaAnimations = new Set<Animation>();
+  let ctaExpanded = false;
+
+  const characterOffset = (index: number, revealing: boolean) => {
+    const direction = index % 2 === 0 ? -1 : 1;
+    const distance = 2 + (index % 4) * 0.65;
+    return direction * distance * (revealing ? -1 : 1);
+  };
+
+  const settleCtaAnimations = () => {
+    ctaAnimations.forEach((animation) => {
+      try {
+        animation.commitStyles();
+      } catch {
+        // A cancelled animation can disappear between pointer events.
+      }
+      animation.cancel();
+    });
+    ctaAnimations.clear();
+  };
+
+  const animateCharacters = (
+    characters: HTMLElement[],
+    revealing: boolean,
+    baseDelay: number,
+  ) => {
+    characters.forEach((character, index) => {
+      const computed = window.getComputedStyle(character);
+      const hiddenOffset = characterOffset(index, revealing);
+      const animation = character.animate(
+        [
+          {
+            opacity: computed.opacity,
+            transform: computed.transform,
+          },
+          revealing
+            ? {
+                opacity: 1,
+                transform: "translate3d(0, 0, 0)",
+              }
+            : {
+                opacity: 0,
+                transform: `translate3d(${hiddenOffset * 0.28}px, ${hiddenOffset}px, 0)`,
+              },
+        ],
+        {
+          duration: revealing ? 170 : 200,
+          delay: baseDelay + index * (revealing ? 3 : 4),
+          easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+          fill: "forwards",
+        },
+      );
+
+      ctaAnimations.add(animation);
+      animation.addEventListener("finish", () => ctaAnimations.delete(animation), { once: true });
+      animation.addEventListener("cancel", () => ctaAnimations.delete(animation), { once: true });
+    });
+  };
+
+  const setCtaExpanded = (expanded: boolean) => {
+    if (expanded === ctaExpanded) return;
+    ctaExpanded = expanded;
+    heroContactCta.classList.toggle("is-expanded", expanded);
+
+    settleCtaAnimations();
+
+    if (reducedMotion.matches) {
+      idleCharacters.forEach((character) => {
+        character.style.opacity = expanded ? "0" : "1";
+        character.style.transform = expanded ? "translate3d(0, -3px, 0)" : "translate3d(0, 0, 0)";
+      });
+      emailCharacters.forEach((character) => {
+        character.style.opacity = expanded ? "1" : "0";
+        character.style.transform = expanded ? "translate3d(0, 0, 0)" : "translate3d(0, 3px, 0)";
+      });
+      return;
+    }
+
+    animateCharacters(idleCharacters, !expanded, expanded ? 0 : 96);
+    animateCharacters(emailCharacters, expanded, expanded ? 96 : 0);
+  };
+
+  heroContactCta.addEventListener("pointerenter", () => setCtaExpanded(true));
+  heroContactCta.addEventListener("pointerleave", () => setCtaExpanded(false));
+  heroContactCta.addEventListener("focus", () => setCtaExpanded(true));
+  heroContactCta.addEventListener("blur", () => setCtaExpanded(false));
+}
+
 const finishSiteLoader = async (fadeDuration = 140) => {
   document.body.classList.remove("is-loader-active");
   if (!siteLoader) return;
@@ -187,6 +296,22 @@ const finishSiteLoader = async (fadeDuration = 140) => {
 };
 
 const runSiteLoader = async () => {
+  if (window.location.hash === "#contact") {
+    await finishSiteLoader(0);
+    requestAnimationFrame(() => {
+      const contactTarget = document.querySelector<HTMLElement>("#contact");
+      if (!contactTarget) return;
+
+      const inlineScrollBehavior = document.documentElement.style.scrollBehavior;
+      document.documentElement.style.scrollBehavior = "auto";
+      contactTarget.scrollIntoView();
+      requestAnimationFrame(() => {
+        document.documentElement.style.scrollBehavior = inlineScrollBehavior;
+      });
+    });
+    return;
+  }
+
   const panelTop = siteLoader?.querySelector<HTMLElement>(".site-loader__panel--top");
   const panelRight = siteLoader?.querySelector<HTMLElement>(".site-loader__panel--right");
   const panelBottom = siteLoader?.querySelector<HTMLElement>(".site-loader__panel--bottom");
@@ -628,10 +753,13 @@ const renderFramePhysics = (deltaTime: number) => {
   const stageBounds = stage.getBoundingClientRect();
   const stageCenter = stageBounds.left + stageBounds.width / 2;
   const cursorX = stageCenter + gyroX * stageBounds.width / 2;
+  const shellCenters = shells.map((shell) => {
+    const bounds = shell.getBoundingClientRect();
+    return bounds.left + bounds.width / 2;
+  });
 
-  shells.forEach((shell) => {
-    const shellBounds = shell.getBoundingClientRect();
-    const shellCenter = shellBounds.left + shellBounds.width / 2;
+  shells.forEach((shell, index) => {
+    const shellCenter = shellCenters[index];
     const stagePosition = clamp((shellCenter - stageCenter) / (stageBounds.width / 2), -1.3, 1.3);
     const cursorDistance = Math.abs(shellCenter - cursorX) / (stageBounds.width * 0.52);
     const proximity = clamp(1 - cursorDistance, 0, 1) * gyroPresence;
@@ -935,6 +1063,27 @@ reducedMotion.addEventListener("change", () => {
 
   requestRender();
 });
+
+const featuredProjects = [...document.querySelectorAll<HTMLElement>(".featured-project")];
+
+if (featuredProjects.length > 0) {
+  if (reducedMotion.matches || !("IntersectionObserver" in window)) {
+    featuredProjects.forEach((project) => project.classList.add("is-visible"));
+  } else {
+    const featuredObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-visible");
+          featuredObserver.unobserve(entry.target);
+        });
+      },
+      { rootMargin: "0px 0px -7%", threshold: 0.08 },
+    );
+
+    featuredProjects.forEach((project) => featuredObserver.observe(project));
+  }
+}
 
 measureRail();
 renderRail(performance.now());

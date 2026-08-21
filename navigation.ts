@@ -36,10 +36,32 @@ document.addEventListener("keydown", (event) => {
 
 const footerReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const footerWordmarks = [...document.querySelectorAll<HTMLElement>(".portfolio-footer__wordmark")];
+const footerMeasureCanvas = document.createElement("canvas");
+const footerMeasureContext = footerMeasureCanvas.getContext("2d");
 
 footerWordmarks.forEach((wordmark) => {
   const letters = [...wordmark.querySelectorAll<HTMLElement>("span")];
   if (letters.length === 0) return;
+
+  const measureGlyphFloors = () => {
+    if (!footerMeasureContext) return;
+
+    letters.forEach((letter) => {
+      const styles = getComputedStyle(letter);
+      const lineHeight = Number.parseFloat(styles.lineHeight);
+      footerMeasureContext.font = `${styles.fontStyle} ${styles.fontWeight} ${styles.fontSize} ${styles.fontFamily}`;
+      const metrics = footerMeasureContext.measureText(letter.textContent ?? "");
+      const ascent = metrics.fontBoundingBoxAscent || metrics.actualBoundingBoxAscent;
+      const descent = metrics.fontBoundingBoxDescent || metrics.actualBoundingBoxDescent;
+      const leading = lineHeight - ascent - descent;
+      const glyphFloor = leading / 2 + ascent + metrics.actualBoundingBoxDescent;
+      letter.style.setProperty("--footer-glyph-floor", `${glyphFloor.toFixed(2)}px`);
+    });
+  };
+
+  measureGlyphFloors();
+  document.fonts.ready.then(measureGlyphFloors).catch(() => undefined);
+  window.addEventListener("resize", measureGlyphFloors);
 
   const currentScales = letters.map(() => 1);
   const targetScales = letters.map(() => 1);

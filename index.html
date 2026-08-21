@@ -24,7 +24,8 @@
       type="font/ttf"
       crossorigin
     />
-    <link rel="stylesheet" href="styles.css?v=20260816-13" />
+    <link rel="stylesheet" href="styles.css?v=20260821-1" />
+    <link rel="stylesheet" href="editorial-work.css?v=20260821-3" />
     <noscript>
       <style>
         body.is-loader-active { height: auto; overflow: auto; }
@@ -38,7 +39,7 @@
       </style>
     </noscript>
   </head>
-  <body class="is-loader-active">
+  <body class="home-page is-loader-active">
     <div class="site-loader" aria-hidden="true">
       <div class="site-loader__panel site-loader__panel--top"></div>
       <div class="site-loader__panel site-loader__panel--right"></div>
@@ -72,9 +73,10 @@
           working with brands worldwide.
         </h1>
 
-        <a class="hero-cta" href="#featured-work">
-          <span>View selected work</span>
-          <span class="hero-cta__arrow" aria-hidden="true">↘</span>
+        <a class="hero-cta" href="#contact" aria-label="Go to Raheem's contact details">
+          <span class="hero-cta__label hero-cta__label--idle">Contact me</span>
+          <span class="hero-cta__label hero-cta__label--email">hello@raheem.studio</span>
+          <span class="hero-cta__arrow" aria-hidden="true">→</span>
         </a>
 
         <div id="work" class="project-stage" aria-label="Selected projects">
@@ -120,35 +122,41 @@
           <h2 id="featured-work-title">Clear ideas.<br />Distinct outcomes.</h2>
         </div>
         <div class="featured-work__grid">
-          <a class="featured-project featured-project--wide" href="case-study.html?project=01">
-            <span class="featured-project__caption">Visual identity / Project 01</span>
-            <span class="featured-project__media featured-project__media--01" aria-hidden="true"></span>
+          <a class="featured-project featured-project--wide" href="case-study.html?project=01" style="--project-order: 0;">
+            <span class="featured-project__media featured-project__media--01" aria-hidden="true"><span>01</span></span>
+            <span class="featured-project__caption"><strong>Project 01</strong><span>View case study</span></span>
+            <span class="featured-project__summary">A flexible visual identity designed to feel clear, considered, and unmistakable.</span>
           </a>
-          <a class="featured-project featured-project--offset" href="case-study.html?project=02">
-            <span class="featured-project__caption">Brand system / Project 02</span>
-            <span class="featured-project__media featured-project__media--02" aria-hidden="true"></span>
+          <a class="featured-project featured-project--offset" href="case-study.html?project=02" style="--project-order: 1;">
+            <span class="featured-project__media featured-project__media--02" aria-hidden="true"><span>02</span></span>
+            <span class="featured-project__caption"><strong>Project 02</strong><span>View case study</span></span>
+            <span class="featured-project__summary">A brand system built to move consistently across physical and digital touchpoints.</span>
           </a>
-          <a class="featured-project featured-project--small" href="case-study.html?project=03">
-            <span class="featured-project__caption">Art direction / Project 03</span>
-            <span class="featured-project__media featured-project__media--03" aria-hidden="true"></span>
+          <a class="featured-project featured-project--small" href="case-study.html?project=03" style="--project-order: 2;">
+            <span class="featured-project__media featured-project__media--03" aria-hidden="true"><span>03</span></span>
+            <span class="featured-project__caption"><strong>Project 03</strong><span>View case study</span></span>
+            <span class="featured-project__summary">Art direction that turns a distinct point of view into a recognizable visual world.</span>
           </a>
-          <a class="featured-project featured-project--large" href="case-study.html?project=04">
-            <span class="featured-project__caption">Packaging / Project 04</span>
-            <span class="featured-project__media featured-project__media--04" aria-hidden="true"></span>
+          <a class="featured-project featured-project--large" href="case-study.html?project=04" style="--project-order: 3;">
+            <span class="featured-project__media featured-project__media--04" aria-hidden="true"><span>04</span></span>
+            <span class="featured-project__caption"><strong>Project 04</strong><span>View case study</span></span>
+            <span class="featured-project__summary">Packaging made to hold attention while keeping the product story direct and useful.</span>
           </a>
-          <a class="featured-project featured-project--medium" href="case-study.html?project=05">
-            <span class="featured-project__caption">Campaign / Project 05</span>
-            <span class="featured-project__media featured-project__media--05" aria-hidden="true"></span>
+          <a class="featured-project featured-project--medium" href="case-study.html?project=05" style="--project-order: 4;">
+            <span class="featured-project__media featured-project__media--05" aria-hidden="true"><span>05</span></span>
+            <span class="featured-project__caption"><strong>Project 05</strong><span>View case study</span></span>
+            <span class="featured-project__summary">A campaign language with enough rhythm to work across motion, social, and print.</span>
           </a>
-          <a class="featured-project featured-project--end" href="case-study.html?project=06">
-            <span class="featured-project__caption">Digital / Project 06</span>
-            <span class="featured-project__media featured-project__media--06" aria-hidden="true"></span>
+          <a class="featured-project featured-project--end" href="case-study.html?project=06" style="--project-order: 5;">
+            <span class="featured-project__media featured-project__media--06" aria-hidden="true"><span>06</span></span>
+            <span class="featured-project__caption"><strong>Project 06</strong><span>View case study</span></span>
+            <span class="featured-project__summary">A responsive digital expression carrying the identity into an animated experience.</span>
           </a>
         </div>
         <a class="featured-work__all" href="work.html">View all work <span aria-hidden="true">↗</span></a>
       </section>
 
-      <section id="contact" class="content-section content-section--contact" aria-labelledby="contact-title">
+      <section class="content-section content-section--contact" aria-labelledby="contact-title">
         <div class="contact-prelude">
           <h2>Ideas become clearer<br />through perspective.</h2>
           <div class="contact-prelude__grid">
@@ -163,7 +171,7 @@
             <p>Perspective is where strategy meets visual culture.</p>
           </div>
         </div>
-        <footer class="portfolio-footer portfolio-footer--home">
+        <footer class="portfolio-footer portfolio-footer--home" id="contact">
           <h2 id="contact-title" class="visually-hidden">Contact Raheem</h2>
           <div class="portfolio-footer__lead">
             <h3>Let’s make<br />something clear.</h3>
@@ -187,7 +195,7 @@
       </section>
     </main>
 
-    <script src="script.js?v=20260816-13"></script>
-    <script src="navigation.js?v=20260816-13"></script>
+    <script src="script.js?v=20260821-1"></script>
+    <script src="navigation.js?v=20260818-14"></script>
   </body>
 </html>

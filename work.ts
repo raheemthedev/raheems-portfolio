@@ -16,62 +16,62 @@ interface ArchiveProject {
 const archiveProjects: ArchiveProject[] = [
   {
     number: "01",
-    title: "Project title",
+    title: "Project 01",
     discipline: "Visual Identity",
     category: "identity",
     style: "identity",
     year: "2026",
-    summary: "A flexible identity system built to make a growing brand feel clear, considered, and unmistakable.",
+    summary: "A flexible visual identity designed to feel clear, considered, and unmistakable.",
     services: ["Strategy", "Identity", "Guidelines"],
   },
   {
     number: "02",
-    title: "Project title",
+    title: "Project 02",
     discipline: "Brand System",
     category: "identity",
     style: "brand",
     year: "2026",
-    summary: "A brand system that gives a new venture the structure to move consistently across every touchpoint.",
+    summary: "A brand system built to move consistently across physical and digital touchpoints.",
     services: ["Brand system", "Art direction", "Digital"],
   },
   {
     number: "03",
-    title: "Project title",
+    title: "Project 03",
     discipline: "Art Direction",
     category: "direction",
     style: "direction",
     year: "2025",
-    summary: "A visual direction that turns a point of view into a recognizable world for people to step into.",
+    summary: "Art direction that turns a distinct point of view into a recognizable visual world.",
     services: ["Concept", "Campaign", "Editorial"],
   },
   {
     number: "04",
-    title: "Project title",
+    title: "Project 04",
     discipline: "Packaging",
     category: "packaging",
     style: "packaging",
     year: "2025",
-    summary: "Packaging designed to hold attention on the shelf while keeping the product story direct and useful.",
+    summary: "Packaging made to hold attention while keeping the product story direct and useful.",
     services: ["Packaging", "Typography", "Production"],
   },
   {
     number: "05",
-    title: "Project title",
+    title: "Project 05",
     discipline: "Campaign Design",
     category: "campaign",
     style: "campaign",
     year: "2024",
-    summary: "A campaign language made for movement, giving a launch a sharper rhythm across physical and digital media.",
+    summary: "A campaign language with enough rhythm to work across motion, social, and print.",
     services: ["Campaign", "Motion", "Social"],
   },
   {
     number: "06",
-    title: "Project title",
+    title: "Project 06",
     discipline: "Digital Expression",
     category: "digital",
     style: "digital",
     year: "2024",
-    summary: "A digital expression that carries the identity into a responsive, animated, and easy-to-use experience.",
+    summary: "A responsive digital expression carrying the identity into an animated experience.",
     services: ["Web design", "Interaction", "Development"],
   },
 ];
@@ -91,14 +91,16 @@ const projectMarkup = (project: ArchiveProject, index: number) => {
   const caseStudyHref = `case-study.html?project=${encodeURIComponent(project.number)}`;
   const media = project.image
     ? `<img src="${project.image}" alt="${project.imageAlt ?? project.title}" />`
-    : `<div class="work-card__blank" aria-hidden="true"></div>`;
+    : `<div class="work-card__blank" aria-hidden="true"><span>${project.number}</span></div>`;
 
   const content = `
     <div class="work-card__media">${media}</div>
     <div class="work-card__details">
-      <h3>${project.title}</h3>
-      <p>${project.discipline}</p>
-      <span>${project.year}</span>
+      <div class="work-card__heading">
+        <h3>${project.title}</h3>
+        <span>View case study</span>
+      </div>
+      <p class="work-card__summary">${project.summary}</p>
     </div>
   `;
 
@@ -109,32 +111,22 @@ const projectMarkup = (project: ArchiveProject, index: number) => {
   `;
 };
 
-workGrid.innerHTML = `
-  <div class="work-grid__column" data-grid-column="0">
-    ${archiveProjects.map(projectMarkup).join("")}
-  </div>
-  <div class="work-grid__column" data-grid-column="1"></div>
-`;
+workGrid.innerHTML = archiveProjects.map(projectMarkup).join("");
 
 const gridLayouts = [
-  "work-card--landscape",
-  "work-card--portrait",
-  "work-card--compact",
-  "work-card--square",
-  "work-card--portrait",
-  "work-card--landscape",
+  "work-card--wide",
+  "work-card--offset",
+  "work-card--small",
+  "work-card--large",
+  "work-card--medium",
+  "work-card--end",
 ] as const;
 
 const composeGrid = (visibleCards: HTMLElement[]) => {
   workCards.forEach((card) => card.classList.remove(...gridLayouts));
   workGrid.classList.toggle("is-single", visibleCards.length === 1);
-  const columns = [...workGrid.querySelectorAll<HTMLElement>(".work-grid__column")];
-  columns.forEach((column) => {
-    [...column.children].forEach((child) => column.removeChild(child));
-  });
   visibleCards.forEach((card, index) => {
     card.classList.add(gridLayouts[index % gridLayouts.length]);
-    columns[index % columns.length]?.append(card);
   });
 };
 

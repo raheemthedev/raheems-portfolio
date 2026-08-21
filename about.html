@@ -24,7 +24,7 @@
       type="font/ttf"
       crossorigin
     />
-    <link rel="stylesheet" href="styles.css?v=20260816-13" />
+    <link rel="stylesheet" href="styles.css?v=20260821-1" />
   </head>
   <body class="about-page">
     <a class="skip-link" href="#main">Skip to content</a>
@@ -48,9 +48,25 @@
       <section class="content-section content-section--about" aria-labelledby="about-title">
         <div class="about-shell">
           <p class="section-label">/ ABOUT <span>A</span></p>
-          <h1 id="about-title" class="about-display-title">about me</h1>
+
+          <div class="about-media-rail" aria-label="A moving strip of selected studio imagery">
+            <div class="about-media-rail__track">
+              <div class="about-media-frame about-media-frame--light" role="img" aria-label="Image placeholder 1"></div>
+              <div class="about-media-frame about-media-frame--dark" role="img" aria-label="Image placeholder 2"></div>
+              <div class="about-media-frame about-media-frame--mid" role="img" aria-label="Image placeholder 3"></div>
+              <div class="about-media-frame about-media-frame--black" role="img" aria-label="Image placeholder 4"></div>
+              <div class="about-media-frame about-media-frame--soft" role="img" aria-label="Image placeholder 5"></div>
+              <div class="about-media-frame about-media-frame--deep" role="img" aria-label="Image placeholder 6"></div>
+            </div>
+          </div>
 
           <div class="about-intro">
+            <div class="about-intro__heading">
+              <h1 id="about-title" class="about-display-title">about me</h1>
+              <a class="about-resume-link" href="mailto:hello@raheem.studio?subject=Resume%20request">
+                Request résumé ↗
+              </a>
+            </div>
             <div class="about-intro__copy">
               <p>
                 I’m an independent designer and developer based in Toronto, creating
@@ -65,12 +81,6 @@
                 I work closely with founders, studios, and creative teams from early
                 direction through final execution.
               </p>
-              <a class="about-resume-link" href="mailto:hello@raheem.studio?subject=Resume%20request">
-                Request résumé ↗
-              </a>
-            </div>
-            <div class="about-portrait" aria-label="Portrait placeholder">
-              <div class="about-portrait__placeholder" aria-hidden="true"></div>
             </div>
           </div>
 
@@ -127,6 +137,7 @@
       <p class="portfolio-footer__wordmark" aria-label="Raheem"><span>R</span><span>A</span><span>H</span><span>E</span><span>E</span><span>M</span></p>
       <div class="portfolio-footer__base"><span>© 2026 — Independent creative studio</span><span>Toronto / Working worldwide</span><a href="#main">Back to top ↑</a></div>
     </footer>
-    <script src="navigation.js?v=20260816-13"></script>
+    <script src="about.js?v=20260818-3"></script>
+    <script src="navigation.js?v=20260818-14"></script>
   </body>
 </html>
