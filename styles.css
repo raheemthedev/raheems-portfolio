@@ -1003,13 +1003,20 @@ body.is-loader-active .project-stage {
   margin: 0 auto;
 }
 
+.about-hero {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 130px);
+  min-height: calc(100svh - 130px);
+}
+
 .about-page .section-label {
-  margin-bottom: 58px;
+  margin-bottom: 44px;
 }
 
 .about-media-rail {
   width: 100vw;
-  height: clamp(320px, 31vw, 600px);
+  height: clamp(200px, 30vh, 340px);
   margin-left: calc(50% - 50vw);
   overflow: hidden;
   cursor: grab;
@@ -1032,7 +1039,7 @@ body.is-loader-active .project-stage {
 }
 
 .about-media-frame {
-  flex: 0 0 clamp(250px, 24vw, 460px);
+  flex: 0 0 clamp(170px, 15vw, 280px);
   height: 100%;
   background: #deddd8;
   clip-path: inset(var(--about-frame-inset, 14%) 0);
@@ -1058,7 +1065,7 @@ body.is-loader-active .project-stage {
 }
 
 .about-display-title {
-  font-size: 190px;
+  font-size: clamp(88px, 9vw, 132px);
 }
 
 .about-display-heading {
@@ -1070,7 +1077,7 @@ body.is-loader-active .project-stage {
   grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
   gap: clamp(56px, 7vw, 132px);
   align-items: start;
-  margin-top: clamp(72px, 7vw, 132px);
+  margin-top: clamp(40px, 6vh, 72px);
 }
 
 .about-intro__heading {
@@ -1081,20 +1088,20 @@ body.is-loader-active .project-stage {
   max-width: 700px;
   padding-top: 4px;
   color: var(--headline);
-  font-size: 25px;
+  font-size: clamp(18px, 1.3vw, 22px);
   font-weight: 520;
   line-height: 1.14;
 }
 
 .about-intro__copy p {
-  margin: 0 0 30px;
+  margin: 0 0 20px;
 }
 
 .about-resume-link {
   display: inline-flex;
   align-items: center;
   min-height: 38px;
-  margin-top: 48px;
+  margin-top: 28px;
   padding: 9px 12px;
   border: 1px solid rgba(8, 8, 8, 0.72);
   border-radius: 2px;
@@ -1111,7 +1118,7 @@ body.is-loader-active .project-stage {
 }
 
 .about-experience {
-  margin-top: 190px;
+  margin-top: clamp(72px, 10vh, 140px);
 }
 
 .experience-list {
@@ -2815,12 +2822,17 @@ body.is-loader-active .project-stage {
     padding: 100px 20px 160px;
   }
 
+  .about-hero {
+    min-height: calc(100vh - 100px);
+    min-height: calc(100svh - 100px);
+  }
+
   .about-page .section-label {
     margin-bottom: 36px;
   }
 
   .about-media-rail {
-    height: 300px;
+    height: 230px;
   }
 
   .about-media-rail__track {
@@ -2829,7 +2841,7 @@ body.is-loader-active .project-stage {
   }
 
   .about-media-frame {
-    flex-basis: min(72vw, 300px);
+    flex-basis: min(58vw, 240px);
   }
 
   .about-display-title {
@@ -2843,7 +2855,7 @@ body.is-loader-active .project-stage {
   .about-intro {
     grid-template-columns: 1fr;
     gap: 48px;
-    margin-top: 64px;
+    margin-top: 44px;
   }
 
   .about-intro__copy {
@@ -2856,7 +2868,7 @@ body.is-loader-active .project-stage {
   }
 
   .about-experience {
-    margin-top: 130px;
+    margin-top: 96px;
   }
 
   .experience-list {

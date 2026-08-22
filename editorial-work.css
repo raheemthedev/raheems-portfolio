@@ -216,6 +216,35 @@
 .work-page .site-header,
 .work-page .corner-mark { color: #fff; mix-blend-mode: difference; }
 
+.work-archive__more {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(120px, 18vh, 260px);
+}
+
+.work-more-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 16px 26px;
+  border: 1px solid rgba(8, 8, 8, 0.72);
+  border-radius: 2px;
+  color: #080808;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.work-more-link:hover,
+.work-more-link:focus-visible {
+  background: #080808;
+  color: #f4f4f1;
+}
+
 @keyframes editorial-media-drift {
   from { transform: translate3d(-2.5%, -1.5%, 0) rotate(-1deg) scale(1.03); }
   to { transform: translate3d(2.5%, 1.5%, 0) rotate(1deg) scale(1.08); }

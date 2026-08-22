@@ -57,8 +57,8 @@ if (aboutRail && aboutRailTrack) {
     aboutFrames.forEach((frame, index) => {
       const visibleCenter = frameCenters[index] - offset;
       const distance = clampValue(Math.abs(visibleCenter - focalCenter) / influenceRadius, 0, 1);
-      const proximity = Math.pow(1 - distance, 1.65);
-      const targetHeight = 0.58 + proximity * 0.4;
+      const proximity = Math.pow(1 - distance, 1.4);
+      const targetHeight = 0.86 + proximity * 0.12;
       const inset = (1 - targetHeight) * 50;
       frame.style.setProperty("--about-frame-inset", `${inset.toFixed(3)}%`);
     });
