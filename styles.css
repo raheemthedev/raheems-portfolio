@@ -775,11 +775,48 @@ body.is-loader-active .project-stage {
 }
 
 .project-card__media img {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
+  transition: opacity 220ms ease;
+}
+
+.project-card__media img,
+.featured-project__media img,
+.work-card__media img,
+.work-gallery__frame img,
+.case-hero--asset img,
+.case-media--asset img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.project-card__image--hover,
+.featured-project__image--hover,
+.work-card__image--hover {
+  opacity: 0;
+}
+
+.project-card:hover .project-card__image--hover,
+.project-card:focus-visible .project-card__image--hover,
+.featured-project:hover .featured-project__image--hover,
+.featured-project:focus-visible .featured-project__image--hover,
+.work-card:hover .work-card__image--hover,
+.work-card:focus-within .work-card__image--hover {
+  opacity: 1;
+}
+
+.project-card:hover .project-card__image--still,
+.project-card:focus-visible .project-card__image--still,
+.featured-project:hover .featured-project__image--still,
+.featured-project:focus-visible .featured-project__image--still,
+.work-card:hover .work-card__image--still,
+.work-card:focus-within .work-card__image--still {
+  opacity: 0;
 }
 
 .project-card__meta {
@@ -1566,7 +1603,7 @@ body.is-loader-active .project-stage {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .work-gallery__frame:hover,
@@ -1678,12 +1715,14 @@ body.is-loader-active .project-stage {
 }
 
 .work-card__media img {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
-  transition: transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 220ms ease, transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .work-card__placeholder {
@@ -2155,9 +2194,27 @@ body.is-loader-active .project-stage {
   transition: transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.featured-project__image {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity 220ms ease;
+}
+
 .featured-project--offset .featured-project__media,
 .featured-project--small .featured-project__media {
   min-height: clamp(220px, 25vw, 620px);
+}
+
+/* Match Electronic Botanica's frame to its landscape cover. */
+.featured-project--offset .featured-project__media--02,
+.work-card[data-project="02"] .work-card__media {
+  min-height: 0;
+  aspect-ratio: 1920 / 1285;
+  background: #0b0b0b;
 }
 
 .featured-project__media--01 { background: #1b1b1a; }
@@ -3016,6 +3073,10 @@ body.is-loader-active .project-stage {
     aspect-ratio: 1.08;
   }
 
+  .work-card[data-project="02"] .work-card__media {
+    aspect-ratio: 1920 / 1285;
+  }
+
   .work-card:nth-of-type(even) .work-card__media {
     margin-left: auto;
   }
@@ -3233,6 +3294,10 @@ body.is-loader-active .project-stage {
 
   .featured-project:nth-child(3n) .featured-project__media {
     aspect-ratio: 0.84;
+  }
+
+  .featured-project--offset .featured-project__media--02 {
+    aspect-ratio: 1920 / 1285;
   }
 
   .contact-prelude {

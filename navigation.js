@@ -100,3 +100,43 @@ footerWordmarks.forEach((wordmark) => {
     wordmark.addEventListener("pointerleave", resetWave);
     footerReducedMotion.addEventListener("change", resetWave);
 });
+// Progressive biography text used by the homepage and expanded About manifesto.
+const scrollWordTargets = [
+    ...document.querySelectorAll("[data-scroll-words], [data-about-scroll-words]"),
+];
+scrollWordTargets.forEach((target) => {
+    const originalText = (target.textContent ?? "").replace(/\s+/g, " ").trim();
+    const words = originalText.split(" ").filter(Boolean);
+    const scrollContainer = target.closest(".home-about-reveal__scroll, .about-manifesto__scroll, .about-practice__scroll");
+    if (!scrollContainer || words.length === 0)
+        return;
+    target.setAttribute("aria-label", originalText);
+    target.innerHTML = words
+        .map((word) => `<span class="scroll-word" aria-hidden="true">${word}</span>`)
+        .join(" ");
+    const wordElements = [...target.querySelectorAll(".scroll-word")];
+    let frame = null;
+    const renderWords = () => {
+        frame = null;
+        if (footerReducedMotion.matches) {
+            wordElements.forEach((word) => { word.style.opacity = "1"; });
+            return;
+        }
+        const bounds = scrollContainer.getBoundingClientRect();
+        const scrollDistance = Math.max(scrollContainer.offsetHeight - window.innerHeight, 1);
+        const progress = Math.min(Math.max(-bounds.top / scrollDistance, 0), 1);
+        const leadingEdge = progress * (wordElements.length + 7);
+        wordElements.forEach((word, index) => {
+            const reveal = Math.min(Math.max((leadingEdge - index) / 6, 0), 1);
+            word.style.opacity = (0.16 + reveal * 0.84).toFixed(3);
+        });
+    };
+    const requestRender = () => {
+        if (frame === null)
+            frame = requestAnimationFrame(renderWords);
+    };
+    window.addEventListener("scroll", requestRender, { passive: true });
+    window.addEventListener("resize", requestRender);
+    footerReducedMotion.addEventListener("change", requestRender);
+    requestRender();
+});

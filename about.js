@@ -100,3 +100,115 @@ if (aboutRail && aboutRailTrack) {
     measure();
     requestAnimationFrame(render);
 }
+const worldSection = document.querySelector("[data-world-section]");
+const worldCollage = document.querySelector("[data-world-collage]");
+const worldTitle = document.querySelector("[data-world-title]");
+const worldCards = worldCollage
+    ? [...worldCollage.querySelectorAll("[data-world-card]")]
+    : [];
+if (worldSection && worldCollage && worldTitle && worldCards.length) {
+    const desktopOpen = [
+        { x: .26, y: .25, w: .24, h: .27 },
+        { x: .46, y: .19, w: .19, h: .25 },
+        { x: .73, y: .27, w: .23, h: .28 },
+        { x: .25, y: .73, w: .25, h: .32 },
+        { x: .50, y: .80, w: .18, h: .23 },
+        { x: .74, y: .72, w: .22, h: .30 },
+    ];
+    const mobileOpen = [
+        { x: .29, y: .26, w: .46, h: .25 },
+        { x: .68, y: .19, w: .34, h: .22 },
+        { x: .73, y: .43, w: .42, h: .25 },
+        { x: .28, y: .67, w: .45, h: .29 },
+        { x: .65, y: .78, w: .34, h: .21 },
+        { x: .28, y: .87, w: .38, h: .20 },
+    ];
+    let frame = null;
+    let targetProgress = 0;
+    let currentProgress = 0;
+    let initialized = false;
+    let stageWidth = 1;
+    let stageHeight = 1;
+    let metrics = [];
+    const clamp = (value, minimum = 0, maximum = 1) => Math.min(Math.max(value, minimum), maximum);
+    const ease = (value) => {
+        const t = clamp(value);
+        return t * t * (3 - 2 * t);
+    };
+    const readProgress = () => {
+        const bounds = worldSection.getBoundingClientRect();
+        const travel = Math.max(worldSection.offsetHeight - window.innerHeight, 1);
+        targetProgress = clamp(-bounds.top / travel);
+        if (!initialized) {
+            currentProgress = targetProgress;
+            initialized = true;
+        }
+    };
+    const measureWorld = () => {
+        stageWidth = Math.max(worldCollage.clientWidth, 1);
+        stageHeight = Math.max(worldCollage.clientHeight, 1);
+        const isMobile = stageWidth <= 800;
+        const targets = isMobile ? mobileOpen : desktopOpen;
+        const stackWidth = Math.min(Math.max(stageWidth * (isMobile ? .62 : .31), 260), 500);
+        const stackHeight = stackWidth * (isMobile ? .78 : .68);
+        metrics = worldCards.map((card, index) => {
+            const target = targets[index] ?? targets[targets.length - 1];
+            const width = stageWidth * target.w;
+            const height = stageHeight * target.h;
+            const stackScale = Math.min(stackWidth / width, stackHeight / height) * (1 - index * .012);
+            const offset = (index - (worldCards.length - 1) / 2) * (isMobile ? 2.2 : 3.2);
+            card.style.width = `${width.toFixed(2)}px`;
+            card.style.height = `${height.toFixed(2)}px`;
+            return { ...target, width, height, stackScale, offset };
+        });
+    };
+    const renderWorld = () => {
+        const smoothing = aboutReducedMotion.matches ? 1 : .095;
+        currentProgress += (targetProgress - currentProgress) * smoothing;
+        if (Math.abs(targetProgress - currentProgress) < .00008)
+            currentProgress = targetProgress;
+        const rawProgress = currentProgress;
+        const spread = aboutReducedMotion.matches ? 1 : ease((rawProgress - .07) / .63);
+        const exit = aboutReducedMotion.matches ? 0 : ease((rawProgress - .84) / .16);
+        worldCards.forEach((card, index) => {
+            const metric = metrics[index];
+            if (!metric)
+                return;
+            const startX = stageWidth * .5 + metric.offset;
+            const startY = stageHeight * .5 + metric.offset * .6;
+            const endX = stageWidth * metric.x;
+            const endY = stageHeight * metric.y - exit * stageHeight * (.16 + index * .028);
+            const x = startX + (endX - startX) * spread;
+            const y = startY + (endY - startY) * spread;
+            const scale = metric.stackScale + (1 - metric.stackScale) * spread;
+            const translateX = x - metric.width * scale * .5;
+            const translateY = y - metric.height * scale * .5;
+            card.style.transform = `translate3d(${translateX.toFixed(2)}px, ${translateY.toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
+            card.style.opacity = `${(1 - exit * .35).toFixed(3)}`;
+            card.style.zIndex = `${index === 0 ? 12 : 11 - index}`;
+        });
+        const titleOpacity = spread * (1 - exit);
+        worldTitle.style.opacity = titleOpacity.toFixed(3);
+        worldTitle.style.transform = `translate(-50%, -50%) scale(${(.9 + spread * .1).toFixed(3)})`;
+        worldSection.style.setProperty("--world-spread", spread.toFixed(4));
+        if (Math.abs(targetProgress - currentProgress) > .00008) {
+            frame = requestAnimationFrame(renderWorld);
+        }
+        else {
+            frame = null;
+        }
+    };
+    const requestWorldRender = () => {
+        readProgress();
+        if (frame === null)
+            frame = requestAnimationFrame(renderWorld);
+    };
+    window.addEventListener("scroll", requestWorldRender, { passive: true });
+    window.addEventListener("resize", () => {
+        measureWorld();
+        requestWorldRender();
+    });
+    aboutReducedMotion.addEventListener("change", requestWorldRender);
+    measureWorld();
+    requestWorldRender();
+}

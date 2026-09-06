@@ -2,23 +2,47 @@
 const archiveProjects = [
     {
         number: "01",
-        title: "Project 01",
-        discipline: "Visual Identity",
+        title: "Flip",
+        discipline: "Fintech / Cryptocurrency",
         category: "identity",
         style: "identity",
-        year: "2026",
-        summary: "A flexible visual identity designed to feel clear, considered, and unmistakable.",
-        services: ["Strategy", "Identity", "Guidelines"],
+        year: "2024",
+        summary: "A crypto exchange experience as simple as flipping a coin.",
+        services: ["Brand identity", "Art direction", "Illustration"],
+        image: "assets/projects/flip/LCover.jpg",
+        hoverImage: "assets/projects/flip/flip-hover-all.gif?v=3",
+        imageAlt: "Flip cryptocurrency exchange visual identity",
+        gallery: [
+            "assets/projects/flip/L1.jpg",
+            "assets/projects/flip/L2.jpg",
+            "assets/projects/flip/L3.jpg",
+            "assets/projects/flip/L4.jpg",
+            "assets/projects/flip/L5.jpg",
+            "assets/projects/flip/L6.jpg",
+            "assets/projects/flip/L7.jpg",
+        ],
     },
     {
         number: "02",
-        title: "Project 02",
-        discipline: "Brand System",
+        title: "Electronic Botanica",
+        discipline: "Exhibition Identity",
         category: "identity",
         style: "brand",
         year: "2026",
-        summary: "A brand system built to move consistently across physical and digital touchpoints.",
-        services: ["Brand system", "Art direction", "Digital"],
+        summary: "A generative art exhibition exploring the collision between organic forms and digital systems.",
+        services: ["Brand identity", "Art direction", "Generative design"],
+        image: "assets/projects/electronic-botanica/l4-cover.jpg",
+        hoverImage: "assets/projects/electronic-botanica/hover.gif?v=1",
+        imageAlt: "Electronic Botanica generative art exhibition identity",
+        gallery: [
+            "assets/projects/electronic-botanica/l4-cover.jpg",
+            "assets/projects/electronic-botanica/l5.jpg",
+            "assets/projects/electronic-botanica/l6.jpg",
+            "assets/projects/electronic-botanica/l8.jpg",
+            "assets/projects/electronic-botanica/l11.jpg",
+            "assets/projects/electronic-botanica/p12.gif",
+            "assets/projects/electronic-botanica/p13.webp",
+        ],
     },
     {
         number: "03",
@@ -73,8 +97,8 @@ if (!workArchive || !workGrid || !workDetailsList || filterButtons.length === 0 
 const projectMarkup = (project, index) => {
     const caseStudyHref = `case-study.html?project=${encodeURIComponent(project.number)}`;
     const media = project.image
-        ? `<img src="${project.image}" alt="${project.imageAlt ?? project.title}" />`
-        : `<div class="work-card__blank" aria-hidden="true"><span>${project.number}</span></div>`;
+        ? `<img class="work-card__image work-card__image--still" src="${project.image}" alt="${project.imageAlt ?? project.title}" draggable="false" />${project.hoverImage ? `<img class="work-card__image work-card__image--hover" src="${project.hoverImage}" alt="" aria-hidden="true" draggable="false" />` : ""}`
+        : `<div class="work-card__blank" aria-hidden="true"></div>`;
     const content = `
     <div class="work-card__media">${media}</div>
     <div class="work-card__details">
@@ -86,7 +110,7 @@ const projectMarkup = (project, index) => {
     </div>
   `;
     return `
-    <article class="work-card work-card--${project.style}" data-category="${project.category}" style="--project-order: ${index};">
+    <article class="work-card work-card--${project.style}" data-project="${project.number}" data-category="${project.category}" style="--project-order: ${index};">
       <a href="${caseStudyHref}" aria-label="View ${project.title} case study">${content}</a>
     </article>
   `;
@@ -110,7 +134,7 @@ const composeGrid = (visibleCards) => {
 const galleryFrameMarkup = (project, index) => {
     const image = project.gallery?.[index] ?? project.image;
     const content = image
-        ? `<img src="${image}" alt="${project.imageAlt ?? project.title} — frame ${index + 1}" />`
+        ? `<img src="${image}" alt="${project.imageAlt ?? project.title} — frame ${index + 1}" draggable="false" />`
         : `<div class="work-card__blank" aria-hidden="true"></div>`;
     const caseStudyHref = `case-study.html?project=${encodeURIComponent(project.number)}`;
     return `<a class="work-gallery__frame" href="${caseStudyHref}" aria-label="View ${project.title} case study frame ${index + 1}" style="--frame-index: ${index};">${content}</a>`;

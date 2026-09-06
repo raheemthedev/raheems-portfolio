@@ -24,15 +24,19 @@ const projects = [
     },
     {
         number: "01",
-        title: "TODO TITLE",
-        tags: ["TODO DISCIPLINE", "VISUAL IDENTITY"],
+        title: "FLIP",
+        tags: ["BRAND IDENTITY", "FINTECH"],
         style: "identity",
+        image: "assets/projects/flip/LCover.jpg",
+        imageAlt: "Flip cryptocurrency exchange visual identity",
     },
     {
         number: "02",
-        title: "TODO TITLE",
-        tags: ["BRAND SYSTEM", "TODO DISCIPLINE"],
+        title: "ELECTRONIC BOTANICA",
+        tags: ["EXHIBITION IDENTITY", "GENERATIVE ART"],
         style: "brand",
+        image: "assets/projects/electronic-botanica/l4-cover.jpg",
+        imageAlt: "Electronic Botanica generative art exhibition identity",
     },
     {
         number: "03",
@@ -59,7 +63,7 @@ track.innerHTML = Array.from({ length: copies }, (_, copyIndex) => projects
         >
           <a class="project-card project-card--${project.style}" href="case-study.html?project=${encodeURIComponent(project.number)}" aria-label="View project ${project.number} case study" ${copyIndex === 1 ? "" : 'tabindex="-1"'}>
             <div class="project-card__media">
-              ${project.image ? `<img src="${project.image}" alt="${project.imageAlt ?? project.title}" />` : ""}
+              ${project.image ? `<img class="project-card__image" src="${project.image}" alt="${project.imageAlt ?? project.title}" draggable="false" />` : ""}
             </div>
             <div class="project-card__meta">
               <div class="project-card__tags">

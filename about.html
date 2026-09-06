@@ -24,7 +24,8 @@
       type="font/ttf"
       crossorigin
     />
-    <link rel="stylesheet" href="styles.css?v=20260822-1" />
+    <link rel="stylesheet" href="styles.css?v=20260906-4" />
+    <link rel="stylesheet" href="about-reveal.css?v=20260826-5" />
   </head>
   <body class="about-page">
     <a class="skip-link" href="#main">Skip to content</a>
@@ -45,6 +46,12 @@
     </header>
 
     <main id="main">
+      <section class="about-opening" aria-labelledby="about-opening-title">
+        <p class="about-opening__meta"><span>/ ABOUT</span><span>TORONTO, CANADA</span></p>
+        <h1 id="about-opening-title">HI, I’M<br />RAHEEM</h1>
+        <p class="about-opening__base"><span>Designer + developer</span><span>Scroll to know me ↓</span></p>
+      </section>
+
       <section class="content-section content-section--about" aria-labelledby="about-title">
         <div class="about-shell">
           <div class="about-hero">
@@ -64,7 +71,7 @@
             <div class="about-intro">
               <div class="about-intro__heading">
                 <h1 id="about-title" class="about-display-title">about me</h1>
-                <a class="about-resume-link" href="mailto:hello@raheem.studio?subject=Resume%20request">
+                <a class="about-resume-link" href="mailto:animashaunraheem05@gmail.com?subject=Resume%20request">
                   Request résumé ↗
                 </a>
               </div>
@@ -84,43 +91,121 @@
                 </p>
               </div>
             </div>
+
           </div>
 
+          <section class="about-practice" aria-labelledby="about-practice-title">
+            <div class="about-practice__scroll">
+              <div class="about-practice__sticky">
+                <p class="about-practice__label">/ PRACTICE</p>
+                <h2 id="about-practice-title" data-about-scroll-words>
+                  I specialize in identity systems, art direction, motion, and creative
+                  development—building expressive ideas into useful digital experiences.
+                </h2>
+                <p class="about-practice__aside">
+                  I’m equally interested in the quiet systems behind the work: research,
+                  structure, rhythm, and the details that make an experience feel inevitable.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section class="about-manifesto" aria-labelledby="about-manifesto-title">
+            <div class="about-manifesto__scroll">
+              <div class="about-manifesto__sticky">
+                <p class="about-manifesto__label">/ PERSPECTIVE</p>
+                <h2 id="about-manifesto-title" class="about-manifesto__text" data-about-scroll-words>
+                  I see design as a meeting point between expression, intention, and utility.
+                  I move between strategy, identity, motion, and development to build systems
+                  that communicate clearly and stay memorable.
+                </h2>
+              </div>
+            </div>
+          </section>
+
+          <section class="about-world" aria-labelledby="about-world-title" data-world-section>
+            <div class="about-world__sticky">
+              <p class="about-world__label">/ PERSONAL ARCHIVE</p>
+              <h2 id="about-world-title" class="about-world__title" data-world-title>a glimpse into my world</h2>
+              <p class="about-world__note">Scroll to unfold<br />the archive ↓</p>
+              <div class="about-world__stage" data-world-collage>
+                <figure class="about-world__card about-world__card--one" data-world-card>
+                  <img src="reference/landing page.png" alt="A monochrome view of Raheem's portfolio landing page" />
+                </figure>
+                <figure class="about-world__card about-world__card--two" data-world-card>
+                  <img src="reference/casestudy.png" alt="A detail from Raheem's case-study design process" />
+                </figure>
+                <figure class="about-world__card about-world__card--three" data-world-card>
+                  <img src="reference/1.png" alt="A portfolio composition from Raheem's visual archive" />
+                </figure>
+                <figure class="about-world__card about-world__card--four" data-world-card>
+                  <img src="reference/about-sec.png" alt="An earlier study for Raheem's About page" />
+                </figure>
+                <figure class="about-world__card about-world__card--five" data-world-card>
+                  <img src="reference/footer mine.png" alt="A typographic footer study from Raheem's portfolio" />
+                </figure>
+                <figure class="about-world__card about-world__card--six" data-world-card>
+                  <img src="reference/2.png" alt="A second portfolio composition from Raheem's visual archive" />
+                </figure>
+              </div>
+            </div>
+          </section>
+
           <section class="about-experience" aria-labelledby="experience-title">
-            <h2 id="experience-title" class="about-display-heading">my experience</h2>
+            <h2 id="experience-title" class="about-display-heading">experience</h2>
             <div class="experience-list">
               <article class="experience-row">
                 <div class="experience-role">
-                  <h3>independent practice</h3>
-                  <p>designer &amp; developer</p>
+                  <p class="experience-company">Raheem Studio</p>
+                  <h3>Independent designer &amp; developer</h3>
                 </div>
                 <p class="experience-description">
                   Partnering with founders and small teams to shape identities,
                   campaigns, and digital experiences from direction to delivery.
                 </p>
-                <p class="experience-date">current</p>
+                <p class="experience-date">Current</p>
               </article>
               <article class="experience-row">
                 <div class="experience-role">
-                  <h3>selected collaborations</h3>
-                  <p>creative partner</p>
+                  <p class="experience-company">Selected collaborations</p>
+                  <h3>Creative partner</h3>
                 </div>
                 <p class="experience-description">
                   Collaborating with studios and multidisciplinary teams across brand
                   identity, art direction, interaction, and visual systems.
                 </p>
-                <p class="experience-date">ongoing</p>
+                <p class="experience-date">Ongoing</p>
               </article>
               <article class="experience-row">
                 <div class="experience-role">
-                  <h3>freelance projects</h3>
-                  <p>identity, motion &amp; digital</p>
+                  <p class="experience-company">Independent commissions</p>
+                  <h3>Identity, motion &amp; digital</h3>
                 </div>
                 <p class="experience-description">
                   Available for focused engagements that need a distinct visual point
                   of view and a practical system built to last.
                 </p>
-                <p class="experience-date">open</p>
+                <p class="experience-date">Open</p>
+              </article>
+            </div>
+          </section>
+
+          <section class="about-education" aria-labelledby="education-title">
+            <h2 id="education-title" class="about-display-heading">education</h2>
+            <div class="education-list">
+              <article class="education-row">
+                <div>
+                  <p class="education-source">Independent study</p>
+                  <h3>Visual systems &amp; creative development</h3>
+                </div>
+                <p class="education-date">Ongoing</p>
+              </article>
+              <article class="education-row">
+                <div>
+                  <p class="education-source">Practice-led learning</p>
+                  <h3>Identity, motion &amp; interaction</h3>
+                </div>
+                <p class="education-date">Continuous</p>
               </article>
             </div>
           </section>
@@ -133,13 +218,13 @@
       <h2 id="about-footer-title" class="visually-hidden">Contact Raheem</h2>
       <div class="portfolio-footer__lead">
         <h3>Let’s make<br />something clear.</h3>
-        <div class="portfolio-footer__actions"><a href="mailto:hello@raheem.studio">Drop me an email <span aria-hidden="true">@</span></a><a href="work.html">See selected work <span aria-hidden="true">→</span></a></div>
+        <div class="portfolio-footer__actions"><a href="mailto:animashaunraheem05@gmail.com">Drop me an email <span aria-hidden="true">@</span></a><a href="work.html">See selected work <span aria-hidden="true">→</span></a></div>
       </div>
-      <nav class="portfolio-footer__socials" aria-label="Social links"><a href="https://github.com/raheemthedev">GitHub</a><a href="mailto:hello@raheem.studio">Email</a><a href="work.html">Selected work</a></nav>
+      <nav class="portfolio-footer__socials" aria-label="Social links"><a href="https://x.com/const_neo">X</a><a href="mailto:animashaunraheem05@gmail.com">Email</a><a href="https://be.net/animashraheem">Behance</a></nav>
       <p class="portfolio-footer__wordmark" aria-label="Raheem"><span>R</span><span>A</span><span>H</span><span>E</span><span>E</span><span>M</span></p>
       <div class="portfolio-footer__base"><span>© 2026 — Independent creative studio</span><span>Toronto / Working worldwide</span><a href="#main">Back to top ↑</a></div>
     </footer>
-    <script src="about.js?v=20260822-1"></script>
-    <script src="navigation.js?v=20260818-14"></script>
+    <script src="about.js?v=20260826-4"></script>
+    <script src="navigation.js?v=20260826-2"></script>
   </body>
 </html>
