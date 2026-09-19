@@ -2239,17 +2239,23 @@ body.is-loader-active .project-stage {
   text-transform: uppercase;
 }
 
-.contact-prelude {
-  min-height: min(82svh, 900px);
-  padding: clamp(74px, 6vw, 140px) clamp(20px, 2vw, 42px);
+.services {
+  padding: clamp(74px, 6vw, 140px) clamp(20px, 2vw, 42px) clamp(70px, 6vw, 130px);
   border-bottom: 1px solid rgba(244, 244, 241, 0.24);
   background: #080808;
   color: #f4f4f1;
 }
 
-.contact-prelude h2 {
-  max-width: 980px;
+.services__eyebrow {
   margin: 0;
+  color: rgba(244, 244, 241, .48);
+  font-size: clamp(10px, .72vw, 15px);
+  text-transform: uppercase;
+}
+
+.services__title {
+  max-width: 980px;
+  margin: clamp(28px, 3vw, 60px) 0 0;
   color: inherit;
   font-size: clamp(54px, 6.4vw, 150px);
   font-weight: 430;
@@ -2257,23 +2263,169 @@ body.is-loader-active .project-stage {
   letter-spacing: -0.065em;
 }
 
-.contact-prelude__grid {
-  display: grid;
-  grid-template-columns: 0.8fr 1.05fr 1fr;
-  gap: clamp(48px, 8vw, 180px);
+.services__lede {
+  margin: clamp(24px, 2.4vw, 48px) 0 0 auto;
   width: min(78%, 1260px);
-  margin: clamp(100px, 13vw, 250px) 0 0 auto;
-}
-
-.contact-prelude__grid p,
-.contact-prelude__grid ul {
-  margin: 0;
   font-size: clamp(16px, 1.12vw, 27px);
   line-height: 1.12;
+  color: rgba(244, 244, 241, .72);
 }
 
-.contact-prelude__grid ul {
-  padding-left: 1em;
+/* OPTION 2 — Kayak's 3 ways as sticky stacking blocks, portfolio tokens only. */
+.service-stack {
+  margin-top: clamp(70px, 7vw, 150px);
+}
+
+.service-card {
+  position: sticky;
+  top: 0;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: clamp(28px, 4vw, 90px);
+  align-items: center;
+  min-height: 82svh;
+  padding: clamp(48px, 5vw, 110px) clamp(24px, 3.4vw, 80px);
+  border-radius: 22px 22px 0 0;
+  overflow: clip;
+  opacity: 0;
+  transform: translate3d(0, 64px, 0);
+  transition:
+    opacity 720ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 980ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.service-card.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.service-card--dark {
+  background: #101010;
+  color: #f4f4f1;
+}
+
+.service-card--grey {
+  background: #232321;
+  color: #f4f4f1;
+}
+
+.service-card--paper {
+  background: #f4f4f1;
+  color: #101010;
+}
+
+.service-card__text {
+  min-width: 0;
+}
+
+.service-card__index {
+  margin: 0;
+  font-size: clamp(10px, .72vw, 15px);
+  text-transform: uppercase;
+  opacity: .56;
+}
+
+.service-card h3 {
+  margin: clamp(22px, 2.4vw, 48px) 0 0;
+  font-size: clamp(38px, 4.2vw, 88px);
+  font-weight: 430;
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+}
+
+.service-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: clamp(22px, 2.2vw, 44px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.service-card__tags li {
+  padding: 8px 16px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: clamp(12px, .95vw, 20px);
+  line-height: 1.2;
+  opacity: .8;
+}
+
+.service-card__cta {
+  display: inline-block;
+  margin-top: clamp(28px, 3vw, 60px);
+  padding-bottom: 5px;
+  border-bottom: 1px solid currentColor;
+  font-size: clamp(14px, 1.05vw, 23px);
+}
+
+.service-card__media-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(12px, 1.2vw, 24px);
+  min-width: 0;
+}
+
+.service-card__media {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: clamp(7px, 0.65vw, 12px);
+  aspect-ratio: 0.9;
+  background: rgba(127, 127, 127, .16);
+}
+
+.service-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.service-card__media:hover img {
+  transform: scale(1.045);
+}
+
+/* OPTION 3 — Kayak's And there's more as a quiet marquee, same motion language as the galleries. */
+.services__marquee {
+  margin-top: clamp(60px, 6vw, 120px);
+  overflow: hidden;
+  border-top: 1px solid rgba(244, 244, 241, .18);
+  border-bottom: 1px solid rgba(244, 244, 241, .18);
+  padding: clamp(16px, 1.6vw, 28px) 0;
+}
+
+.services__marquee-track {
+  display: flex;
+  width: max-content;
+  animation: services-marquee 28s linear infinite;
+  font-size: clamp(14px, 1.05vw, 23px);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: rgba(244, 244, 241, .6);
+  white-space: nowrap;
+}
+
+.services__marquee:hover .services__marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes services-marquee {
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .service-card {
+    position: relative;
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .services__marquee-track {
+    animation: none;
+  }
 }
 
 .portfolio-footer {
@@ -3300,25 +3452,42 @@ body.is-loader-active .project-stage {
     aspect-ratio: 1920 / 1285;
   }
 
-  .contact-prelude {
-    min-height: 0;
-    padding: 84px 16px 110px;
+  .services {
+    padding: 84px 16px 70px;
   }
 
-  .contact-prelude h2 {
+  .services__title {
     font-size: 50px;
   }
 
-  .contact-prelude__grid {
-    grid-template-columns: 1fr;
-    gap: 42px;
+  .services__lede {
     width: 100%;
-    margin-top: 100px;
+    font-size: 18px;
   }
 
-  .contact-prelude__grid p,
-  .contact-prelude__grid ul {
-    font-size: 18px;
+  .service-stack {
+    margin-top: 60px;
+  }
+
+  .service-card {
+    position: relative;
+    grid-template-columns: 1fr;
+    min-height: 0;
+    padding: 48px 20px 56px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+  }
+
+  .service-card h3 {
+    font-size: 40px;
+  }
+
+  .service-card__media-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .service-card__media {
+    aspect-ratio: 1.1;
   }
 
   .portfolio-footer {

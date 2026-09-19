@@ -1068,24 +1068,26 @@ reducedMotion.addEventListener("change", () => {
   requestRender();
 });
 
-const featuredProjects = [...document.querySelectorAll<HTMLElement>(".featured-project")];
+const revealTargets = [
+  ...document.querySelectorAll<HTMLElement>(".featured-project, .service-card"),
+];
 
-if (featuredProjects.length > 0) {
+if (revealTargets.length > 0) {
   if (reducedMotion.matches || !("IntersectionObserver" in window)) {
-    featuredProjects.forEach((project) => project.classList.add("is-visible"));
+    revealTargets.forEach((target) => target.classList.add("is-visible"));
   } else {
-    const featuredObserver = new IntersectionObserver(
+    const revealObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
           entry.target.classList.add("is-visible");
-          featuredObserver.unobserve(entry.target);
+          revealObserver.unobserve(entry.target);
         });
       },
       { rootMargin: "0px 0px -7%", threshold: 0.08 },
     );
 
-    featuredProjects.forEach((project) => featuredObserver.observe(project));
+    revealTargets.forEach((target) => revealObserver.observe(target));
   }
 }
 

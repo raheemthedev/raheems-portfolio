@@ -24,9 +24,9 @@
       type="font/ttf"
       crossorigin
     />
-    <link rel="stylesheet" href="styles.css?v=20260906-4" />
+    <link rel="stylesheet" href="styles.css?v=20260906-5" />
     <link rel="stylesheet" href="editorial-work.css?v=20260906-3" />
-    <link rel="stylesheet" href="about-reveal.css?v=20260826-1" />
+    <link rel="stylesheet" href="about-reveal.css?v=20260826-5" />
     <noscript>
       <style>
         body.is-loader-active { height: auto; overflow: auto; }
@@ -112,6 +112,7 @@
             <span class="featured-project__caption"><strong>Electronic Botanica</strong><span>View case study</span></span>
             <span class="featured-project__summary">A generative art exhibition exploring the collision between organic forms and digital systems.</span>
           </a>
+          <!-- HIDDEN UNTIL REAL WORK SHIPS: placeholder cards 03-06 (restore by deleting this comment wrapper)
           <a class="featured-project featured-project--small" href="case-study.html?project=03" style="--project-order: 2;">
             <span class="featured-project__media featured-project__media--03" aria-hidden="true"></span>
             <span class="featured-project__caption"><strong>Project 03</strong><span>View case study</span></span>
@@ -132,6 +133,7 @@
             <span class="featured-project__caption"><strong>Project 06</strong><span>View case study</span></span>
             <span class="featured-project__summary">A responsive digital expression carrying the identity into an animated experience.</span>
           </a>
+          HIDDEN UNTIL REAL WORK SHIPS -->
         </div>
         <a class="featured-work__all" href="work.html">View all work <span aria-hidden="true">↗</span></a>
       </section>
@@ -141,10 +143,10 @@
           <div class="home-about-reveal__sticky">
             <p class="home-about-reveal__label">/ ABOUT RAHEEM</p>
             <p id="home-about-title" class="home-about-reveal__text" data-scroll-words>
-              Raheem is an independent designer and developer shaping clear brand identities,
-              digital experiences, and motion systems for ambitious people and growing businesses.
-              His practice brings strategy, visual culture, and technology together to create work
-              that feels distinct, useful, and built to last.
+              Raheem is an independent <span class="img-anchor" data-img-anchor>designer<span class="img-card" aria-hidden="true"><img src="assets/projects/flip/L1.jpg" alt="" draggable="false" /></span></span> and developer shaping clear brand <span class="img-anchor" data-img-anchor>identities,<span class="img-card" aria-hidden="true"><img src="assets/projects/flip/LCover.jpg" alt="" draggable="false" /></span></span>
+              digital <span class="img-anchor" data-img-anchor>experiences,<span class="img-card" aria-hidden="true"><img src="assets/projects/electronic-botanica/l4-cover.jpg" alt="" draggable="false" /></span></span> and <span class="img-anchor" data-img-anchor>motion<span class="img-card" aria-hidden="true"><img src="assets/projects/flip/L4.jpg" alt="" draggable="false" /></span></span> systems for ambitious people and growing businesses.
+              His practice brings strategy, visual <span class="img-anchor" data-img-anchor>culture,<span class="img-card" aria-hidden="true"><img src="assets/projects/electronic-botanica/l6.jpg" alt="" draggable="false" /></span></span> and technology together to create work
+              that feels <span class="img-anchor" data-img-anchor>distinct,<span class="img-card" aria-hidden="true"><img src="assets/projects/electronic-botanica/l5.jpg" alt="" draggable="false" /></span></span> <span class="img-anchor" data-img-anchor>useful,<span class="img-card" aria-hidden="true"><img src="assets/projects/electronic-botanica/p9-1.jpg" alt="" draggable="false" /></span></span> and built to last.
             </p>
             <div class="home-about-reveal__base">
               <a href="about.html">More about me <span aria-hidden="true">↗</span></a>
@@ -152,26 +154,86 @@
             </div>
           </div>
         </div>
+        <!-- HIDDEN FOR NOW: availability duplicates footer CTA (restore by deleting this comment wrapper)
         <div class="home-about-reveal__availability">
           <p>/ AVAILABILITY</p>
           <h2>I’m currently open to new collaborations and contract projects.</h2>
           <a href="mailto:animashaunraheem05@gmail.com">animashaunraheem05@gmail.com <span aria-hidden="true">↗</span></a>
         </div>
+        HIDDEN FOR NOW -->
       </section>
 
       <section class="content-section content-section--contact" aria-labelledby="contact-title">
-        <div class="contact-prelude">
-          <h2>Ideas become clearer<br />through perspective.</h2>
-          <div class="contact-prelude__grid">
-            <p>What I shape:</p>
-            <ul>
-              <li>Brand identities</li>
-              <li>Campaigns</li>
-              <li>Digital experiences</li>
-              <li>Motion systems</li>
-              <li>Creative direction</li>
-            </ul>
-            <p>Perspective is where strategy meets visual culture.</p>
+        <div class="services" data-services>
+          <p class="services__eyebrow">/ What I shape</p>
+          <h2 class="services__title">Ideas become clearer<br />through perspective.</h2>
+          <p class="services__lede">Perspective is where strategy meets visual culture. Three ways we help, spun off the Kayak model — kept in this portfolio's black-and-paper system.</p>
+          <!-- OPTION 2: sticky stacking service blocks (Kayak's 3 ways, portfolio styling) -->
+          <div class="service-stack">
+            <article class="service-card service-card--dark">
+              <div class="service-card__text">
+                <p class="service-card__index">01 / Identity — All the visuals</p>
+                <h3>A visual world built from a distinct point of view.</h3>
+                <ul class="service-card__tags">
+                  <li>Brand identities</li>
+                  <li>Creative direction</li>
+                </ul>
+                <a class="service-card__cta" href="work.html">See selected work <span aria-hidden="true">↗</span></a>
+              </div>
+              <div class="service-card__media-grid">
+                <figure class="service-card__media">
+                  <img src="assets/projects/flip/LCover.jpg" alt="Flip cryptocurrency exchange visual identity" draggable="false" />
+                </figure>
+                <figure class="service-card__media">
+                  <img src="assets/projects/flip/L1.jpg" alt="Flip brand identity detail" draggable="false" />
+                </figure>
+              </div>
+            </article>
+            <article class="service-card service-card--grey">
+              <div class="service-card__text">
+                <p class="service-card__index">02 / Digital &amp; Motion — All things verbal, made visual</p>
+                <h3>Digital experiences carried into motion.</h3>
+                <ul class="service-card__tags">
+                  <li>Digital experiences</li>
+                  <li>Motion systems</li>
+                </ul>
+                <a class="service-card__cta" href="about.html">More about me <span aria-hidden="true">↗</span></a>
+              </div>
+              <div class="service-card__media-grid">
+                <figure class="service-card__media">
+                  <img src="assets/projects/electronic-botanica/l4-cover.jpg" alt="Electronic Botanica generative art exhibition identity" draggable="false" />
+                </figure>
+                <figure class="service-card__media">
+                  <img src="assets/projects/electronic-botanica/l6.jpg" alt="Electronic Botanica visual detail" draggable="false" />
+                </figure>
+              </div>
+            </article>
+            <article class="service-card service-card--paper">
+              <div class="service-card__text">
+                <p class="service-card__index">03 / Campaigns &amp; Direction — A few critical constructs</p>
+                <h3>A campaign language with enough rhythm to travel.</h3>
+                <ul class="service-card__tags">
+                  <li>Campaigns</li>
+                  <li>Creative direction</li>
+                </ul>
+                <a class="service-card__cta" href="mailto:animashaunraheem05@gmail.com">Drop me an email <span aria-hidden="true">@</span></a>
+              </div>
+              <div class="service-card__media-grid">
+                <figure class="service-card__media">
+                  <img src="assets/projects/flip/L2.jpg" alt="Flip brand campaign visual" draggable="false" />
+                </figure>
+                <figure class="service-card__media">
+                  <img src="assets/projects/flip/L4.jpg" alt="Flip campaign detail" draggable="false" />
+                </figure>
+              </div>
+            </article>
+          </div>
+          <!-- OPTION 3: Kayak-style deliverables marquee (And there's more) -->
+          <div class="services__marquee" aria-label="All deliverables">
+            <div class="services__marquee-track" aria-hidden="true">
+              <span>Brand identities · Campaigns · Digital experiences · Motion systems · Creative direction ·&nbsp;</span>
+              <span>Brand identities · Campaigns · Digital experiences · Motion systems · Creative direction ·&nbsp;</span>
+            </div>
           </div>
         </div>
         <footer class="portfolio-footer portfolio-footer--home" id="contact">
@@ -198,7 +260,7 @@
       </section>
     </main>
 
-    <script src="script.js?v=20260906-4"></script>
-    <script src="navigation.js?v=20260826-1"></script>
+    <script src="script.js?v=20260906-5"></script>
+    <script src="navigation.js?v=20260826-5"></script>
   </body>
 </html>

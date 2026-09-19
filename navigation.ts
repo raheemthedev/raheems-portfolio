@@ -122,19 +122,80 @@ const scrollWordTargets = [
 
 scrollWordTargets.forEach((target) => {
   const originalText = (target.textContent ?? "").replace(/\s+/g, " ").trim();
-  const words = originalText.split(" ").filter(Boolean);
   const scrollContainer = target.closest<HTMLElement>(
     ".home-about-reveal__scroll, .about-manifesto__scroll, .about-practice__scroll",
   );
 
-  if (!scrollContainer || words.length === 0) return;
+  if (!scrollContainer || originalText.length === 0) return;
 
   target.setAttribute("aria-label", originalText);
-  target.innerHTML = words
-    .map((word) => `<span class="scroll-word" aria-hidden="true">${word}</span>`)
-    .join(" ");
+
+  // Split text nodes into identical .scroll-word spans while preserving
+  // phrase lines and [data-img-anchor] wrappers (with their image cards)
+  // in place, so the rendered text is unchanged.
+  const makeWord = (word: string) => {
+    const span = document.createElement("span");
+    span.className = "scroll-word";
+    span.setAttribute("aria-hidden", "true");
+    span.textContent = word;
+    return span;
+  };
+  const splitChildren = (parent: Element) => {
+    const nodes = [...parent.childNodes];
+    if (parent instanceof HTMLElement) parent.innerHTML = "";
+    nodes.forEach((node) => {
+      if (node instanceof HTMLElement && node.hasAttribute("data-img-anchor")) {
+        const card = node.querySelector(".img-card");
+        const anchorWord = (node.textContent ?? "").replace(/\s+/g, " ").trim();
+        node.innerHTML = "";
+        node.append(makeWord(anchorWord));
+        if (card) node.append(card);
+        parent.append(node, document.createTextNode(" "));
+        return;
+      }
+
+      if (node instanceof HTMLElement) {
+        splitChildren(node);
+        parent.append(node, document.createTextNode(" "));
+        return;
+      }
+
+      const words = (node.textContent ?? "").replace(/\s+/g, " ").split(" ").filter(Boolean);
+      words.forEach((word) => {
+        parent.append(makeWord(word), document.createTextNode(" "));
+      });
+    });
+  };
+
+  splitChildren(target);
 
   const wordElements = [...target.querySelectorAll<HTMLElement>(".scroll-word")];
+  if (wordElements.length === 0) return;
+
+  // Anchor words that own image cards, in reading order. Cards open as the
+  // scrub reaches their word and vanish once scroll moves past the text.
+  const anchorCards = [...target.querySelectorAll<HTMLElement>("[data-img-anchor]")]
+    .map((anchor) => ({
+      anchor,
+      wordIndex: wordElements.indexOf(
+        anchor.querySelector<HTMLElement>(".scroll-word") as HTMLElement,
+      ),
+    }))
+    .filter((entry) => entry.wordIndex >= 0);
+  // Phrase steps for the discrete snap: each step owns the words around
+  // one anchor, split at midpoints between consecutive anchors.
+  const stepBounds = anchorCards.map((entry, step) => {
+    const start = step === 0
+      ? 0
+      : Math.round((anchorCards[step - 1].wordIndex + entry.wordIndex) / 2);
+    const end = step === anchorCards.length - 1
+      ? wordElements.length
+      : Math.round((entry.wordIndex + anchorCards[step + 1].wordIndex) / 2);
+    return { start, end };
+  });
+  const hasSnapSteps = anchorCards.length > 0;
+  if (hasSnapSteps) target.classList.add("has-spotlight");
+  let openCard = -1;
   let frame: number | null = null;
 
   const renderWords = () => {
@@ -142,6 +203,8 @@ scrollWordTargets.forEach((target) => {
 
     if (footerReducedMotion.matches) {
       wordElements.forEach((word) => { word.style.opacity = "1"; });
+      anchorCards.forEach(({ anchor }) => anchor.classList.remove("is-open"));
+      openCard = -1;
       return;
     }
 
@@ -149,11 +212,35 @@ scrollWordTargets.forEach((target) => {
     const scrollDistance = Math.max(scrollContainer.offsetHeight - window.innerHeight, 1);
     const progress = Math.min(Math.max(-bounds.top / scrollDistance, 0), 1);
     const leadingEdge = progress * (wordElements.length + 7);
+    const pastManifesto = bounds.bottom <= window.innerHeight / 2;
+
+    if (!hasSnapSteps) {
+      wordElements.forEach((word, index) => {
+        const reveal = Math.min(Math.max((leadingEdge - index) / 6, 0), 1);
+        word.style.opacity = (0.16 + reveal * 0.84).toFixed(3);
+      });
+      return;
+    }
+
+    // Discrete phrase snap: one step lit with its card, the rest dim.
+    let step = -1;
+    if (!pastManifesto && progress > 0) {
+      step = Math.min(anchorCards.length - 1, Math.floor(progress * anchorCards.length));
+    }
 
     wordElements.forEach((word, index) => {
-      const reveal = Math.min(Math.max((leadingEdge - index) / 6, 0), 1);
-      word.style.opacity = (0.16 + reveal * 0.84).toFixed(3);
+      const lit = step >= 0 &&
+        index >= stepBounds[step].start &&
+        index < stepBounds[step].end;
+      word.style.opacity = lit ? "1" : "0.16";
     });
+
+    if (step !== openCard) {
+      openCard = step;
+      anchorCards.forEach((entry, index) => {
+        entry.anchor.classList.toggle("is-open", index === openCard);
+      });
+    }
   };
 
   const requestRender = () => {
