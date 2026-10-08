@@ -11,18 +11,6 @@ if (!landing || !stage || !track || !shaderCanvas || !year) {
 }
 const projects = [
     {
-        number: "05",
-        title: "TODO TITLE",
-        tags: ["CAMPAIGN DESIGN", "TODO DISCIPLINE"],
-        style: "campaign",
-    },
-    {
-        number: "06",
-        title: "TODO TITLE",
-        tags: ["DIGITAL EXPRESSION", "TODO DISCIPLINE"],
-        style: "digital",
-    },
-    {
         number: "01",
         title: "FLIP",
         tags: ["BRAND IDENTITY", "FINTECH"],
@@ -38,19 +26,8 @@ const projects = [
         image: "assets/projects/electronic-botanica/l4-cover.jpg",
         imageAlt: "Electronic Botanica generative art exhibition identity",
     },
-    {
-        number: "03",
-        title: "TODO TITLE",
-        tags: ["ART DIRECTION", "TODO DISCIPLINE"],
-        style: "direction",
-    },
-    {
-        number: "04",
-        title: "TODO TITLE",
-        tags: ["PACKAGING", "TODO DISCIPLINE"],
-        style: "packaging",
-    },
 ];
+projects.push({ number: "03", title: "PROJECT 03", tags: ["ART DIRECTION", "PLACEHOLDER"], style: "direction" }, { number: "04", title: "PROJECT 04", tags: ["PACKAGING", "PLACEHOLDER"], style: "packaging" }, { number: "05", title: "PROJECT 05", tags: ["CAMPAIGN DESIGN", "PLACEHOLDER"], style: "campaign" }, { number: "06", title: "PROJECT 06", tags: ["DIGITAL EXPRESSION", "PLACEHOLDER"], style: "digital" });
 // Keep several complete sequences in the rail so a fractional viewport or zoom
 // never reaches the end of the rendered track while the loop is being wrapped.
 const copies = 4;
@@ -71,7 +48,7 @@ track.innerHTML = Array.from({ length: copies }, (_, copyIndex) => projects
               </div>
               <div class="project-card__title">
                 <strong>PROJECT ${project.number} — ${project.title}</strong>
-                <span>${project.number} / TODO</span>
+                <span>${project.number} / SELECTED WORK</span>
               </div>
             </div>
           </a>
@@ -848,8 +825,38 @@ reducedMotion.addEventListener("change", () => {
     });
     requestRender();
 });
+const charRevealTargets = [
+    ...document.querySelectorAll("[data-char-reveal]"),
+];
+charRevealTargets.forEach((target) => {
+    const originalText = target.textContent ?? "";
+    target.setAttribute("aria-label", originalText.trim().replace(/\s+/g, " "));
+    const walker = document.createTreeWalker(target, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+    while (walker.nextNode()) {
+        const node = walker.currentNode;
+        if (node.textContent && node.textContent.trim().length > 0)
+            textNodes.push(node);
+    }
+    textNodes.forEach((node) => {
+        const fragment = document.createDocumentFragment();
+        [...(node.textContent ?? "")].forEach((ch, i) => {
+            if (ch === " " || ch === "\n") {
+                fragment.append(document.createTextNode(" "));
+                return;
+            }
+            const span = document.createElement("span");
+            span.className = "char";
+            span.setAttribute("aria-hidden", "true");
+            span.textContent = ch;
+            span.style.transitionDelay = `${Math.min(i * 12, 400)}ms`;
+            fragment.append(span);
+        });
+        node.replaceWith(fragment);
+    });
+});
 const revealTargets = [
-    ...document.querySelectorAll(".featured-project, .service-card"),
+    ...document.querySelectorAll(".featured-project, [data-char-reveal]"),
 ];
 if (revealTargets.length > 0) {
     if (reducedMotion.matches || !("IntersectionObserver" in window)) {
@@ -866,6 +873,48 @@ if (revealTargets.length > 0) {
         }, { rootMargin: "0px 0px -7%", threshold: 0.08 });
         revealTargets.forEach((target) => revealObserver.observe(target));
     }
+}
+// Kayak-style service sections behave on scroll in AND scroll out:
+// they settle in when entered and ease back out when left.
+const serviceCards = [
+    ...document.querySelectorAll(".service-card"),
+];
+if (serviceCards.length > 0) {
+    if (reducedMotion.matches || !("IntersectionObserver" in window)) {
+        serviceCards.forEach((card) => card.classList.add("is-visible"));
+    }
+    else {
+        const serviceObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                entry.target.classList.toggle("is-visible", entry.isIntersecting);
+            });
+        }, { rootMargin: "0px 0px -12%", threshold: 0.15 });
+        serviceCards.forEach((card) => serviceObserver.observe(card));
+    }
+}
+// Subtle scroll parallax on service images: each image drifts its crop
+// at its own rate as its card travels through the viewport.
+const serviceParallaxImages = serviceCards.flatMap((card) => [...card.querySelectorAll(".service-card__media img")].map((img, index) => ({ img, rate: [18, 34, 26][index] ?? 24 })));
+if (serviceParallaxImages.length > 0 && !reducedMotion.matches) {
+    let parallaxFrame = null;
+    const renderParallax = () => {
+        parallaxFrame = null;
+        const viewportHeight = window.innerHeight || 1;
+        for (const { img, rate } of serviceParallaxImages) {
+            const bounds = img.getBoundingClientRect();
+            if (bounds.bottom < -viewportHeight || bounds.top > viewportHeight * 2)
+                continue;
+            const progress = Math.min(Math.max((viewportHeight - bounds.top) / (viewportHeight + bounds.height), 0), 1);
+            img.style.objectPosition = `50% ${(50 + (0.5 - progress) * rate).toFixed(2)}%`;
+        }
+    };
+    const requestParallax = () => {
+        if (parallaxFrame === null)
+            parallaxFrame = requestAnimationFrame(renderParallax);
+    };
+    window.addEventListener("scroll", requestParallax, { passive: true });
+    window.addEventListener("resize", requestParallax);
+    requestParallax();
 }
 measureRail();
 renderRail(performance.now());

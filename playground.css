@@ -6,6 +6,16 @@
   color: #080808;
 }
 
+/* Match the restrained display hierarchy used by the Work archive. */
+.pg-hero h1 {
+  font-size: clamp(70px, 9vw, 174px);
+  line-height: .9;
+}
+
+@media (max-width: 800px) {
+  .pg-hero h1 { font-size: clamp(58px, 16vw, 82px); }
+}
+
 .playground-page .site-header,
 .playground-page .corner-mark {
   color: #fff;

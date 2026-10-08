@@ -5,6 +5,17 @@
   gap: clamp(150px, 18vw, 360px) clamp(18px, 2vw, 40px);
 }
 
+/* Keep project copy subordinate to the artwork at every viewport. */
+.featured-project__summary,
+.work-card__summary {
+  font-size: clamp(20px, 1.72vw, 34px);
+  line-height: 1.22;
+}
+
+@media (max-width: 800px) {
+  .work-card__details .work-card__summary { font-size: 22px; }
+}
+
 .featured-project--wide,
 .work-card--wide { grid-column: 6 / span 7; grid-row: 1; }
 
@@ -251,4 +262,15 @@
   .featured-project__summary,
   .work-card__details .work-card__summary { margin-top: 30px; font-size: 25px; }
   .work-archive[data-view="grid"] { padding-bottom: 140px; }
+}
+
+/* Final project-copy scale after the responsive archive rules. */
+.featured-project__summary,
+.work-card__summary {
+  font-size: clamp(20px, 1.72vw, 34px);
+  line-height: 1.22;
+}
+@media (max-width: 800px) {
+  .featured-project__summary,
+  .work-card__details .work-card__summary { font-size: 22px; }
 }

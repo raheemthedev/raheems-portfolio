@@ -2,7 +2,7 @@ interface ArchiveProject {
   number: string;
   title: string;
   discipline: string;
-  category: "identity" | "campaign" | "digital" | "direction" | "packaging";
+  category: "identity" | "exhibition" | "direction" | "packaging" | "campaign" | "digital";
   style: string;
   year: string;
   summary: string;
@@ -41,7 +41,7 @@ const archiveProjects: ArchiveProject[] = [
     number: "02",
     title: "Electronic Botanica",
     discipline: "Exhibition Identity",
-    category: "identity",
+    category: "exhibition",
     style: "brand",
     year: "2026",
     summary: "A generative art exhibition exploring the collision between organic forms and digital systems.",
@@ -59,47 +59,14 @@ const archiveProjects: ArchiveProject[] = [
       "assets/projects/electronic-botanica/p13.webp",
     ],
   },
-  {
-    number: "03",
-    title: "Project 03",
-    discipline: "Art Direction",
-    category: "direction",
-    style: "direction",
-    year: "2025",
-    summary: "Art direction that turns a distinct point of view into a recognizable visual world.",
-    services: ["Concept", "Campaign", "Editorial"],
-  },
-  {
-    number: "04",
-    title: "Project 04",
-    discipline: "Packaging",
-    category: "packaging",
-    style: "packaging",
-    year: "2025",
-    summary: "Packaging made to hold attention while keeping the product story direct and useful.",
-    services: ["Packaging", "Typography", "Production"],
-  },
-  {
-    number: "05",
-    title: "Project 05",
-    discipline: "Campaign Design",
-    category: "campaign",
-    style: "campaign",
-    year: "2024",
-    summary: "A campaign language with enough rhythm to work across motion, social, and print.",
-    services: ["Campaign", "Motion", "Social"],
-  },
-  {
-    number: "06",
-    title: "Project 06",
-    discipline: "Digital Expression",
-    category: "digital",
-    style: "digital",
-    year: "2024",
-    summary: "A responsive digital expression carrying the identity into an animated experience.",
-    services: ["Web design", "Interaction", "Development"],
-  },
 ];
+
+archiveProjects.push(
+  { number: "03", title: "Project 03", discipline: "Art Direction", category: "direction", style: "direction", year: "TBC", summary: "Placeholder — project details and artwork to come.", services: ["Art Direction"] },
+  { number: "04", title: "Project 04", discipline: "Packaging", category: "packaging", style: "packaging", year: "TBC", summary: "Placeholder — project details and artwork to come.", services: ["Packaging"] },
+  { number: "05", title: "Project 05", discipline: "Campaign Design", category: "campaign", style: "campaign", year: "TBC", summary: "Placeholder — project details and artwork to come.", services: ["Campaign Design"] },
+  { number: "06", title: "Project 06", discipline: "Digital Expression", category: "digital", style: "digital", year: "TBC", summary: "Placeholder — project details and artwork to come.", services: ["Digital Expression"] },
+);
 
 const workGrid = document.querySelector<HTMLElement>(".work-grid");
 const workArchive = document.querySelector<HTMLElement>(".work-archive");
@@ -182,10 +149,10 @@ const detailRowMarkup = (project: ArchiveProject) => {
         <a class="work-detail-row__case" href="case-study.html?project=${encodeURIComponent(project.number)}">See Full Case <span aria-hidden="true">↗</span></a>
       </div>
       <div class="work-detail-row__intro">
-        <h3><strong>${project.title}:</strong> visual language for a distinct point of view.</h3>
+        <h3><strong>${project.title}:</strong> ${project.summary}</h3>
         <div class="work-detail-row__copy">
           <p>${project.summary}</p>
-          <p>We created a flexible system that brings the identity together across print, digital, and physical touchpoints.</p>
+          <p>${project.number === "01" ? "The coin-flip idea runs through illustration, typography, and social applications." : project.number === "02" ? "Botanical forms meet an electric palette across posters, motion, and exhibition graphics." : "This slot is reserved for a future case study. Artwork and project information will be added here."}</p>
         </div>
       </div>
       <div class="work-gallery" aria-label="${project.title} project frames">

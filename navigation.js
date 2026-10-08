@@ -100,13 +100,39 @@ footerWordmarks.forEach((wordmark) => {
     wordmark.addEventListener("pointerleave", resetWave);
     footerReducedMotion.addEventListener("change", resetWave);
 });
+const sharedReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+let sharedScrollFrame = null;
+const renderSharedScrollEffects = () => {
+    sharedScrollFrame = null;
+    const viewportHeight = Math.max(window.innerHeight, 1);
+    document.querySelectorAll(".section-label, .about-personal__eyebrow, .about-record__intro > p, .case-brief__label").forEach((accent) => {
+        const bounds = accent.getBoundingClientRect();
+        const parentBounds = accent.closest("section, article")?.getBoundingClientRect();
+        if (!parentBounds || bounds.bottom < -100 || bounds.top > viewportHeight + 100)
+            return;
+        const sectionCenter = parentBounds.top + parentBounds.height / 2;
+        const offset = Math.min(Math.max((viewportHeight / 2 - sectionCenter) / viewportHeight, -1), 1) * 14;
+        accent.style.setProperty("--section-parallax-y", `${offset.toFixed(2)}px`);
+        accent.classList.add("section-parallax-accent");
+    });
+};
+const requestSharedScrollEffects = () => {
+    if (sharedReducedMotion.matches || sharedScrollFrame !== null)
+        return;
+    sharedScrollFrame = requestAnimationFrame(renderSharedScrollEffects);
+};
+if (!sharedReducedMotion.matches) {
+    window.addEventListener("scroll", requestSharedScrollEffects, { passive: true });
+    window.addEventListener("resize", requestSharedScrollEffects);
+    requestSharedScrollEffects();
+}
 // Progressive biography text used by the homepage and expanded About manifesto.
 const scrollWordTargets = [
     ...document.querySelectorAll("[data-scroll-words], [data-about-scroll-words]"),
 ];
 scrollWordTargets.forEach((target) => {
     const originalText = (target.textContent ?? "").replace(/\s+/g, " ").trim();
-    const scrollContainer = target.closest(".home-about-reveal__scroll, .about-manifesto__scroll, .about-practice__scroll");
+    const scrollContainer = target.closest(".home-about-reveal__scroll, .about-story-hero__scroll, .about-manifesto__scroll, .about-practice__scroll");
     if (!scrollContainer || originalText.length === 0)
         return;
     target.setAttribute("aria-label", originalText);
