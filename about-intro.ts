@@ -222,6 +222,7 @@ if (aboutIntroSection) {
           <h2 class="intro-title intro-desk__title" id="${titleId}">${aboutIntroEscape(title)}</h2>
           <button type="button" class="intro-desk__add" aria-label="Add a note: ask Raheem something">
             <span class="intro-desk__plus" aria-hidden="true"></span>
+            <svg class="intro-desk__plane" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 2.5 2.8 10.3l7.1 2.8 2.8 7.1 8.8-17.7Z" /><path d="m9.9 13.1 5.4-5.4" /></svg>
             <span class="intro-desk__add-label" aria-hidden="true">Want to ask Raheem something?</span>
           </button>
           <p class="intro-desk__thanks" aria-live="polite"></p>
@@ -400,13 +401,16 @@ if (aboutIntroSection) {
     bodies.forEach(makeMovable);
 
     // The plus drops a blank note onto the desk; what's written on it goes
-    // to Raheem (see aboutNoteEndpoint), and a sent note is stamped and
-    // floats away.
+    // to Raheem (see aboutNoteEndpoint), and a sent note leaves the desk
+    // (sendAway).
     const thanks = root.querySelector<HTMLElement>(".intro-desk__thanks");
     let written = 0;
 
-    // A sent note gets an ink "Sent" stamp, then lifts off the desk and
-    // floats up and away as it fades.
+    // A sent note shrinks back into the plus it came from. As it goes in,
+    // the plus turns into a paper plane, which takes off up and away, and the
+    // plus comes back.
+    const plus = add.querySelector<HTMLElement>(".intro-desk__plus");
+    const plane = add.querySelector<HTMLElement>(".intro-desk__plane");
     const sendAway = (body: DeskBody) => {
       const index = bodies.indexOf(body);
       if (index >= 0) bodies.splice(index, 1);
@@ -416,29 +420,49 @@ if (aboutIntroSection) {
         card.remove();
         return;
       }
-      const stamp = document.createElement("span");
-      stamp.className = "intro-card__stamp";
-      stamp.setAttribute("aria-hidden", "true");
-      stamp.textContent = "Sent";
-      card.append(stamp);
-      stamp.animate(
-        [
-          { opacity: 0, scale: "1.6" },
-          { opacity: 1, scale: "0.94", offset: 0.7 },
-          { opacity: 1, scale: "1" },
-        ],
-        { duration: 340, easing: "cubic-bezier(0.3, 0, 0.2, 1)", fill: "forwards" },
-      );
-      const drift = (Math.random() < 0.5 ? -1 : 1) * (2 + Math.random() * 3);
+      // Placed the way the desk places it, moved by (dx, dy), turned to
+      // `turn` and scaled about its own middle.
+      const placed = (dx: number, dy: number, turn: number, scale = 1) =>
+        `translate3d(${(body.x - card.offsetWidth / 2 + dx).toFixed(1)}px, ${(body.y - card.offsetHeight / 2 + dy).toFixed(1)}px, 0) rotate(${turn.toFixed(2)}deg) scale(${scale})`;
+      const deskBox = desk.getBoundingClientRect();
+      const plusBox = add.getBoundingClientRect();
+      const toX = plusBox.left + plusBox.width / 2 - deskBox.left - body.x;
+      const toY = plusBox.top + plusBox.height / 2 - deskBox.top - body.y;
       const away = card.animate(
         [
-          { translate: "0 0", scale: "1", rotate: "0deg", opacity: 1, boxShadow: "0 18px 40px -18px rgba(0, 0, 0, 0.28)" },
-          { translate: "0 -10px", scale: "1.04", rotate: `${(drift * 0.3).toFixed(1)}deg`, opacity: 1, boxShadow: "0 40px 70px -24px rgba(0, 0, 0, 0.32)", offset: 0.25 },
-          { translate: "0 -18vh", scale: "0.96", rotate: `${drift.toFixed(1)}deg`, opacity: 0, boxShadow: "0 60px 90px -30px rgba(0, 0, 0, 0)" },
+          { transform: placed(0, 0, body.turn), opacity: 1 },
+          { transform: placed(0, -8, body.turn, 1.02), opacity: 1, offset: 0.18 },
+          { transform: placed(toX, toY, 0, 0.06), opacity: 0.2 },
         ],
-        { duration: 1100, delay: 620, easing: "cubic-bezier(0.45, 0, 0.25, 1)", fill: "forwards" },
+        { duration: 760, easing: "cubic-bezier(0.6, 0, 0.25, 1)", fill: "forwards" },
       );
       away.finished.then(() => card.remove()).catch(() => card.remove());
+
+      // The plus takes it in, becomes a plane, and the plane takes off.
+      const arrive = 640;
+      add.animate(
+        [{ scale: "1" }, { scale: "1.16" }, { scale: "1" }],
+        { duration: 420, delay: arrive, easing: "cubic-bezier(0.3, 0, 0.2, 1)" },
+      );
+      plus?.animate(
+        [
+          { opacity: 1, transform: "rotate(0deg) scale(1)" },
+          { opacity: 0, transform: "rotate(90deg) scale(0.3)", offset: 0.12 },
+          { opacity: 0, transform: "rotate(-90deg) scale(0.3)", offset: 0.82 },
+          { opacity: 1, transform: "rotate(0deg) scale(1)" },
+        ],
+        { duration: 1900, delay: arrive, easing: "cubic-bezier(0.3, 0, 0.2, 1)" },
+      );
+      plane?.animate(
+        [
+          { opacity: 0, transform: "translate(-2px, 2px) scale(0.4)" },
+          { opacity: 1, transform: "translate(0, 0) scale(1)", offset: 0.14 },
+          { opacity: 1, transform: "translate(-3px, 3px) scale(0.92)", offset: 0.42 },
+          { opacity: 0, transform: "translate(34px, -34px) scale(0.7)", offset: 0.72 },
+          { opacity: 0, transform: "translate(34px, -34px) scale(0.7)" },
+        ],
+        { duration: 1900, delay: arrive, easing: "cubic-bezier(0.5, 0, 0.3, 1)" },
+      );
     };
 
     const sendNote = async (message: string, from: string) => {

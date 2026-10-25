@@ -307,6 +307,23 @@
   transform: rotate(90deg);
 }
 
+/* The paper plane the plus becomes when a note goes in. */
+.about-personal[data-intro="desk"] .intro-desk__plane {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 46%;
+  height: 46%;
+  margin: -23% 0 0 -23%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .about-personal[data-intro="desk"] .intro-desk__add:hover .intro-desk__plus {
   transform: rotate(90deg);
 }
@@ -534,28 +551,9 @@
   cursor: default;
 }
 
-/* Sent: an ink stamp, then the note floats away (sendAway in about-intro.ts). */
+/* A sent note on its way off the desk (sendAway in about-intro.ts). */
 .about-personal[data-intro="desk"] .intro-card--note.is-sent {
   pointer-events: none;
-}
-
-.about-personal[data-intro="desk"] .intro-card__stamp {
-  position: absolute;
-  top: 46%;
-  left: 50%;
-  padding: 0.18em 0.6em 0.1em;
-  border: 2px solid currentColor;
-  border-radius: 6px;
-  color: rgba(176, 52, 32, 0.88);
-  font-family: "Marcellus", Georgia, serif;
-  font-size: clamp(26px, 2.2vw, 38px);
-  letter-spacing: 0.08em;
-  line-height: 1;
-  text-transform: uppercase;
-  mix-blend-mode: multiply;
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, -50%) rotate(-12deg);
 }
 
 .about-personal[data-intro="desk"] .intro-card--print {
