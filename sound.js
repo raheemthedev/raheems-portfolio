@@ -2,8 +2,8 @@
 // Sound and haptics for the whole site: small sounds synthesised with the Web
 // Audio API (no files to download), and a buzz on phones that can vibrate.
 // Browsers only allow sound after the visitor has clicked or pressed a key,
-// so it wakes on the first one. "/ Sound on" in the nav (or S) turns both
-// off and on, remembered across visits.
+// so it wakes on the first one. The bars at the top right (or S)
+// turn both off and on, remembered across visits.
 const siteSoundKey = "raheem-sound";
 const siteSound = (() => {
     let enabled = true;
@@ -83,8 +83,8 @@ const siteSound = (() => {
         source.start(out.at);
         source.stop(out.at + length + 0.02);
     };
-    // A pentatonic run, so any order of notes sounds like a tune.
-    const scale = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51];
+    // A pentatonic run, for the chime.
+    const scale = [523.25, 587.33, 659.25, 783.99, 880];
     const sounds = {
         // The faintest tick, for hovering and small taps.
         tick(volume = 0.25) {
@@ -133,20 +133,12 @@ const siteSound = (() => {
                 return;
             [0, 2, 4].forEach((step, index) => tone(out, scale[step] * 2, scale[step] * 2, 0.5, 0.22, "sine", index * 0.09));
         },
-        // One note of the footer's RAHEEM, by letter, like a marimba.
-        note(index) {
-            const out = ready(`note-${index}`, 70);
-            if (!out)
-                return;
-            const pitch = scale[index % scale.length];
-            tone(out, pitch, pitch, 0.32, 0.22, "sine");
-            tone(out, pitch * 4, pitch * 4, 0.06, 0.05, "sine");
-        },
-        // Paper picked up off the desk.
-        rustle() {
-            const out = ready("rustle", 120);
+        // A dial's notch, as the cursor crosses a letter of the footer's RAHEEM;
+        // each letter sits a hair higher than the last.
+        notch(index) {
+            const out = ready("notch", 40);
             if (out)
-                hiss(out, "highpass", 2400, 0.14, 0.18, 5200);
+                tone(out, 3000 + index * 90, 2200 + index * 60, 0.025, 0.1, "triangle");
         },
         // Something sent on its way: air rushing past.
         whoosh() {
@@ -160,15 +152,22 @@ const siteSound = (() => {
         if (enabled && typeof navigator.vibrate === "function")
             navigator.vibrate(pattern);
     };
-    // The nav's sound switch.
-    const toggle = document.createElement("a");
-    toggle.href = "#";
+    // The switch: four small bars at the top right that bounce while
+    // sound is on and lie flat when it's off, named on hover.
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "sound-toggle";
     toggle.dataset.soundToggle = "";
-    toggle.setAttribute("role", "button");
+    toggle.innerHTML =
+        `<span class="sound-toggle__bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>` +
+            `<span class="sound-toggle__label" aria-hidden="true"></span>`;
+    const toggleLabel = toggle.querySelector(".sound-toggle__label");
     const label = () => {
-        toggle.innerHTML = `/ SOUND ${enabled ? "ON" : "OFF"} <span aria-hidden="true">S</span>`;
+        toggle.classList.toggle("is-on", enabled);
         toggle.setAttribute("aria-pressed", String(enabled));
-        toggle.setAttribute("aria-label", enabled ? "Sound and haptics on — turn off" : "Sound and haptics off — turn on");
+        toggle.setAttribute("aria-label", enabled ? "Sound and haptics on (S) — turn off" : "Sound and haptics off (S) — turn on");
+        if (toggleLabel)
+            toggleLabel.textContent = enabled ? "Sound on" : "Sound off";
     };
     label();
     toggle.addEventListener("click", (event) => {
@@ -184,7 +183,7 @@ const siteSound = (() => {
         wake();
         sounds.tick(0.6);
     });
-    document.querySelector(".site-nav")?.append(toggle);
+    document.body.append(toggle);
     // A soft tick on hovering the nav.
     document.querySelectorAll(".site-nav a").forEach((link) => {
         link.addEventListener("pointerenter", () => sounds.tick());

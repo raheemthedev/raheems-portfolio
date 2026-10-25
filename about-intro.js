@@ -339,7 +339,6 @@ if (aboutIntroSection) {
                 if (event.target instanceof Element && event.target.closest("textarea, input, button"))
                     return;
                 event.preventDefault();
-                siteSound.rustle();
                 body.held = true;
                 body.settled = true;
                 body.velocityX = body.velocityY = body.spin = 0;

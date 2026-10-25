@@ -3,7 +3,7 @@ const keyboardNavigationTargets: Record<string, string> = {
   w: '.site-nav a[href*="work.html"]',
   a: '.site-nav a[href*="about.html"]',
   c: '.site-nav a[href*="#contact"]',
-  s: ".site-nav [data-sound-toggle]",
+  s: "[data-sound-toggle]",
 };
 
 const isTypingTarget = (target: EventTarget | null) => {
