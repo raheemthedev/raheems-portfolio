@@ -311,19 +311,20 @@
   transform: rotate(90deg);
 }
 
-/* What the plus is for: shown on hover and focus, and once on its own after
-   the desk has landed. */
+/* What the plus is for, centred beneath it so the two share the headline's
+   centre line: shown on hover and focus, and once on its own after the desk
+   has landed. */
 .about-personal[data-intro="desk"] .intro-desk__add-label {
   position: absolute;
-  top: 50%;
-  left: calc(100% + 16px);
+  top: calc(100% + 14px);
+  left: 50%;
   color: var(--ink);
   font-size: clamp(12px, 0.85vw, 15px);
   letter-spacing: 0.02em;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transform: translate(-8px, -50%);
+  transform: translate(-50%, -6px);
   transition:
     opacity 300ms ease,
     transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -333,12 +334,12 @@
 .about-personal[data-intro="desk"] .intro-desk__add:focus-visible .intro-desk__add-label,
 .about-personal[data-intro="desk"] .intro-desk__add.is-hinting .intro-desk__add-label {
   opacity: 1;
-  transform: translate(0, -50%);
+  transform: translate(-50%, 0);
 }
 
 .about-personal[data-intro="desk"] .intro-desk__thanks {
   min-height: 1.4em;
-  margin: -12px 0 0;
+  margin: 0;
   font-size: clamp(12px, 0.85vw, 15px);
   opacity: 0;
   transition: opacity 400ms ease;
