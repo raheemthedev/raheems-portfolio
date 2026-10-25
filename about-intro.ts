@@ -222,7 +222,9 @@ if (aboutIntroSection) {
           <h2 class="intro-title intro-desk__title" id="${titleId}">${aboutIntroEscape(title)}</h2>
           <button type="button" class="intro-desk__add" aria-label="Add a note: ask Raheem something">
             <span class="intro-desk__plus" aria-hidden="true"></span>
-            <svg class="intro-desk__plane" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 2.5 2.8 10.3l7.1 2.8 2.8 7.1 8.8-17.7Z" /><path d="m9.9 13.1 5.4-5.4" /></svg>
+            <span class="intro-desk__trail" aria-hidden="true"></span>
+            <svg class="intro-desk__plane" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 2.5 2.8 10.3l7.1 2.8 2.8 7.1 8.8-17.7Z" /><path class="intro-desk__plane-fold" d="m9.9 13.1 11.6-10.6" /></svg>
+            <svg class="intro-desk__check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5.5 12.5 4.2 4.2 8.8-9.4" pathLength="1" /></svg>
             <span class="intro-desk__add-label" aria-hidden="true">Want to ask Raheem something?</span>
           </button>
           <p class="intro-desk__thanks" aria-live="polite"></p>
@@ -406,11 +408,12 @@ if (aboutIntroSection) {
     const thanks = root.querySelector<HTMLElement>(".intro-desk__thanks");
     let written = 0;
 
-    // A sent note shrinks back into the plus it came from. As it goes in,
-    // the plus turns into a paper plane, which takes off up and away, and the
-    // plus comes back.
+    // A sent note shrinks back into the plus it came from, and the plus
+    // turns into a paper plane that takes off (see below).
     const plus = add.querySelector<HTMLElement>(".intro-desk__plus");
-    const plane = add.querySelector<HTMLElement>(".intro-desk__plane");
+    const plane = add.querySelector<SVGElement>(".intro-desk__plane");
+    const trail = add.querySelector<HTMLElement>(".intro-desk__trail");
+    const check = add.querySelector<SVGElement>(".intro-desk__check");
     const sendAway = (body: DeskBody) => {
       const index = bodies.indexOf(body);
       if (index >= 0) bodies.splice(index, 1);
@@ -432,36 +435,71 @@ if (aboutIntroSection) {
         [
           { transform: placed(0, 0, body.turn), opacity: 1 },
           { transform: placed(0, -8, body.turn, 1.02), opacity: 1, offset: 0.18 },
-          { transform: placed(toX, toY, 0, 0.06), opacity: 0.2 },
+          { transform: placed(toX, toY, 0, 0.06), opacity: 0 },
         ],
         { duration: 760, easing: "cubic-bezier(0.6, 0, 0.25, 1)", fill: "forwards" },
       );
       away.finished.then(() => card.remove()).catch(() => card.remove());
 
-      // The plus takes it in, becomes a plane, and the plane takes off.
+      // The plus takes it in: the circle floods with ink, the plus turns
+      // into a paper plane that winds back and launches off with a streak,
+      // a tick draws in, and the circle settles back to the plus.
       const arrive = 640;
+      const total = 2300;
+      // One shared timeline; each step eases on its own (keyframe easings).
+      const timing = { duration: total, delay: arrive, easing: "linear" };
       add.animate(
-        [{ scale: "1" }, { scale: "1.16" }, { scale: "1" }],
-        { duration: 420, delay: arrive, easing: "cubic-bezier(0.3, 0, 0.2, 1)" },
+        [
+          { backgroundColor: "rgba(11, 11, 11, 0)", color: "#0b0b0b", scale: "1" },
+          { backgroundColor: "#0b0b0b", color: "#f1f1ed", scale: "1.14", offset: 0.07 },
+          { backgroundColor: "#0b0b0b", color: "#f1f1ed", scale: "1", offset: 0.16 },
+          { backgroundColor: "#0b0b0b", color: "#f1f1ed", scale: "1", offset: 0.8 },
+          { backgroundColor: "rgba(11, 11, 11, 0)", color: "#0b0b0b", scale: "1" },
+        ],
+        timing,
       );
       plus?.animate(
         [
           { opacity: 1, transform: "rotate(0deg) scale(1)" },
-          { opacity: 0, transform: "rotate(90deg) scale(0.3)", offset: 0.12 },
-          { opacity: 0, transform: "rotate(-90deg) scale(0.3)", offset: 0.82 },
+          { opacity: 0, transform: "rotate(90deg) scale(0.3)", offset: 0.08 },
+          { opacity: 0, transform: "rotate(-90deg) scale(0.3)", offset: 0.84 },
           { opacity: 1, transform: "rotate(0deg) scale(1)" },
         ],
-        { duration: 1900, delay: arrive, easing: "cubic-bezier(0.3, 0, 0.2, 1)" },
+        timing,
       );
       plane?.animate(
         [
-          { opacity: 0, transform: "translate(-2px, 2px) scale(0.4)" },
-          { opacity: 1, transform: "translate(0, 0) scale(1)", offset: 0.14 },
-          { opacity: 1, transform: "translate(-3px, 3px) scale(0.92)", offset: 0.42 },
-          { opacity: 0, transform: "translate(34px, -34px) scale(0.7)", offset: 0.72 },
-          { opacity: 0, transform: "translate(34px, -34px) scale(0.7)" },
+          { opacity: 0, transform: "translate(-6px, 6px) scale(0.3) rotate(-20deg)", easing: "cubic-bezier(0.2, 0.9, 0.3, 1.3)" },
+          { opacity: 1, transform: "translate(0, 0) scale(1) rotate(0deg)", offset: 0.12 },
+          // Wound back, like a throw being loaded.
+          { opacity: 1, transform: "translate(-4px, 4px) scale(0.9) rotate(-8deg)", offset: 0.24, easing: "cubic-bezier(0.6, 0, 0.9, 0.4)" },
+          { opacity: 1, transform: "translate(22px, -22px) scale(0.85) rotate(4deg)", offset: 0.33 },
+          { opacity: 0, transform: "translate(46px, -46px) scale(0.6) rotate(6deg)", offset: 0.4 },
+          { opacity: 0, transform: "translate(46px, -46px) scale(0.6)" },
         ],
-        { duration: 1900, delay: arrive, easing: "cubic-bezier(0.5, 0, 0.3, 1)" },
+        timing,
+      );
+      trail?.animate(
+        [
+          { opacity: 0, transform: "rotate(-45deg) scaleX(0)" },
+          { opacity: 0, transform: "rotate(-45deg) scaleX(0)", offset: 0.25 },
+          { opacity: 1, transform: "rotate(-45deg) scaleX(1)", offset: 0.33 },
+          { opacity: 0, transform: "rotate(-45deg) scaleX(1) translateX(30%)", offset: 0.46 },
+          { opacity: 0, transform: "rotate(-45deg) scaleX(0)" },
+        ],
+        timing,
+      );
+      check?.animate(
+        [
+          { opacity: 0, strokeDashoffset: 1 },
+          { opacity: 0, strokeDashoffset: 1, offset: 0.4 },
+          { opacity: 1, strokeDashoffset: 1, offset: 0.42 },
+          { opacity: 1, strokeDashoffset: 0, offset: 0.54 },
+          { opacity: 1, strokeDashoffset: 0, offset: 0.76 },
+          { opacity: 0, strokeDashoffset: 0, offset: 0.82 },
+          { opacity: 0, strokeDashoffset: 0 },
+        ],
+        timing,
       );
     };
 
