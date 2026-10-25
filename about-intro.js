@@ -162,7 +162,7 @@ const aboutIntroPaintNote = (card, scale) => {
 // facets (cells around scattered points, each tilted its own way), lit from
 // the top left, with a dark crease where neighbouring facets meet. It's mapped
 // onto the bending sheet like the note itself, so the wrinkles fold with it.
-// Crumpled paper's small-scale surface: two scales of facets (cells around
+// Crumpled paper's small-scale surface: three scales of facets (cells around
 // scattered points, each tilted its own way and bowed a little), with a crease
 // where neighbouring facets meet. Per pixel: the tilt, and how creased it is.
 const aboutIntroFacets = (width, height) => {
@@ -170,8 +170,9 @@ const aboutIntroFacets = (width, height) => {
     const tiltY = new Float32Array(width * height);
     const crease = new Float32Array(width * height);
     const layers = [
-        { cell: Math.max(width, height) / 6, tilt: 0.7, crease: 0.035 },
-        { cell: Math.max(width, height) / 16, tilt: 0.38, crease: 0.05 },
+        { cell: Math.max(width, height) / 6, tilt: 0.3, crease: 0.035 },
+        { cell: Math.max(width, height) / 16, tilt: 0.34, crease: 0.05 },
+        { cell: Math.max(width, height) / 38, tilt: 0.3, crease: 0.08 },
     ].map((layer) => {
         const columns = Math.ceil(width / layer.cell) + 1;
         const rows = Math.ceil(height / layer.cell) + 1;
@@ -305,8 +306,8 @@ const aboutIntroPaperSim = (width, height, columns) => {
             y[index] = lastY[index] = (row / rows) * height;
             // The faintest unevenness, so it knows which way to buckle.
             z[index] = lastZ[index] = (Math.random() - 0.5) * 2;
-            // Some of the ball's surface sits further out than the rest.
-            lump[index] = 0.84 + Math.random() * 0.24;
+            // A little give point to point, so its surface isn't smooth.
+            lump[index] = 0.95 + Math.random() * 0.08;
         }
     }
     // Stiffer against bending on a finer sheet, so the folds stay large.
@@ -336,6 +337,18 @@ const aboutIntroPaperSim = (width, height, columns) => {
     const centreY = height / 2;
     const openRadius = Math.hypot(width, height) / 2 + 4;
     const ballRadius = Math.max(width, height) * 0.26;
+    // The hands aren't a sphere: a lopsided, slightly long wad, turned at random,
+    // with broad lumps around it (a few waves round its outline).
+    const turn = Math.random() * Math.PI;
+    const turnCos = Math.cos(turn);
+    const turnSin = Math.sin(turn);
+    const stretch = 1.08 + Math.random() * 0.22;
+    const waves = [2, 3, 5].map((count) => ({ count, phase: Math.random() * Math.PI * 2, size: 0.1 + Math.random() * 0.08 }));
+    const shapeAt = (alongX, alongY, alongZ) => {
+        const angle = Math.atan2(alongY, alongX);
+        const tilt = Math.atan2(alongZ, Math.hypot(alongX, alongY));
+        return waves.reduce((sum, wave) => sum + wave.size * Math.sin(wave.count * angle + wave.phase) * Math.cos(tilt), 1);
+    };
     const step = (squeeze) => {
         const radius = openRadius + (ballRadius - openRadius) * squeeze;
         for (let index = 0; index < count; index += 1) {
@@ -354,9 +367,14 @@ const aboutIntroPaperSim = (width, height, columns) => {
                 const offsetX = x[index] - centreX;
                 const offsetY = y[index] - centreY;
                 const offsetZ = z[index];
-                const distance = Math.hypot(offsetX, offsetY, offsetZ) || 1;
-                // The lumps only show as it closes, so the sheet starts square.
-                const limit = radius * (1 + (lump[index] - 1) * squeeze);
+                // Measured in the wad's own frame, which is a little longer one way.
+                const alongX = offsetX * turnCos + offsetY * turnSin;
+                const alongY = (-offsetX * turnSin + offsetY * turnCos) / (1 + (stretch - 1) * squeeze);
+                const alongZ = offsetZ;
+                const distance = Math.hypot(alongX, alongY, alongZ) || 1;
+                // Its shape only shows as it closes, so the sheet starts square.
+                const shape = 1 + (shapeAt(alongX, alongY, alongZ) * lump[index] - 1) * squeeze;
+                const limit = radius * shape;
                 if (distance > limit) {
                     const pull = limit / distance;
                     x[index] = centreX + offsetX * pull;
@@ -619,7 +637,7 @@ const aboutIntroCrumple3D = (card, host, duration, onBall) => {
     camera.position.set(0, 0, 1000);
     // Soft daylight from above, and a key light from the top left that casts
     // the shadows; together they light the flat sheet as it looked.
-    scene.add(new THREE.HemisphereLight(0xffffff, 0xa89870, 0.5));
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xd2c6a0, 0.56));
     const key = new THREE.DirectionalLight(0xffffff, 0.72);
     key.position.set(-0.45, 0.6, 1).multiplyScalar(600);
     key.castShadow = true;
@@ -633,7 +651,8 @@ const aboutIntroCrumple3D = (card, host, duration, onBall) => {
     const note = new THREE.CanvasTexture(aboutIntroPaintNote(card, ratioCanvas));
     note.encoding = THREE.sRGBEncoding;
     note.anisotropy = 4;
-    const wrinkles = new THREE.CanvasTexture(aboutIntroPaperNormals(Math.round(width * 1.5), Math.round(height * 1.5)));
+    const wrinkles = new THREE.CanvasTexture(aboutIntroPaperNormals(Math.round(width * 2), Math.round(height * 2)));
+    wrinkles.anisotropy = 4;
     const paperColor = new THREE.Color(getComputedStyle(card).backgroundColor);
     paperColor.convertSRGBToLinear();
     const normalScale = new THREE.Vector2(0, 0);
@@ -667,7 +686,7 @@ const aboutIntroCrumple3D = (card, host, duration, onBall) => {
         geometry.computeVertexNormals();
         geometry.computeBoundingSphere();
         const wrinkling = Math.min(squeeze * 1.8, 1);
-        normalScale.set(wrinkling * 1.4, wrinkling * 1.4);
+        normalScale.set(wrinkling * 1.3, wrinkling * 1.3);
         // The ball sits on the desk.
         desk.position.z = -Math.max(radius, sheet.ballRadius) - 2;
         renderer.render(scene, camera);
@@ -812,8 +831,8 @@ if (aboutIntroSection) {
     /* Desk ---------------------------------------------------------------------- */
     const buildDesk = (root) => {
         const prints = [
-            { src: "assets/projects/electronic-botanica/l8.jpg", caption: "Kept / Electronic Botanica" },
-            { src: "assets/projects/flip/L3.jpg", caption: "Kept / Flip" },
+            { src: "assets/projects/electronic-botanica/l8.webp", caption: "Kept / Electronic Botanica" },
+            { src: "assets/projects/flip/L3.webp", caption: "Kept / Flip" },
         ];
         const cards = [
             ...notes.map((note, index) => `

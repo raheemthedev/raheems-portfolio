@@ -31,10 +31,14 @@ interface CornerBody {
 }
 
 // Run a per-frame step for the three marks, each knowing its resting centre.
-const cornerPhysics = (step: (bodies: CornerBody[], delta: number, now: number) => void) => {
+// The loop sleeps once nothing has moved for a moment and `keepAwake` has
+// nothing pending; `wake` starts it again.
+const cornerPhysics = (step: (bodies: CornerBody[], delta: number, now: number) => void, keepAwake: () => boolean) => {
   const marks = [cornerMarks.he, cornerMarks.e, cornerMarks.m].filter((mark): mark is HTMLElement => mark !== null);
   let bodies: CornerBody[] = [];
   let last = performance.now();
+  let frame: number | null = null;
+  let still = 0;
 
   const measure = () => {
     bodies = marks.map((mark) => {
@@ -50,21 +54,36 @@ const cornerPhysics = (step: (bodies: CornerBody[], delta: number, now: number) 
   };
 
   const render = (now: number) => {
+    frame = null;
     const delta = Math.min(Math.max(now - last, 4), 40);
     last = now;
+    const before = bodies.map((body) => body.x + body.y + body.turn + body.scale);
     step(bodies, delta, now);
-    bodies.forEach((body) => {
+    let moved = 0;
+    bodies.forEach((body, index) => {
+      moved += Math.abs(body.x + body.y + body.turn + body.scale - before[index]);
       body.mark.style.transform =
         `translate3d(${(body.x - body.homeX).toFixed(1)}px, ${(body.y - body.homeY).toFixed(1)}px, 0) rotate(${body.turn.toFixed(2)}deg) scale(${body.scale.toFixed(3)})`;
     });
-    requestAnimationFrame(render);
+    still = moved < 0.02 && !keepAwake() ? still + 1 : 0;
+    if (still < 20) frame = requestAnimationFrame(render);
   };
 
-  window.addEventListener("resize", measure);
+  const wake = () => {
+    still = 0;
+    if (frame !== null) return;
+    last = performance.now();
+    frame = requestAnimationFrame(render);
+  };
+
+  window.addEventListener("resize", () => {
+    measure();
+    wake();
+  });
   measure();
-  requestAnimationFrame(render);
+  wake();
   document.documentElement.classList.add("is-marks-loose");
-  return () => bodies;
+  return { bodies: () => bodies, wake };
 };
 
 // A spring that pulls a body toward a point.
@@ -367,7 +386,7 @@ const cornerCue = () => {
     return { x: body.homeX + (towardX / reach) * STEP_OUT, y: body.homeY + (towardY / reach) * STEP_OUT };
   };
 
-  const bodies = cornerPhysics((all, delta, now) => {
+  const physics = cornerPhysics((all, delta, now) => {
     const step = delta / 16.7;
     all.forEach((body, index) => {
       // A letter back from a pocket grows into place.
@@ -444,7 +463,10 @@ const cornerCue = () => {
     whole = complete ? Math.max(0, whole - delta / 3000) : 0;
     cornerCollide(all.filter((body) => !placed.has(body) && !sinking.has(body) && aiming?.body !== body), RADIUS, 0.92);
     if (aiming) drawCue(24 + shotOf(aiming).load * 80);
-  });
+  }, () => aiming !== null || whole > 0 || physics.bodies().some((body) =>
+    // A loose letter still has to find its way home.
+    !placed.has(body) && Math.hypot(body.x - body.homeX, body.y - body.homeY) > 0.5));
+  const bodies = physics.bodies;
 
   [cornerMarks.he, cornerMarks.e, cornerMarks.m].forEach((mark) => {
     if (!mark) return;
@@ -459,6 +481,7 @@ const cornerCue = () => {
       body.velocityX = 0;
       body.velocityY = 0;
       aiming = { body, pointerX: event.clientX, pointerY: event.clientY };
+      physics.wake();
       mark.setPointerCapture(event.pointerId);
       mark.classList.add("is-held");
       document.documentElement.classList.add("is-cue-aiming");

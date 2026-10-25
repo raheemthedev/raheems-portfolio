@@ -220,3 +220,11 @@ The current titles, descriptions, years, services, and links are placeholders. W
 - Detailed frame expansion must be centered, maintain spacing, and never overlap adjacent frames.
 - Keep project structures scalable and practical for real images and case studies.
 - Do not commit unrelated generated files, system files, or `node_modules`.
+
+## Performance
+
+- Images are served as WebP (made with `cwebp -q 90`, PNG screenshots at `-q 92`, `-sharp_yuv`; only images over 2400px on their long side were scaled down, to 2400). The original JPG/PNG/GIF files are kept beside them but no longer referenced; animated GIFs became animated WebP (`gif2webp -q 90 -mixed`). `assets/projects/electronic-botanica/p13.webp` is an animated WebP left as it was. To add an image, convert it the same way and reference the `.webp`.
+- Images in the HTML load lazily (`loading="lazy" decoding="async"`) unless marked otherwise.
+- The corner marks' animation loop sleeps when nothing is moving and wakes on a press, a shot or a resize.
+- Vercel's build runs `npm run build && npm run minify`: `scripts/minify.mjs` minifies the JS and CSS in place with esbuild, as plain scripts so the globals shared between files keep their names. The repository's own `.js`/`.css` stay readable; don't run `npm run minify` locally.
+- three.js (for the note crumple) loads from cdnjs only when a note is opened.

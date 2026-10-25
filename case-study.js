@@ -34,7 +34,7 @@ const flipDimensions = {
 };
 const flipAsset = (name, alt, eager = false) => `
   <figure class="case-media case-media--asset" data-case-reveal>
-    <img src="assets/projects/flip/${name}.jpg" alt="${alt}" width="${flipDimensions[name]?.[0] ?? 2560}" height="${flipDimensions[name]?.[1] ?? 1440}" loading="${eager ? "eager" : "lazy"}" decoding="async" draggable="false"${eager ? " fetchpriority=\"high\"" : ""} />
+    <img src="assets/projects/flip/${name}.webp" alt="${alt}" width="${flipDimensions[name]?.[0] ?? 2560}" height="${flipDimensions[name]?.[1] ?? 1440}" loading="${eager ? "eager" : "lazy"}" decoding="async" draggable="false"${eager ? " fetchpriority=\"high\"" : ""} />
   </figure>
 `;
 const flipPair = (first, second, firstAlt, secondAlt) => `
@@ -51,7 +51,7 @@ const botanicaDimensions = {
 };
 const botanicaAsset = (name, alt, portrait = false) => `
   <figure class="case-media case-media--asset${portrait ? " case-media--asset-portrait" : ""}" data-case-reveal>
-    <img src="assets/projects/electronic-botanica/${name}" alt="${alt}" width="${botanicaDimensions[name][0]}" height="${botanicaDimensions[name][1]}" loading="${name === 'l4-cover.jpg' ? 'eager' : 'lazy'}" decoding="async" draggable="false" />
+    <img src="assets/projects/electronic-botanica/${name.replace(/\.(jpg|gif)$/, ".webp")}" alt="${alt}" width="${botanicaDimensions[name][0]}" height="${botanicaDimensions[name][1]}" loading="${name === 'l4-cover.jpg' ? 'eager' : 'lazy'}" decoding="async" draggable="false" />
   </figure>
 `;
 const botanicaPair = (first, second, firstAlt, secondAlt) => `
@@ -148,10 +148,10 @@ const galleryMarkup = isFlipProject
     `;
 const projectCover = (candidate) => {
     if (candidate.number === "01") {
-        return `<img src="assets/projects/flip/LCover.jpg" alt="Flip brand identity project" loading="lazy" decoding="async" draggable="false" />`;
+        return `<img src="assets/projects/flip/LCover.webp" alt="Flip brand identity project" loading="lazy" decoding="async" draggable="false" />`;
     }
     if (candidate.number === "02") {
-        return `<img src="assets/projects/electronic-botanica/l4-cover.jpg" alt="Electronic Botanica exhibition identity project" loading="lazy" decoding="async" draggable="false" />`;
+        return `<img src="assets/projects/electronic-botanica/l4-cover.webp" alt="Electronic Botanica exhibition identity project" loading="lazy" decoding="async" draggable="false" />`;
     }
     return `<span class="case-more__placeholder case-more__placeholder--${candidate.number}" aria-hidden="true"><b>${candidate.title}</b><i>${candidate.number}</i></span>`;
 };
