@@ -60,15 +60,21 @@ if (shapeRoot) {
     // The reel's opening and closing cards.
     const opening = document.createElement("div");
     opening.className = "shape-reel-card shape-reel-card--opening";
+    // Its contents are filled in once the chapters are read (below).
     opening.innerHTML =
         `<p class="shape-reel-card__label">/ What I shape</p>` +
             `<p class="shape-reel-card__title">Three ways<br />an idea takes<br />shape.</p>` +
+            `<ol class="shape-reel-card__contents"></ol>` +
             `<p class="shape-reel-card__hint">Scroll or drag <span aria-hidden="true">→</span></p>`;
     const closing = document.createElement("div");
     closing.className = "shape-reel-card shape-reel-card--closing";
     closing.innerHTML =
-        `<p class="shape-reel-card__label">That's the shape of it</p>` +
-            `<a class="shape-reel-card__link" href="work.html">See all work <span aria-hidden="true">↗</span></a>`;
+        `<p class="shape-reel-card__label">That’s the shape of it</p>` +
+            `<p class="shape-reel-card__title">Got an idea<br />worth shaping?</p>` +
+            `<p class="shape-reel-card__links">` +
+            `<a class="shape-reel-card__link" href="mailto:animashaunraheem05@gmail.com">Start a project <span aria-hidden="true">↗</span></a>` +
+            `<a class="shape-reel-card__link shape-reel-card__link--quiet" href="work.html">See all work <span aria-hidden="true">→</span></a>` +
+            `</p>`;
     track?.prepend(opening);
     track?.append(closing);
     const chapters = [...shapeRoot.querySelectorAll(".shape-chapter")].map((article) => {
@@ -124,6 +130,12 @@ if (shapeRoot) {
         };
     });
     const allFrames = chapters.flatMap((chapter) => chapter.frames);
+    const contents = opening.querySelector(".shape-reel-card__contents");
+    if (contents) {
+        contents.innerHTML = chapters
+            .map((chapter) => `<li><span>${chapter.number}</span>${chapter.kind}</li>`)
+            .join("");
+    }
     hud.innerHTML =
         `<span class="shape-hud__bar" aria-hidden="true"><i></i></span>` +
             `<span class="shape-hud__count" aria-hidden="true"><b>00</b> / ${String(allFrames.length).padStart(2, "0")}</span>` +
@@ -169,7 +181,7 @@ if (shapeRoot) {
         });
         if (!reelLive() || !track) {
             chapters.forEach(({ frames, ghost }) => {
-                frames.forEach((figure) => ["--drift", "--lean", "--reveal", "--pan", "--squash"].forEach((name) => figure.style.removeProperty(name)));
+                frames.forEach((figure) => ["--drift", "--lean", "--reveal", "--pan", "--squash", "--focus"].forEach((name) => figure.style.removeProperty(name)));
                 ghost.style.removeProperty("transform");
             });
             shapeRoot.dataset.toneNow = chapters[0]?.tone ?? "dark";
@@ -200,7 +212,8 @@ if (shapeRoot) {
             chapter.ghost.style.transform = `translate3d(${(ghostX - chapterLeft).toFixed(1)}px, 0, 0)`;
             chapter.ghost.style.opacity = (Math.sin(passing * Math.PI) * 0.3).toFixed(3);
             chapter.frames.forEach((figure, figureIndex) => {
-                const left = figure.offsetLeft + chapterLeft;
+                // Frames are placed within their strip, which sits inside the chapter.
+                const left = figure.offsetLeft + stripLeft;
                 const onScreen = left + figure.offsetWidth / 2;
                 if (onScreen < centre)
                     passed += 1;
@@ -212,6 +225,8 @@ if (shapeRoot) {
                 figure.style.setProperty("--reveal", reveal.toFixed(3));
                 figure.style.setProperty("--lean", `${lean.toFixed(2)}deg`);
                 figure.style.setProperty("--squash", squash.toFixed(4));
+                // Its caption comes up as it nears the middle of the screen.
+                figure.style.setProperty("--focus", shapeClamp(1 - Math.abs(onScreen - centre) / (width * 0.38), 0, 1).toFixed(3));
             });
         });
         shapeRoot.dataset.toneNow = chapters[current]?.tone ?? "dark";
