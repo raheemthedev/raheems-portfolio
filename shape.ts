@@ -276,6 +276,7 @@ if (shapeRoot) {
   };
 
   const openFrame = (index: number) => {
+    siteSound.tick(0.4);
     returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     showFrame(index);
     lightbox.hidden = false;
@@ -284,6 +285,7 @@ if (shapeRoot) {
   };
 
   const closeFrame = () => {
+    siteSound.tick(0.3);
     lightbox.classList.remove("is-open");
     window.setTimeout(() => {
       lightbox.hidden = true;

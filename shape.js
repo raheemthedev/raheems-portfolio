@@ -263,6 +263,7 @@ if (shapeRoot) {
             lightboxCount.textContent = `${String(shownFrame + 1).padStart(2, "0")} / ${String(allFrames.length).padStart(2, "0")}`;
     };
     const openFrame = (index) => {
+        siteSound.tick(0.4);
         returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         showFrame(index);
         lightbox.hidden = false;
@@ -270,6 +271,7 @@ if (shapeRoot) {
         lightbox.querySelector(".shape-lightbox__close")?.focus();
     };
     const closeFrame = () => {
+        siteSound.tick(0.3);
         lightbox.classList.remove("is-open");
         window.setTimeout(() => {
             lightbox.hidden = true;

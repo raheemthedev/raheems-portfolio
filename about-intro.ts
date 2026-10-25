@@ -362,6 +362,7 @@ if (aboutIntroSection) {
         // Writing in a note or pressing its buttons doesn't pick it up.
         if (event.target instanceof Element && event.target.closest("textarea, input, button")) return;
         event.preventDefault();
+        siteSound.rustle();
         body.held = true;
         body.settled = true;
         body.velocityX = body.velocityY = body.spin = 0;
@@ -448,6 +449,12 @@ if (aboutIntroSection) {
       const total = 2300;
       // One shared timeline; each step eases on its own (keyframe easings).
       const timing = { duration: total, delay: arrive, easing: "linear" };
+      // Air as the plane launches, a chime with the tick.
+      window.setTimeout(() => siteSound.whoosh(), arrive + total * 0.25);
+      window.setTimeout(() => {
+        siteSound.chime();
+        siteSound.buzz(12);
+      }, arrive + total * 0.45);
       add.animate(
         [
           { backgroundColor: "rgba(11, 11, 11, 0)", color: "#0b0b0b", scale: "1" },
@@ -520,6 +527,7 @@ if (aboutIntroSection) {
 
     add.addEventListener("click", () => {
       if (desk.querySelectorAll(".intro-card--note").length >= 4) return;
+      siteSound.pop();
       written += 1;
       const card = document.createElement("article");
       card.className = "intro-card intro-card--note";
@@ -544,6 +552,7 @@ if (aboutIntroSection) {
       const status = card.querySelector<HTMLElement>(".intro-card__status");
       // The × discards the note: it drops away and is gone.
       card.querySelector<HTMLButtonElement>(".intro-card__close")?.addEventListener("click", () => {
+        siteSound.tick(0.4);
         const body = bodies.find((candidate) => candidate.card === card);
         if (body) bodies.splice(bodies.indexOf(body), 1);
         const away = card.animate(
