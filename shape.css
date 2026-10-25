@@ -218,8 +218,7 @@
 }
 
 .shape-hud,
-.shape-reel-card,
-.shape-chapter__ghost {
+.shape-reel-card {
   display: none;
 }
 
@@ -386,31 +385,6 @@
     background-size: 100% 0.06em;
   }
 
-  /* The chapter's word, sliding huge behind its frames. */
-  .shape[data-layout="reel"] .shape-chapter__ghost {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    z-index: 0;
-    display: block;
-    margin-top: -0.5em;
-    color: transparent;
-    font-size: clamp(180px, 30vh, 380px);
-    font-weight: 430;
-    line-height: 1;
-    letter-spacing: -0.06em;
-    white-space: nowrap;
-    -webkit-text-stroke: 1.5px var(--tone-ink);
-    opacity: 0;
-    pointer-events: none;
-    will-change: transform;
-  }
-
-  .shape[data-layout="reel"] .shape-chapter > :not(.shape-chapter__ghost) {
-    position: relative;
-    z-index: 1;
-  }
-
   .shape[data-layout="reel"] .shape__track {
     position: relative;
     display: flex;
@@ -503,7 +477,7 @@
     grid-area: 1 / 2 / 3 / 3;
     display: flex;
     align-items: center;
-    gap: clamp(28px, 3.2vw, 64px);
+    gap: clamp(40px, 4.6vw, 90px);
     width: auto;
     height: 100%;
     overflow: visible;
@@ -511,7 +485,7 @@
   }
 
   .shape[data-layout="reel"] .shape-frame {
-    --size: 56vh;
+    --size: 48vh;
     --aspect: 0.8;
     position: relative;
     flex: none;
@@ -519,7 +493,7 @@
     height: var(--size);
     margin: 0;
     cursor: zoom-in;
-    transform: translate3d(var(--drift, 0px), 0, 0) skewX(var(--lean, 0deg)) scale(var(--squash, 1));
+    transform: translate3d(var(--drift, 0px), 0, 0);
     transition: opacity 400ms ease;
   }
 
@@ -547,11 +521,9 @@
     clip-path: inset(0 calc((1 - var(--reveal, 1)) * 100%) 0 0 round 6px);
   }
 
-  .shape[data-layout="reel"] .shape-frame:nth-child(2) { --size: 34vh; --aspect: 1; align-self: flex-start; margin-top: 4vh; }
-  .shape[data-layout="reel"] .shape-frame:nth-child(3) { --size: 46vh; --aspect: 1.45; align-self: flex-end; margin-bottom: 6vh; }
-  .shape[data-layout="reel"] .shape-frame:nth-child(4) { --size: 40vh; --aspect: 0.76; }
-  .shape[data-layout="reel"] .shape-frame:nth-child(5) { --size: 28vh; --aspect: 1.2; align-self: flex-start; margin-top: 10vh; }
-  .shape[data-layout="reel"] .shape-frame:nth-child(6) { --size: 52vh; --aspect: 1.25; }
+  .shape[data-layout="reel"] .shape-frame:nth-child(2) { --size: 32vh; --aspect: 1; align-self: flex-start; margin-top: 6vh; }
+  .shape[data-layout="reel"] .shape-frame:nth-child(3) { --size: 40vh; --aspect: 1.45; align-self: flex-end; margin-bottom: 8vh; }
+  .shape[data-layout="reel"] .shape-frame:nth-child(4) { --size: 44vh; --aspect: 0.8; }
 
   .shape[data-layout="reel"] .shape-frame img {
     display: block;

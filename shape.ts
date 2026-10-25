@@ -2,12 +2,11 @@
 // ?shape=sentence and is what narrow screens get.
 //   reel      — a film: the section pins and scrolling (or dragging) travels
 //               sideways from a title card through the three chapters to a
-//               closing card. Frames wipe in as they arrive, drift at
-//               different depths with their images panning inside, lean and
-//               shrink a little with the speed, and the chapter's word slides
-//               huge behind them; the colour changes with each chapter. Click
-//               a frame to see it full screen. A strip at the foot counts the
-//               frames and jumps between chapters.
+//               closing card, a little faster than the page scrolls. Frames
+//               wipe in as they arrive and drift gently at different depths
+//               with their images panning inside; the colour changes with
+//               each chapter. Click a frame to see it full screen. A strip at
+//               the foot counts the frames and jumps between chapters.
 //   sentence  — a manifesto: each chapter is one sentence set huge, its words
 //               inking in as you read down, with image pills set in the type
 //               that flick through the chapter's frames. Hover a pill for a
@@ -103,12 +102,6 @@ if (shapeRoot) {
     const line = article.querySelector<HTMLElement>(".shape-chapter__line");
     const number = article.querySelector(".shape-chapter__number")?.textContent ?? "";
     const kind = article.querySelector(".shape-chapter__kind")?.firstChild?.textContent ?? "";
-    // The chapter's word, huge and outlined, sliding behind its frames.
-    const ghost = document.createElement("span");
-    ghost.className = "shape-chapter__ghost";
-    ghost.setAttribute("aria-hidden", "true");
-    ghost.textContent = kind;
-    article.prepend(ghost);
     frames.forEach((figure) => {
       // A window for each image, so it can wipe in and pan inside it.
       const image = figure.querySelector("img");
@@ -130,10 +123,9 @@ if (shapeRoot) {
       pills,
       words: line ? shapeSplitWords(line) : [],
       // How far each frame drifts against the travel, for depth.
-      depths: frames.map((_, index) => [0.04, -0.06, 0.08, -0.03, 0.1, -0.05][index % 6]),
+      depths: frames.map((_, index) => [0.03, -0.04, 0.05, -0.02][index % 4]),
       number,
       kind,
-      ghost,
     };
   });
   const allFrames = chapters.flatMap((chapter) => chapter.frames);
@@ -155,12 +147,13 @@ if (shapeRoot) {
   let layout: ShapeLayout = "reel";
   let frame: number | null = null;
   let travel = 0;
-  let lastShift = 0;
-  let lean = 0;
 
+  // How much further across the reel travels than the page scrolls.
+  const reelSpeed = 1.7;
   const reelLive = () => layout === "reel" && shapeDesktop.matches;
 
-  // The reel is as tall as its track is wide, so scrolling down travels across.
+  // The reel is as tall as its track is wide (over reelSpeed), so scrolling
+  // down travels across.
   const measure = () => {
     if (!stage || !track) return;
     if (!reelLive()) {
@@ -170,7 +163,7 @@ if (shapeRoot) {
       return;
     }
     travel = Math.max(track.scrollWidth - window.innerWidth, 0);
-    stage.style.height = `${travel + window.innerHeight}px`;
+    stage.style.height = `${travel / reelSpeed + window.innerHeight}px`;
   };
 
   const reelProgress = () => {
@@ -193,9 +186,8 @@ if (shapeRoot) {
     });
 
     if (!reelLive() || !track) {
-      chapters.forEach(({ frames, ghost }) => {
-        frames.forEach((figure) => ["--drift", "--lean", "--reveal", "--pan", "--squash", "--focus"].forEach((name) => figure.style.removeProperty(name)));
-        ghost.style.removeProperty("transform");
+      chapters.forEach(({ frames }) => {
+        frames.forEach((figure) => ["--drift", "--reveal", "--pan", "--focus"].forEach((name) => figure.style.removeProperty(name)));
       });
       shapeRoot.dataset.toneNow = chapters[0]?.tone ?? "dark";
       return;
@@ -205,11 +197,6 @@ if (shapeRoot) {
     const shift = -progress * travel;
     track.style.transform = `translate3d(${shift.toFixed(1)}px, 0, 0)`;
 
-    // Frames lean into the travel and shrink a touch when it's quick, and
-    // settle when it stops.
-    lean += (shapeClamp((shift - lastShift) * 0.12, -7, 7) - lean) * 0.18;
-    lastShift = shift;
-    const squash = 1 - Math.min(Math.abs(lean) * 0.008, 0.05);
     const width = window.innerWidth;
     const centre = width / 2;
     let current = 0;
@@ -217,14 +204,8 @@ if (shapeRoot) {
     chapters.forEach((chapter, index) => {
       const chapterLeft = chapter.article.offsetLeft + shift;
       if (chapterLeft < centre) current = index;
-      // The chapter's word crosses the screen behind it, slower, over the
-      // time the chapter takes to pass.
       const strip = chapter.frames[0]?.parentElement;
       const stripLeft = chapterLeft + (strip?.offsetLeft ?? 0);
-      const passing = shapeClamp((width - stripLeft) / (width + (strip?.offsetWidth ?? chapter.article.offsetWidth)), 0, 1);
-      const ghostX = width * 0.6 + (-chapter.ghost.offsetWidth - width * 0.6) * passing;
-      chapter.ghost.style.transform = `translate3d(${(ghostX - chapterLeft).toFixed(1)}px, 0, 0)`;
-      chapter.ghost.style.opacity = (Math.sin(passing * Math.PI) * 0.3).toFixed(3);
       chapter.frames.forEach((figure, figureIndex) => {
         // Frames are placed within their strip, which sits inside the chapter.
         const left = figure.offsetLeft + stripLeft;
@@ -236,8 +217,6 @@ if (shapeRoot) {
         figure.style.setProperty("--drift", `${drift.toFixed(1)}px`);
         figure.style.setProperty("--pan", `${((onScreen - centre) * -0.06).toFixed(1)}px`);
         figure.style.setProperty("--reveal", reveal.toFixed(3));
-        figure.style.setProperty("--lean", `${lean.toFixed(2)}deg`);
-        figure.style.setProperty("--squash", squash.toFixed(4));
         // Its caption comes up as it nears the middle of the screen.
         figure.style.setProperty("--focus", shapeClamp(1 - Math.abs(onScreen - centre) / (width * 0.38), 0, 1).toFixed(3));
       });
@@ -246,7 +225,6 @@ if (shapeRoot) {
     if (hudBar) hudBar.style.transform = `scaleX(${progress.toFixed(4)})`;
     if (hudCount) hudCount.textContent = String(passed).padStart(2, "0");
     hudButtons.forEach((button, index) => button.setAttribute("aria-current", String(index === current)));
-    if (Math.abs(lean) > 0.02) request();
   };
 
   const request = () => {
@@ -339,8 +317,8 @@ if (shapeRoot) {
 
   /* Dragging the reel -------------------------------------------------------------- */
 
-  // Dragging sideways scrolls the page (the reel is as tall as it is wide, so
-  // a pixel across is a pixel down), and a flick carries on and slows. A
+  // Dragging sideways scrolls the page (a pixel across is reelSpeed times
+  // less down, since the reel travels faster), and a flick carries on and slows. A
   // press that doesn't move opens the frame under it. Steps are instant: the
   // page's smooth scrolling would otherwise restart on every one.
   let dragging: { x: number; lastX: number; lastTime: number; velocity: number; moved: boolean; frame: HTMLElement | null } | null = null;
@@ -363,7 +341,7 @@ if (shapeRoot) {
       viewport.classList.add("is-dragging");
     }
     if (!dragging.moved) return;
-    window.scrollBy({ top: -step, behavior: "instant" });
+    window.scrollBy({ top: -step / reelSpeed, behavior: "instant" });
     dragging.velocity = step / (Math.max(now - dragging.lastTime, 1) / 16.7);
     dragging.lastX = event.clientX;
     dragging.lastTime = now;
@@ -380,7 +358,7 @@ if (shapeRoot) {
     }
     const carry = () => {
       velocity *= 0.92;
-      window.scrollBy({ top: -velocity, behavior: "instant" });
+      window.scrollBy({ top: -velocity / reelSpeed, behavior: "instant" });
       coast = Math.abs(velocity) > 0.4 ? requestAnimationFrame(carry) : null;
     };
     if (!shapeStill.matches) coast = requestAnimationFrame(carry);
