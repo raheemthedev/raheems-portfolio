@@ -108,7 +108,7 @@ const footerSetups = footerWordmarks.map((wordmark) => {
       // shift every letter so none overlap.
       const reach = influences(event.clientX, 0.7);
       const widths = letters.map((letter) => letter.offsetWidth);
-      const wanted = reach.map((influence) => 1 + influence * 0.5);
+      const wanted = reach.map((influence) => 1 + influence * 1.1);
       const natural = widths.reduce((sum, width) => sum + width, 0);
       const grown = widths.reduce((sum, width, index) => sum + width * wanted[index], 0);
       const fit = natural / Math.max(grown, 1);

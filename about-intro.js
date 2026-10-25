@@ -264,11 +264,13 @@ const aboutIntroWrinkle = (texture) => {
     context.drawImage(shine, 0, 0, texture.width, texture.height);
     return crumpled;
 };
-// Crumple a note in place: the sheet is a mesh, and creases switch on across
-// it one after another — each a fold line the paper bends sharply along, so
-// it breaks into flat facets — while the edges are drawn in harder than the
-// middle until it's a lumpy ball. Every facet is lit by the angle it's turned
-// to. `onBall` hears when it's done, with the canvas to throw.
+// Crumple a note the way paper crumples: the sheet is simulated as a cloth
+// of points that won't stretch and resists bending a little, and a sphere
+// closes in on it like cupped hands. With nowhere to go, the paper buckles —
+// folding over itself into ridges and pockets — until it's a lumpy ball.
+// Each facet is drawn with the note (or the blank back, where the sheet has
+// flipped over), lit by the way it really faces, and darker deep inside the
+// ball. `onBall` hears when it's done, with the canvas to throw.
 const aboutIntroCrumple = (card, host, duration, onBall) => {
     const width = card.offsetWidth;
     const height = card.offsetHeight;
@@ -276,6 +278,7 @@ const aboutIntroCrumple = (card, host, duration, onBall) => {
     const margin = 40;
     const texture = aboutIntroPaintNote(card, ratio);
     const wrinkled = aboutIntroWrinkle(texture);
+    const paper = getComputedStyle(card).backgroundColor;
     const canvas = document.createElement("canvas");
     canvas.className = "intro-crumple";
     canvas.setAttribute("aria-hidden", "true");
@@ -294,151 +297,142 @@ const aboutIntroCrumple = (card, host, duration, onBall) => {
         onBall(canvas);
         return;
     }
-    // The fold lines, in the sheet's own units (its longer side is 1).
-    const longest = Math.max(width, height);
-    const sheetX = width / longest;
-    const sheetY = height / longest;
-    const creases = Array.from({ length: 48 }, () => {
-        const angle = Math.random() * Math.PI;
-        return {
-            x: (0.15 + Math.random() * 0.7) * sheetX,
-            y: (0.15 + Math.random() * 0.7) * sheetY,
-            normalX: Math.cos(angle),
-            normalY: Math.sin(angle),
-            sign: Math.random() < 0.5 ? -1 : 1,
-            weight: 0.25 + Math.random() * 0.35,
-            // Folds arrive in waves, scattered over the first half of the squeeze.
-            start: Math.random() * 0.5,
-        };
-    });
-    // The ball it ends as, with a little irregularity to its outline.
-    const ball = longest * 0.24;
-    const seed = Math.random() * 10;
-    const columns = 26;
+    // The sheet as a grid of points, lying flat with the faintest unevenness
+    // so it knows which way to buckle.
+    const columns = 20;
     const rows = Math.max(14, Math.round(columns * (height / width)));
-    const light = { x: -0.45, y: -0.6, z: 0.66 };
-    const flatLight = light.z;
+    const across = columns + 1;
+    const count = across * (rows + 1);
+    const x = new Float32Array(count);
+    const y = new Float32Array(count);
+    const z = new Float32Array(count);
+    const lastX = new Float32Array(count);
+    const lastY = new Float32Array(count);
+    const lastZ = new Float32Array(count);
+    const lump = new Float32Array(count);
+    for (let row = 0; row <= rows; row += 1) {
+        for (let column = 0; column <= columns; column += 1) {
+            const index = row * across + column;
+            x[index] = lastX[index] = (column / columns) * width;
+            y[index] = lastY[index] = (row / rows) * height;
+            z[index] = lastZ[index] = (Math.random() - 0.5) * 1.2;
+            // Some of the ball's surface sits further out than the rest.
+            lump[index] = 0.84 + Math.random() * 0.24;
+        }
+    }
+    // What holds it together: neighbours at their spacing (the paper can't
+    // stretch), diagonals (it can't shear), and points two apart (it resists
+    // bending, so folds come out sharp rather than floppy).
+    const links = [];
+    const link = (first, second, stiffness) => {
+        links.push([first, second, Math.hypot(x[first] - x[second], y[first] - y[second]), stiffness]);
+    };
+    for (let row = 0; row <= rows; row += 1) {
+        for (let column = 0; column <= columns; column += 1) {
+            const index = row * across + column;
+            if (column < columns)
+                link(index, index + 1, 1);
+            if (row < rows)
+                link(index, index + across, 1);
+            if (column < columns && row < rows) {
+                link(index, index + across + 1, 0.6 + Math.random() * 0.3);
+                link(index + 1, index + across, 0.6 + Math.random() * 0.3);
+            }
+            if (column < columns - 1)
+                link(index, index + 2, 0.18);
+            if (row < rows - 1)
+                link(index, index + across * 2, 0.18);
+        }
+    }
+    const centreX = width / 2;
+    const centreY = height / 2;
+    const longest = Math.max(width, height);
+    const openRadius = Math.hypot(width, height) / 2 + 4;
+    const ballRadius = longest * 0.26;
+    const light = { x: -0.42, y: -0.55, z: 0.72 };
     const started = performance.now();
+    const triangles = [];
+    for (let row = 0; row < rows; row += 1) {
+        for (let column = 0; column < columns; column += 1) {
+            const a = row * across + column;
+            // Each cell split along a random diagonal, so the folds don't line up
+            // in a regular pattern.
+            if (Math.random() < 0.5)
+                triangles.push([a, a + 1, a + across], [a + 1, a + across + 1, a + across]);
+            else
+                triangles.push([a, a + 1, a + across + 1], [a, a + across + 1, a + across]);
+        }
+    }
     const frame = (now) => {
         const progress = Math.min((now - started) / duration, 1);
-        // Quick to start, slow to finish, like a hand squeezing.
-        const squeeze = 1 - Math.pow(1 - progress, 2.4);
-        // The fine wrinkles come up early, as the first squeeze crushes the sheet.
-        const wrinkling = Math.min(squeeze * 2.2, 1);
-        // Where every point of the mesh has got to, with its height.
-        const points = [];
-        for (let row = 0; row <= rows; row += 1) {
-            for (let column = 0; column <= columns; column += 1) {
-                const u = column / columns;
-                const v = row / rows;
-                const sx = u * sheetX;
-                const sy = v * sheetY;
-                let z = 0;
-                let pushX = 0;
-                let pushY = 0;
-                creases.forEach((crease) => {
-                    const on = Math.min(Math.max((squeeze - crease.start) / 0.45, 0), 1);
-                    if (!on)
-                        return;
-                    const distance = (sx - crease.x) * crease.normalX + (sy - crease.y) * crease.normalY;
-                    z += crease.sign * crease.weight * Math.abs(distance) * on;
-                    // The paper buckles sideways along each fold, too.
-                    const side = Math.sign(distance) * crease.weight * on;
-                    pushX += crease.normalX * side;
-                    pushY += crease.normalY * side;
-                });
-                // Gathered onto a rough ball: every point heads for a spot inside a
-                // circle, the edges to its rim, so the sheet rounds up as it shrinks.
-                const fromX = (u - 0.5) * 2;
-                const fromY = (v - 0.5) * 2;
-                const edge = Math.min(Math.hypot(fromX, fromY) / Math.SQRT2, 1);
-                const offsetX = (u - 0.5) * width;
-                const offsetY = (v - 0.5) * height;
-                const offset = Math.hypot(offsetX, offsetY) || 1;
-                const rim = ball * (0.82 + 0.18 * Math.sin(u * 13.1 + v * 7.7 + seed));
-                // How far out toward the sheet's edge along its own direction, so the
-                // whole edge — corners and sides alike — lands on the rim.
-                const outward = Math.max(Math.abs(fromX), Math.abs(fromY));
-                const ballX = (offsetX / offset) * rim * Math.pow(outward, 0.75);
-                const ballY = (offsetY / offset) * rim * Math.pow(outward, 0.75);
-                const x = width / 2 + offsetX + (ballX - offsetX) * squeeze - pushX * squeeze * longest * 0.01;
-                const y = height / 2 + offsetY + (ballY - offsetY) * squeeze - pushY * squeeze * longest * 0.01;
-                // Edges curl up off the desk as it balls up.
-                const lift = (z * 0.38 + edge * edge * 0.16) * squeeze * longest;
-                points.push({ x, y, z: lift, u: u * texture.width, v: v * texture.height });
+        const squeeze = 1 - Math.pow(1 - progress, 2.2);
+        const radius = openRadius + (ballRadius - openRadius) * squeeze;
+        // Move, then keep inside the closing hands, then hold the paper together.
+        for (let index = 0; index < count; index += 1) {
+            const moveX = (x[index] - lastX[index]) * 0.82;
+            const moveY = (y[index] - lastY[index]) * 0.82;
+            const moveZ = (z[index] - lastZ[index]) * 0.82;
+            lastX[index] = x[index];
+            lastY[index] = y[index];
+            lastZ[index] = z[index];
+            x[index] += moveX;
+            y[index] += moveY;
+            z[index] += moveZ + (Math.random() - 0.5) * 0.35 * (1 - squeeze);
+        }
+        for (let pass = 0; pass < 10; pass += 1) {
+            for (let index = 0; index < count; index += 1) {
+                const offsetX = x[index] - centreX;
+                const offsetY = y[index] - centreY;
+                const offsetZ = z[index];
+                const distance = Math.hypot(offsetX, offsetY, offsetZ) || 1;
+                // The lumps only show as it closes, so the sheet starts square.
+                const limit = radius * (1 + (lump[index] - 1) * squeeze);
+                if (distance > limit) {
+                    const pull = limit / distance;
+                    x[index] = centreX + offsetX * pull;
+                    y[index] = centreY + offsetY * pull;
+                    z[index] = offsetZ * pull;
+                }
             }
+            links.forEach(([first, second, rest, stiffness]) => {
+                const dx = x[second] - x[first];
+                const dy = y[second] - y[first];
+                const dz = z[second] - z[first];
+                const length = Math.hypot(dx, dy, dz) || 1;
+                // Only stretching is resisted hard; squeezing a link is what folds it.
+                const strain = (length - rest) / length;
+                const amount = strain > 0 ? stiffness * 0.5 : stiffness * 0.12;
+                const shiftX = dx * strain * amount;
+                const shiftY = dy * strain * amount;
+                const shiftZ = dz * strain * amount;
+                x[first] += shiftX;
+                y[first] += shiftY;
+                z[first] += shiftZ;
+                x[second] -= shiftX;
+                y[second] -= shiftY;
+                z[second] -= shiftZ;
+            });
         }
         context.setTransform(1, 0, 0, 1, 0, 0);
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.setTransform(ratio, 0, 0, ratio, margin * ratio, margin * ratio);
-        // A soft shadow under it on the desk, gathering in as it balls up.
-        const spread = 1 - squeeze * 0.6;
-        const shadow = context.createRadialGradient(width / 2, height / 2 + 6, 0, width / 2, height / 2 + 6, Math.max(width, height) * 0.62 * spread);
-        shadow.addColorStop(0, `rgba(0, 0, 0, ${(0.12 + squeeze * 0.12).toFixed(3)})`);
+        // Its shadow on the desk, gathering in as it balls up.
+        const shadowRadius = Math.max(radius * 0.95, ballRadius);
+        const shadow = context.createRadialGradient(centreX + 4, centreY + 10, 0, centreX + 4, centreY + 10, shadowRadius);
+        shadow.addColorStop(0, `rgba(0, 0, 0, ${(0.1 + squeeze * 0.16).toFixed(3)})`);
         shadow.addColorStop(1, "rgba(0, 0, 0, 0)");
         context.fillStyle = shadow;
         context.fillRect(-margin, -margin, width + margin * 2, height + margin * 2);
-        // Facets furthest from the eye first, so nearer ones cover them.
-        const triangles = [];
-        for (let row = 0; row < rows; row += 1) {
-            for (let column = 0; column < columns; column += 1) {
-                const a = row * (columns + 1) + column;
-                const b = a + 1;
-                const c = a + columns + 1;
-                const d = c + 1;
-                triangles.push([a, b, c], [b, d, c]);
-            }
-        }
-        triangles.sort((first, second) => (points[first[0]].z + points[first[1]].z + points[first[2]].z) - (points[second[0]].z + points[second[1]].z + points[second[2]].z));
+        // Furthest facets first, nearer ones over them.
+        triangles.sort((first, second) => (z[first[0]] + z[first[1]] + z[first[2]]) - (z[second[0]] + z[second[1]] + z[second[2]]));
+        const wrinkling = Math.min(squeeze * 1.6, 0.85);
         triangles.forEach(([first, second, third]) => {
-            const p0 = points[first];
-            const p1 = points[second];
-            const p2 = points[third];
-            // Grown a hair from its middle so neighbouring facets meet without seams.
-            const midX = (p0.x + p1.x + p2.x) / 3;
-            const midY = (p0.y + p1.y + p2.y) / 3;
-            const grow = (point) => {
-                const dx = point.x - midX;
-                const dy = point.y - midY;
-                const length = Math.hypot(dx, dy) || 1;
-                return { x: point.x + (dx / length) * 0.6, y: point.y + (dy / length) * 0.6 };
-            };
-            const g0 = grow(p0);
-            const g1 = grow(p1);
-            const g2 = grow(p2);
-            context.save();
-            context.beginPath();
-            context.moveTo(g0.x, g0.y);
-            context.lineTo(g1.x, g1.y);
-            context.lineTo(g2.x, g2.y);
-            context.closePath();
-            context.clip();
-            // Map the note's picture onto the facet.
-            const det = p0.u * (p1.v - p2.v) + p1.u * (p2.v - p0.v) + p2.u * (p0.v - p1.v);
-            if (det) {
-                const a = (p0.x * (p1.v - p2.v) + p1.x * (p2.v - p0.v) + p2.x * (p0.v - p1.v)) / det;
-                const b = (p0.y * (p1.v - p2.v) + p1.y * (p2.v - p0.v) + p2.y * (p0.v - p1.v)) / det;
-                const c = (p0.x * (p2.u - p1.u) + p1.x * (p0.u - p2.u) + p2.x * (p1.u - p0.u)) / det;
-                const d = (p0.y * (p2.u - p1.u) + p1.y * (p0.u - p2.u) + p2.y * (p1.u - p0.u)) / det;
-                const e = (p0.x * (p1.u * p2.v - p2.u * p1.v) + p1.x * (p2.u * p0.v - p0.u * p2.v) + p2.x * (p0.u * p1.v - p1.u * p0.v)) / det;
-                const f = (p0.y * (p1.u * p2.v - p2.u * p1.v) + p1.y * (p2.u * p0.v - p0.u * p2.v) + p2.y * (p0.u * p1.v - p1.u * p0.v)) / det;
-                context.transform(a, b, c, d, e, f);
-                if (wrinkling < 1)
-                    context.drawImage(texture, 0, 0);
-                if (wrinkling > 0) {
-                    context.globalAlpha = wrinkling;
-                    context.drawImage(wrinkled, 0, 0);
-                    context.globalAlpha = 1;
-                }
-            }
-            context.restore();
-            // Lit by the way it faces: creases catch the light or fall into shade.
-            const ax = p1.x - p0.x;
-            const ay = p1.y - p0.y;
-            const az = p1.z - p0.z;
-            const bx = p2.x - p0.x;
-            const by = p2.y - p0.y;
-            const bz = p2.z - p0.z;
+            const ax = x[second] - x[first];
+            const ay = y[second] - y[first];
+            const az = z[second] - z[first];
+            const bx = x[third] - x[first];
+            const by = y[third] - y[first];
+            const bz = z[third] - z[first];
             let nx = ay * bz - az * by;
             let ny = az * bx - ax * bz;
             let nz = ax * by - ay * bx;
@@ -446,20 +440,73 @@ const aboutIntroCrumple = (card, host, duration, onBall) => {
             nx /= length;
             ny /= length;
             nz /= length;
-            if (nz < 0) {
+            // Facing away: we're looking at the back of the paper.
+            const back = nz < 0;
+            if (back) {
                 nx = -nx;
                 ny = -ny;
                 nz = -nz;
             }
-            const lit = nx * light.x + ny * light.y + nz * light.z - flatLight;
-            context.beginPath();
-            context.moveTo(g0.x, g0.y);
-            context.lineTo(g1.x, g1.y);
-            context.lineTo(g2.x, g2.y);
-            context.closePath();
-            context.fillStyle = lit < 0
-                ? `rgba(40, 30, 0, ${Math.min(-lit * 1.1, 0.38).toFixed(3)})`
-                : `rgba(255, 255, 255, ${Math.min(lit * 1.4, 0.42).toFixed(3)})`;
+            // Grown a hair from its middle so neighbouring facets meet without seams.
+            const midX = (x[first] + x[second] + x[third]) / 3;
+            const midY = (y[first] + y[second] + y[third]) / 3;
+            const corners = [first, second, third].map((index) => {
+                const dx = x[index] - midX;
+                const dy = y[index] - midY;
+                const reach = Math.hypot(dx, dy) || 1;
+                return { x: x[index] + (dx / reach) * 0.6, y: y[index] + (dy / reach) * 0.6 };
+            });
+            const trace = () => {
+                context.beginPath();
+                context.moveTo(corners[0].x, corners[0].y);
+                context.lineTo(corners[1].x, corners[1].y);
+                context.lineTo(corners[2].x, corners[2].y);
+                context.closePath();
+            };
+            context.save();
+            trace();
+            context.clip();
+            if (back) {
+                context.fillStyle = paper;
+                context.fill();
+            }
+            else {
+                // Map the note's picture onto the facet.
+                const u0 = ((first % across) / columns) * texture.width;
+                const v0 = (Math.floor(first / across) / rows) * texture.height;
+                const u1 = ((second % across) / columns) * texture.width;
+                const v1 = (Math.floor(second / across) / rows) * texture.height;
+                const u2 = ((third % across) / columns) * texture.width;
+                const v2 = (Math.floor(third / across) / rows) * texture.height;
+                const det = u0 * (v1 - v2) + u1 * (v2 - v0) + u2 * (v0 - v1);
+                if (det) {
+                    const x0 = x[first];
+                    const y0 = y[first];
+                    const x1 = x[second];
+                    const y1 = y[second];
+                    const x2 = x[third];
+                    const y2 = y[third];
+                    context.transform((x0 * (v1 - v2) + x1 * (v2 - v0) + x2 * (v0 - v1)) / det, (y0 * (v1 - v2) + y1 * (v2 - v0) + y2 * (v0 - v1)) / det, (x0 * (u2 - u1) + x1 * (u0 - u2) + x2 * (u1 - u0)) / det, (y0 * (u2 - u1) + y1 * (u0 - u2) + y2 * (u1 - u0)) / det, (x0 * (u1 * v2 - u2 * v1) + x1 * (u2 * v0 - u0 * v2) + x2 * (u0 * v1 - u1 * v0)) / det, (y0 * (u1 * v2 - u2 * v1) + y1 * (u2 * v0 - u0 * v2) + y2 * (u0 * v1 - u1 * v0)) / det);
+                    context.drawImage(texture, 0, 0);
+                    context.globalAlpha = wrinkling;
+                    context.drawImage(wrinkled, 0, 0);
+                    context.globalAlpha = 1;
+                }
+            }
+            context.restore();
+            // Light by the way it faces, and less of it deep inside the ball.
+            const facing = Math.max(0, nx * light.x + ny * light.y + nz * light.z);
+            const depth = Math.hypot(midX - centreX, midY - centreY, (z[first] + z[second] + z[third]) / 3) / Math.max(radius, 1);
+            const tucked = 0.55 + 0.45 * Math.min(Math.pow(depth, 1.5), 1);
+            // Relative to the flat sheet, so it starts exactly as the note looked.
+            const brightness = ((0.5 + 0.62 * facing) / (0.5 + 0.62 * light.z)) * (back ? 0.9 : 1) * (squeeze < 0.05 ? 1 : 1 - (1 - tucked) * squeeze);
+            // Shading comes in with the squeeze, so the flat sheet starts clean.
+            const shading = Math.min(squeeze * 3, 1);
+            const lit = 1 + (brightness - 1) * shading;
+            trace();
+            context.fillStyle = lit < 1
+                ? `rgba(46, 34, 6, ${Math.min((1 - lit) * 0.95, 0.6).toFixed(3)})`
+                : `rgba(255, 255, 255, ${Math.min((lit - 1) * 1.5, 0.45).toFixed(3)})`;
             context.fill();
         });
         if (progress < 1)
@@ -797,7 +844,7 @@ if (aboutIntroSection) {
                 finish();
                 return;
             }
-            aboutIntroCrumple(card, desk, 950, (ball) => {
+            aboutIntroCrumple(card, desk, 1150, (ball) => {
                 const toss = (Math.random() < 0.5 ? -1 : 1) * window.innerWidth * 0.45;
                 const flight = ball.animate([
                     { scale: "1", rotate: "0deg", translate: "0 0", opacity: 1 },
