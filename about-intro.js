@@ -378,12 +378,18 @@ if (aboutIntroSection) {
         };
         bodies.forEach(makeMovable);
         // The plus drops a blank note onto the desk; what's written on it goes
-        // to Raheem (see aboutNoteEndpoint), and a sent note is stamped and
-        // floats away.
+        // to Raheem (see aboutNoteEndpoint), and a sent note leaves the desk
+        // (sendAway).
         const thanks = root.querySelector(".intro-desk__thanks");
         let written = 0;
-        // A sent note gets an ink "Sent" stamp, then lifts off the desk and
-        // floats up and away as it fades.
+        // How a sent note leaves the desk, compared with ?sent=plus|peel|fade
+        // (`&dry` plays it without sending anything):
+        //   plus  — it shrinks and glides back into the plus it came from, which
+        //           pulses as it takes it in.
+        //   peel  — it comes unstuck: lifts, swings a little on its tape, then
+        //           drops off the desk as it fades.
+        //   fade  — a soft fade with a slight shrink and blur.
+        const leaving = new URLSearchParams(window.location.search).get("sent");
         const sendAway = (body) => {
             const index = bodies.indexOf(body);
             if (index >= 0)
@@ -394,25 +400,43 @@ if (aboutIntroSection) {
                 card.remove();
                 return;
             }
-            const stamp = document.createElement("span");
-            stamp.className = "intro-card__stamp";
-            stamp.setAttribute("aria-hidden", "true");
-            stamp.textContent = "Sent";
-            card.append(stamp);
-            stamp.animate([
-                { opacity: 0, scale: "1.6" },
-                { opacity: 1, scale: "0.94", offset: 0.7 },
-                { opacity: 1, scale: "1" },
-            ], { duration: 340, easing: "cubic-bezier(0.3, 0, 0.2, 1)", fill: "forwards" });
-            const drift = (Math.random() < 0.5 ? -1 : 1) * (2 + Math.random() * 3);
-            const away = card.animate([
-                { translate: "0 0", scale: "1", rotate: "0deg", opacity: 1, boxShadow: "0 18px 40px -18px rgba(0, 0, 0, 0.28)" },
-                { translate: "0 -10px", scale: "1.04", rotate: `${(drift * 0.3).toFixed(1)}deg`, opacity: 1, boxShadow: "0 40px 70px -24px rgba(0, 0, 0, 0.32)", offset: 0.25 },
-                { translate: "0 -18vh", scale: "0.96", rotate: `${drift.toFixed(1)}deg`, opacity: 0, boxShadow: "0 60px 90px -30px rgba(0, 0, 0, 0)" },
-            ], { duration: 1100, delay: 620, easing: "cubic-bezier(0.45, 0, 0.25, 1)", fill: "forwards" });
+            // Placed the way the desk places it, moved by (dx, dy), turned to
+            // `turn` and scaled about its own middle.
+            const placed = (dx, dy, turn, scale = 1) => `translate3d(${(body.x - card.offsetWidth / 2 + dx).toFixed(1)}px, ${(body.y - card.offsetHeight / 2 + dy).toFixed(1)}px, 0) rotate(${turn.toFixed(2)}deg) scale(${scale})`;
+            let away;
+            if (leaving === "peel") {
+                const swing = (Math.random() < 0.5 ? -1 : 1) * (6 + Math.random() * 4);
+                away = card.animate([
+                    { transform: placed(0, 0, body.turn), opacity: 1 },
+                    { transform: placed(0, -6, body.turn + swing * 0.4), opacity: 1, offset: 0.2 },
+                    { transform: placed(0, 4, body.turn - swing * 0.25), opacity: 1, offset: 0.42 },
+                    { transform: placed(swing * 4, window.innerHeight * 0.6, body.turn + swing * 3), opacity: 0 },
+                ], { duration: 1300, easing: "cubic-bezier(0.55, 0, 0.75, 0.2)", fill: "forwards" });
+            }
+            else if (leaving === "fade") {
+                away = card.animate([
+                    { transform: placed(0, 0, body.turn), opacity: 1, filter: "blur(0px)" },
+                    { transform: placed(0, 0, body.turn, 0.97), opacity: 0, filter: "blur(3px)" },
+                ], { duration: 520, easing: "cubic-bezier(0.4, 0, 0.2, 1)", fill: "forwards" });
+            }
+            else {
+                // Back into the plus, which takes it in with a pulse.
+                const deskBox = desk.getBoundingClientRect();
+                const plusBox = add.getBoundingClientRect();
+                const toX = plusBox.left + plusBox.width / 2 - deskBox.left - body.x;
+                const toY = plusBox.top + plusBox.height / 2 - deskBox.top - body.y;
+                away = card.animate([
+                    { transform: placed(0, 0, body.turn), opacity: 1 },
+                    { transform: placed(0, -8, body.turn, 1.02), opacity: 1, offset: 0.18 },
+                    { transform: placed(toX, toY, 0, 0.06), opacity: 0.2 },
+                ], { duration: 760, easing: "cubic-bezier(0.6, 0, 0.25, 1)", fill: "forwards" });
+                add.animate([{ scale: "1" }, { scale: "1.18" }, { scale: "1" }], { duration: 420, delay: 640, easing: "cubic-bezier(0.3, 0, 0.2, 1)" });
+            }
             away.finished.then(() => card.remove()).catch(() => card.remove());
         };
         const sendNote = async (message, from) => {
+            if (new URLSearchParams(window.location.search).has("dry"))
+                return true;
             if (!aboutNoteEndpoint) {
                 const subject = encodeURIComponent("A note from your About page");
                 const text = from ? `${message}\n\n— ${from}` : message;
