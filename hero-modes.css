@@ -1,0 +1,895 @@
+/* Homepage hero variants (hero-modes.ts). The original project wheel stays
+   in the markup, hidden, and returns with ?hero=classic. */
+
+body:not([data-hero="classic"]) .project-stage {
+  display: none;
+}
+
+body[data-hero="classic"] .hero-alt {
+  display: none;
+}
+
+.home-page .statement {
+  z-index: 3;
+}
+
+.hero-alt {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body.is-loader-active .hero-alt {
+  opacity: 0;
+  clip-path: inset(48% 0 48% 0 round 14px);
+}
+
+body.is-loader-active .hero-controls,
+body.is-loader-active .hero-caption {
+  visibility: hidden;
+  opacity: 0;
+}
+
+/* Shared tiles ------------------------------------------------------------ */
+
+.hero-tile {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(8, 8, 8, 0.06);
+}
+
+.hero-tile img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.hero-tile__number {
+  position: absolute;
+  bottom: 0.7em;
+  left: 0.8em;
+  color: var(--muted);
+  font-size: clamp(10px, 0.72vw, 14px);
+  line-height: 1;
+}
+
+/* Tiles without artwork name the project, sized to the tile itself. */
+.hero-tile {
+  container-type: inline-size;
+}
+
+.hero-tile__copy {
+  position: absolute;
+  top: 7cqw;
+  right: 7cqw;
+  left: 7cqw;
+  display: grid;
+  gap: 2.4cqw;
+  color: var(--ink);
+}
+
+.hero-tile__title {
+  font-size: 9.5cqw;
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+
+.hero-tile__meta {
+  color: var(--muted);
+  font-size: max(9px, 3.6cqw);
+  line-height: 1.2;
+}
+
+:is(.index-lens, .page-transition) .hero-tile__copy {
+  display: none;
+}
+
+/* Placeholder projects take the wheel's dark tones where they need to read
+   against paper; in the Field they stay paper-white like the blanks. */
+:is(.index-lens, .hero-orbit, .page-transition) .hero-tile__number {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.hero-orbit .hero-tile__copy {
+  color: #f4f4f1;
+}
+
+.hero-orbit .hero-tile__meta {
+  color: rgba(244, 244, 241, 0.5);
+}
+
+:is(.index-lens, .hero-orbit, .page-transition) .hero-tile--campaign {
+  background: linear-gradient(100deg, #151515, #181818);
+}
+
+:is(.index-lens, .hero-orbit, .page-transition) .hero-tile--digital {
+  background: radial-gradient(circle at 50% 45%, #272727, #242424 72%);
+}
+
+:is(.index-lens, .hero-orbit, .page-transition) .hero-tile--direction {
+  background: linear-gradient(105deg, #1c1c1c, #202020);
+}
+
+:is(.index-lens, .hero-orbit, .page-transition) .hero-tile--packaging {
+  background: linear-gradient(105deg, #292929, #2b2b2b);
+}
+
+.hero-tile--blank {
+  background: #fbfbf9;
+  box-shadow: 0 0 0 1px rgba(8, 8, 8, 0.035);
+}
+
+/* Caption and controls ---------------------------------------------------- */
+
+.hero-caption {
+  position: absolute;
+  bottom: clamp(56px, 4.4vw, 88px);
+  left: clamp(24px, 1.67vw, 30px);
+  z-index: 6;
+  display: grid;
+  gap: 4px;
+  opacity: 0;
+  transform: translate3d(0, 6px, 0);
+  pointer-events: none;
+  transition:
+    opacity 260ms ease,
+    transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-caption.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.hero-caption small {
+  color: var(--muted);
+  font-size: clamp(10px, 0.72vw, 13px);
+  letter-spacing: 0.02em;
+}
+
+.hero-caption strong {
+  color: var(--ink);
+  font-size: clamp(16px, 1.15vw, 24px);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.hero-caption span {
+  color: #6f6f6c;
+  font-size: clamp(12px, 0.85vw, 16px);
+}
+
+.hero-caption.is-swapping > * {
+  animation: hero-caption-swap 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-caption.is-swapping > :nth-child(2) {
+  animation-delay: 40ms;
+}
+
+.hero-caption.is-swapping > :nth-child(3) {
+  animation-delay: 80ms;
+}
+
+@keyframes hero-caption-swap {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 60%, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.hero-controls {
+  position: absolute;
+  right: clamp(24px, 1.67vw, 30px);
+  bottom: clamp(56px, 4.4vw, 88px);
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap-reverse;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  max-width: min(760px, 70vw);
+  transition: opacity 500ms ease;
+}
+
+.hero-switch {
+  display: flex;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--ink);
+}
+
+.hero-switch button,
+.hero-toggle {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: clamp(11px, 0.8vw, 15px);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.hero-switch button {
+  padding: 0.75em 1.05em;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  transition:
+    background-color 220ms ease,
+    color 220ms ease;
+}
+
+.hero-switch button:hover {
+  color: #fff;
+}
+
+.hero-switch button[aria-pressed="true"] {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.hero-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 1.05em 1.3em;
+  background: var(--ink);
+  color: #fff;
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-toggle:active {
+  transform: scale(0.96);
+}
+
+/* Three nested squares receding, like the field itself. */
+.hero-space-toggle__icon {
+  width: 0.95em;
+  height: 0.95em;
+  border: 1px solid currentColor;
+  box-shadow:
+    inset 0 0 0 0.16em var(--ink),
+    inset 0 0 0 calc(0.16em + 1px) currentColor;
+  transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-space-toggle:hover .hero-space-toggle__icon {
+  transform: scale(1.18);
+}
+
+.hero-space-toggle[aria-pressed="true"] .hero-space-toggle__icon {
+  transform: rotate(45deg) scale(0.8);
+}
+
+.hero-switch button:focus-visible,
+.hero-toggle:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* Field ------------------------------------------------------------------- */
+
+.hero-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  perspective-origin: 50% 50%;
+}
+
+.hero-field:focus {
+  outline: none;
+}
+
+.hero-field.is-dragging {
+  cursor: grabbing;
+}
+
+/* A soft paper halo keeps the statement and CTA legible as large work drifts
+   behind them (Field and Orbit). */
+:is(.hero-field, .hero-orbit)::after {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: radial-gradient(
+    ellipse 38% 25% at 50% 29%,
+    var(--paper) 0%,
+    rgba(244, 244, 241, 0.95) 52%,
+    rgba(244, 244, 241, 0) 100%
+  );
+  content: "";
+  pointer-events: none;
+  transition: opacity 600ms ease;
+}
+
+.hero-field.is-immersive::after {
+  opacity: 0;
+}
+
+.hero-field__world {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+}
+
+.hero-field__card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  visibility: hidden;
+  will-change: transform, opacity;
+}
+
+.hero-field__card--blank {
+  pointer-events: none;
+}
+
+.hero-field__card .hero-tile {
+  transition:
+    transform 460ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 460ms ease;
+}
+
+.hero-field__card.is-hovered .hero-tile,
+.hero-field__card:focus-visible .hero-tile {
+  transform: scale(1.05);
+  box-shadow:
+    0 0 0 1px rgba(8, 8, 8, 0.08),
+    0 30px 70px -30px rgba(8, 8, 8, 0.45);
+}
+
+.hero-field__card:focus-visible {
+  outline: none;
+}
+
+.hero-field__label {
+  position: absolute;
+  top: calc(100% + 0.7em);
+  left: 0;
+  display: flex;
+  gap: 0.8em;
+  color: var(--ink);
+  font-size: clamp(11px, 0.78vw, 14px);
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate3d(0, -4px, 0);
+  transition:
+    opacity 300ms ease,
+    transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-field__label b {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.hero-field__card.is-hovered .hero-field__label {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.hero-field__cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.hero-field__cursor span {
+  display: block;
+  padding: 0.7em 1em;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: clamp(11px, 0.78vw, 14px);
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate3d(18px, 18px, 0) scale(0.6);
+  transform-origin: 0 0;
+  transition:
+    opacity 220ms ease,
+    transform 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 220ms ease;
+}
+
+.hero-field__cursor.is-visible span {
+  opacity: 1;
+  transform: translate3d(18px, 18px, 0) scale(1);
+}
+
+.hero-field__cursor.is-open span {
+  background: #2f4bdb;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .hero-field__cursor {
+    display: none;
+  }
+}
+
+.hero-field__hint {
+  position: absolute;
+  bottom: clamp(110px, 12vh, 150px);
+  left: 50%;
+  z-index: 4;
+  display: flex;
+  gap: 0.5em;
+  margin: 0;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.hero-field__hint span {
+  padding: 0.75em 1.05em;
+  border-radius: 999px;
+  background: rgba(8, 8, 8, 0.86);
+  color: #fff;
+  font-size: clamp(11px, 0.8vw, 14px);
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition:
+    opacity 420ms ease,
+    transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-field__hint.is-visible span {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.hero-field__hint.is-visible span:nth-child(2) {
+  transition-delay: 70ms;
+}
+
+.hero-field__hint.is-visible span:nth-child(3) {
+  transition-delay: 140ms;
+}
+
+/* Full-screen space: the field leaves the landing and takes the viewport. */
+html.is-hero-immersive,
+html.is-hero-immersive body {
+  overflow: hidden;
+}
+
+html.is-hero-immersive .hero-alt {
+  position: fixed;
+  z-index: 40;
+  background: var(--paper);
+}
+
+html.is-hero-immersive :is(.hero-controls, .hero-caption) {
+  position: fixed;
+  z-index: 45;
+}
+
+html.is-hero-immersive .hero-switch {
+  display: none;
+}
+
+html.is-hero-immersive :is(.statement, .hero-cta, .scroll-cue) {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+/* While travelling in or out of the space the controls step aside. */
+html.is-hero-travelling :is(.hero-controls, .hero-caption) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Entries into the space ---------------------------------------------------- */
+
+.hero-entry button {
+  padding: 0.75em 0.85em;
+}
+
+/* "dark": the space with the lights out. */
+.hero-field.is-night {
+  background: #060606;
+}
+
+.hero-field.is-night .hero-tile {
+  background: #121211;
+  box-shadow:
+    0 0 0 1px rgba(244, 244, 241, 0.08),
+    0 0 70px rgba(244, 244, 241, 0.07);
+}
+
+.hero-field.is-night .hero-tile--blank {
+  background: #0c0c0b;
+}
+
+.hero-field.is-night .hero-tile__title,
+.hero-field.is-night .hero-field__label {
+  color: #f4f4f1;
+}
+
+.hero-field.is-night .hero-field__cursor span {
+  background: #f4f4f1;
+  color: var(--ink);
+}
+
+html.is-hero-night .hero-toggle {
+  box-shadow: 0 0 0 1px rgba(244, 244, 241, 0.24);
+}
+
+html.is-hero-night .hero-caption strong {
+  color: #f4f4f1;
+}
+
+.home-page :is(.statement, .scroll-cue) {
+  transition: opacity 500ms ease;
+}
+
+.home-page .hero-cta {
+  transition:
+    width 340ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 340ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 500ms ease;
+}
+
+/* Index ------------------------------------------------------------------- */
+
+/* The list inverts against the lens, so the paper must sit in the same
+   stacking context as the type. */
+.hero-alt--index {
+  background: var(--paper);
+}
+
+/* No transform here: it would isolate the list's blend from the paper. */
+.hero-index {
+  --index-dim: 0.22;
+  --index-lens-width: clamp(300px, 28vw, 560px);
+  position: absolute;
+  right: 0;
+  bottom: clamp(104px, 14vh, 150px);
+  left: 0;
+  width: min(1180px, calc(100% - 2 * clamp(24px, 4vw, 80px)));
+  margin-inline: auto;
+}
+
+.hero-index__head,
+.hero-index__list {
+  position: relative;
+  z-index: 2;
+  color: #c3c3c1;
+  mix-blend-mode: difference;
+}
+
+.hero-index__head {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: clamp(8px, 1vh, 14px);
+  font-size: clamp(10px, 0.72vw, 13px);
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 700ms ease;
+}
+
+.hero-index.is-in .hero-index__head {
+  opacity: 0.7;
+}
+
+.hero-index__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hero-index__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: clamp(40px, 5vw, 96px) minmax(0, 1fr) auto clamp(24px, 2vw, 40px);
+  gap: clamp(12px, 1.4vw, 28px);
+  align-items: baseline;
+  padding: clamp(6px, 0.95vh, 14px) 0;
+}
+
+.hero-index__row::before,
+.hero-index li:last-child .hero-index__row::after {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: #2b2b2a;
+  content: "";
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 1100ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--row) * 70ms);
+}
+
+.hero-index__row::before {
+  top: 0;
+}
+
+.hero-index li:last-child .hero-index__row::after {
+  bottom: 0;
+}
+
+.hero-index.is-in .hero-index__row::before,
+.hero-index.is-in li:last-child .hero-index__row::after {
+  transform: scaleX(1);
+}
+
+.hero-index__row > span {
+  opacity: 0;
+  transform: translate3d(0, 40%, 0);
+  transition:
+    opacity 700ms ease calc(120ms + var(--row) * 70ms),
+    transform 900ms cubic-bezier(0.16, 1, 0.3, 1) calc(120ms + var(--row) * 70ms);
+}
+
+.hero-index.is-in .hero-index__row > span {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.hero-index__row:focus-visible {
+  outline: none;
+}
+
+.hero-index__number,
+.hero-index__tags {
+  font-size: clamp(11px, 0.85vw, 16px);
+  line-height: 1;
+}
+
+.hero-index__number {
+  transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-index__row.is-active .hero-index__number {
+  transform: translate3d(clamp(6px, 0.6vw, 12px), 0, 0);
+}
+
+.hero-index__title {
+  display: block;
+  font-size: clamp(24px, min(2.9vw, 4.2vh), 64px);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.hero-index__arrow {
+  justify-self: end;
+  font-size: clamp(16px, 1.2vw, 24px);
+  line-height: 1;
+}
+
+.hero-index__arrow span {
+  display: inline-block;
+  transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-index__row:hover .hero-index__arrow span,
+.hero-index__row:focus-visible .hero-index__arrow span {
+  transform: translate3d(3px, -3px, 0) rotate(45deg);
+}
+
+/* Orbit (halo) ------------------------------------------------------------ */
+
+.hero-orbit {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.hero-orbit.is-dragging {
+  cursor: grabbing;
+}
+
+.hero-halo__scene {
+  position: absolute;
+  top: 65%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  perspective: 1500px;
+  transform-style: preserve-3d;
+}
+
+.hero-halo__halo,
+.hero-halo__ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* Each tile sits on its ring and stands up around it like a band; as the
+   halo swings face-on (--halo-stand → 0) the tiles turn to face you. */
+.hero-halo__tile {
+  --lift: 0px;
+  position: absolute;
+  top: calc(var(--halo-r) * var(--tile) * -0.375);
+  left: calc(var(--halo-r) * var(--tile) * -0.5);
+  display: block;
+  width: calc(var(--halo-r) * var(--tile));
+  height: calc(var(--halo-r) * var(--tile) * 0.75);
+  transform:
+    rotateZ(var(--angle))
+    translateY(calc(var(--halo-r) * var(--ring-r) * -1))
+    rotateX(var(--halo-stand, -90deg))
+    rotateZ(calc((var(--angle) + var(--ring-turn, 0deg)) * -1 * var(--halo-face, 0)))
+    translateZ(var(--lift));
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.hero-halo__tile.is-hovered,
+.hero-halo__tile:focus-visible {
+  --lift: clamp(18px, 2vw, 40px);
+  outline: none;
+}
+
+.hero-halo__face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  pointer-events: auto;
+  transition: opacity 360ms ease;
+}
+
+.hero-halo__face--back {
+  transform: rotateY(180deg);
+}
+
+.hero-halo__face .hero-tile {
+  box-shadow: 0 0 0 1px rgba(8, 8, 8, 0.08);
+}
+
+.hero-halo__tile .hero-tile__copy {
+  display: none;
+}
+
+.hero-orbit.has-hover .hero-halo__tile:not(.is-hovered) .hero-halo__face {
+  opacity: 0.4;
+}
+
+/* Horizon ------------------------------------------------------------------ */
+
+.hero-horizon {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.hero-horizon.is-dragging {
+  cursor: grabbing;
+}
+
+.hero-horizon__line {
+  position: absolute;
+  top: var(--horizon-line);
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: rgba(8, 8, 8, 0.08);
+  transform: scaleX(0);
+  transition: transform 1600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-horizon__line.is-drawn {
+  transform: scaleX(1);
+}
+
+.hero-horizon__stream {
+  position: absolute;
+  top: var(--horizon-line);
+  left: 50%;
+  width: 0;
+  height: 0;
+}
+
+/* Each image is cropped like a print, at a common height. */
+.hero-horizon__item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  height: var(--horizon-image);
+  visibility: hidden;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+.hero-horizon__item img,
+.hero-horizon__item .hero-tile {
+  display: block;
+  width: calc(var(--horizon-image) * var(--aspect, 1));
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.hero-horizon__item .hero-tile {
+  background: #e7e6e1;
+  box-shadow: none;
+}
+
+.hero-horizon__item .hero-tile__number {
+  color: var(--muted);
+}
+
+.hero-horizon__item.is-hovered {
+  z-index: 200 !important;
+}
+
+.hero-horizon__item.is-hovered img,
+.hero-horizon__item.is-hovered .hero-tile {
+  outline: 1px solid var(--ink);
+}
+
+/* Small screens ----------------------------------------------------------- */
+
+@media (max-width: 800px) {
+  .hero-controls {
+    right: 50%;
+    bottom: clamp(48px, 9vh, 72px);
+    flex-wrap: wrap;
+    justify-content: center;
+    width: max-content;
+    max-width: calc(100vw - 32px);
+    transform: translateX(50%);
+  }
+
+  .hero-caption {
+    bottom: clamp(150px, 20vh, 180px);
+  }
+
+  .hero-index__row {
+    grid-template-columns: 34px minmax(0, 1fr) 20px;
+  }
+
+  .hero-index__tags {
+    display: none;
+  }
+
+  .hero-orbit__scene {
+    top: 66%;
+  }
+
+  .hero-field__hint {
+    flex-direction: column;
+    align-items: center;
+    bottom: clamp(160px, 22vh, 200px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-orbit__card,
+  .hero-caption.is-swapping > * {
+    transition: none;
+    animation: none;
+  }
+}

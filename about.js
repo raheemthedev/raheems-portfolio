@@ -333,9 +333,6 @@ if (aboutRevealTargets.length > 0) {
 const aboutParallaxConfig = [
     [".about-story-hero__label", -16],
     [".about-story-hero__base", 14],
-    [".about-personal__eyebrow", -18],
-    [".about-personal h2", 34],
-    [".about-personal__notes", -26],
     [".about-world__label", -12],
     [".about-world__note", 12],
     [".about-world__progress", -10],
@@ -394,3 +391,15 @@ if (aboutParallaxLayers.length > 0) {
     aboutReducedMotion.addEventListener("change", requestAboutParallax);
     requestAboutParallax();
 }
+// Experience and education rows share the homepage Index behaviour
+// (index-list.ts): titles roll, the other rows dim and a preview trails the
+// cursor.
+document.querySelectorAll(".about-record [data-index-list]").forEach((list) => {
+    const rows = [...list.querySelectorAll("[data-index-row]")];
+    createIndexList(list, {
+        previews: rows.map((row) => row.dataset.preview
+            ? `<img src="${row.dataset.preview}" alt="" draggable="false" />`
+            : '<span class="about-record__preview"></span>'),
+        labels: rows.map((row) => `<span>${row.querySelector("span")?.textContent ?? ""}</span><em>${row.querySelector("time")?.textContent ?? ""}</em>`),
+    });
+});

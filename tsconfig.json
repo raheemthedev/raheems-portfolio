@@ -7,5 +7,5 @@
     "noEmitOnError": true,
     "removeComments": false
   },
-  "files": ["script.ts", "work.ts", "case-study.ts", "about.ts", "navigation.ts", "playground.ts"]
+  "files": ["script.ts", "projects-data.ts", "work.ts", "case-study.ts", "about.ts", "navigation.ts", "playground.ts", "index-list.ts", "hero-modes.ts", "archive.ts", "corner-marks.ts", "shape.ts", "about-intro.ts", "footer-wordmark.ts"]
 }

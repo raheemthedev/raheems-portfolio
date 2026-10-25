@@ -1,0 +1,760 @@
+/* "A little more about me" in five takes (about-intro.ts). */
+
+.about-personal[data-intro] {
+  --gutter: clamp(24px, 3.4vw, 64px);
+  --ink: #0b0b0b;
+  --rule: rgba(11, 11, 11, 0.18);
+  position: relative;
+  display: block;
+  min-height: 0;
+  padding: clamp(110px, 11vw, 200px) var(--gutter);
+  background: #f1f1ed;
+  color: var(--ink);
+}
+
+.about-personal[data-intro] .intro-eyebrow {
+  margin: 0 0 clamp(40px, 5vw, 90px);
+  color: rgba(11, 11, 11, 0.48);
+  font-size: clamp(10px, 0.72vw, 15px);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.about-personal[data-intro] .intro-title {
+  max-width: 13ch;
+  margin: 0;
+  font-size: clamp(48px, 6.4vw, 132px);
+  font-weight: 450;
+  line-height: 0.92;
+  letter-spacing: -0.065em;
+}
+
+.about-personal[data-intro] .intro-hint {
+  margin: 18px 0 0;
+  color: rgba(11, 11, 11, 0.45);
+  font-size: clamp(10px, 0.72vw, 14px);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Lens -------------------------------------------------------------------- */
+
+.about-personal[data-intro="lens"] .intro-lens {
+  position: relative;
+  margin-top: clamp(56px, 8vw, 140px);
+  cursor: none;
+}
+
+.about-personal[data-intro="lens"] .intro-lens__text {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(28px, 3.6vw, 72px);
+  padding: clamp(18px, 2vw, 32px) 0;
+  border-top: 1px solid var(--rule);
+  color: rgba(11, 11, 11, 0.3);
+  font-size: clamp(20px, 1.85vw, 36px);
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+}
+
+.about-personal[data-intro="lens"] .intro-lens__text p {
+  margin: 0;
+}
+
+.about-personal[data-intro="lens"] .intro-lens__no {
+  display: block;
+  margin-bottom: 1.1em;
+  font-size: 0.42em;
+  letter-spacing: 0.08em;
+}
+
+/* The same text, sharp and enlarged, seen only through the lens. */
+.about-personal[data-intro="lens"] .intro-lens__glass {
+  position: absolute;
+  inset: 0;
+  background: #f1f1ed;
+  clip-path: circle(0 at 50% 50%);
+  pointer-events: none;
+}
+
+.about-personal[data-intro="lens"] .intro-lens__glass .intro-lens__text {
+  height: 100%;
+  border-color: transparent;
+  color: var(--ink);
+  transform: scale(1.45);
+}
+
+.about-personal[data-intro="lens"] .intro-lens__ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.about-personal[data-intro="lens"] .intro-lens__ring span {
+  position: absolute;
+  bottom: -26px;
+  left: 50%;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  transform: translateX(-50%);
+}
+
+/* Transcript ---------------------------------------------------------------- */
+
+.about-personal[data-intro="transcript"] .intro-transcript__head {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: clamp(20px, 3vw, 60px);
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--rule);
+  color: rgba(11, 11, 11, 0.55);
+  font-size: clamp(10px, 0.72vw, 14px);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.about-personal[data-intro="transcript"] .intro-transcript__head p {
+  margin: 0;
+}
+
+.about-personal[data-intro="transcript"] .intro-transcript__rec i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 0.5em;
+  border-radius: 50%;
+  background: #d8432f;
+  vertical-align: 0.05em;
+  animation: intro-rec 1.4s steps(2, jump-none) infinite;
+}
+
+@keyframes intro-rec {
+  50% { opacity: 0.15; }
+}
+
+.about-personal[data-intro="transcript"] .intro-transcript {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.about-personal[data-intro="transcript"] .intro-line {
+  display: grid;
+  grid-template-columns: clamp(64px, 7vw, 130px) clamp(36px, 4vw, 70px) minmax(0, 1fr);
+  align-items: baseline;
+  padding: clamp(18px, 2.2vw, 36px) 0;
+}
+
+.about-personal[data-intro="transcript"] .intro-line--q {
+  padding-bottom: 0;
+}
+
+.about-personal[data-intro="transcript"] .intro-line--a {
+  border-bottom: 1px solid var(--rule);
+}
+
+.about-personal[data-intro="transcript"] .intro-line__time,
+.about-personal[data-intro="transcript"] .intro-line__who {
+  color: rgba(11, 11, 11, 0.42);
+  font-size: clamp(10px, 0.72vw, 14px);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+}
+
+.about-personal[data-intro="transcript"] .intro-line--a .intro-line__who {
+  color: var(--ink);
+  font-family: "Marcellus", Georgia, serif;
+  font-size: clamp(16px, 1.3vw, 24px);
+  letter-spacing: 0;
+}
+
+.about-personal[data-intro="transcript"] .intro-line__text {
+  max-width: 34ch;
+  margin: 0;
+  font-size: clamp(22px, 2.3vw, 46px);
+  font-weight: 430;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+.about-personal[data-intro="transcript"] .intro-line--q .intro-line__text {
+  color: rgba(11, 11, 11, 0.5);
+  font-size: clamp(13px, 0.95vw, 18px);
+  letter-spacing: 0;
+  opacity: 0;
+  transition: opacity 500ms ease;
+}
+
+.about-personal[data-intro="transcript"] .intro-line.is-typing .intro-line__text {
+  opacity: 1;
+}
+
+.about-personal[data-intro="transcript"] .is-lead .intro-line__text {
+  max-width: 14ch;
+  font-size: clamp(48px, 6.4vw, 132px);
+  line-height: 0.92;
+  letter-spacing: -0.065em;
+}
+
+.about-personal[data-intro="transcript"] .intro-word {
+  opacity: 0;
+  transition: opacity 90ms linear calc(var(--i) * 55ms + 200ms);
+}
+
+.about-personal[data-intro="transcript"] .is-typing .intro-word {
+  opacity: 1;
+}
+
+/* The caret rides the line being typed. */
+.about-personal[data-intro="transcript"] .intro-line--a.is-typing:not(.is-typed) .intro-line__text::after {
+  display: inline-block;
+  width: 0.06em;
+  height: 0.9em;
+  margin-left: 0.08em;
+  background: currentColor;
+  content: "";
+  vertical-align: -0.08em;
+  animation: intro-caret 900ms steps(2, jump-none) infinite;
+}
+
+@keyframes intro-caret {
+  50% { opacity: 0; }
+}
+
+/* Desk ---------------------------------------------------------------------- */
+
+.about-personal[data-intro="desk"] {
+  padding-bottom: clamp(40px, 5vw, 80px);
+}
+
+.about-personal[data-intro="desk"] .intro-desk {
+  position: relative;
+  height: clamp(680px, 100svh, 1080px);
+}
+
+/* The headline in the middle of the desk, with the plus beneath it. */
+.about-personal[data-intro="desk"] .intro-desk__centre {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(20px, 2.6vw, 40px);
+  width: 100%;
+  transform: translate(-50%, -50%);
+}
+
+.about-personal[data-intro="desk"] .intro-desk__title {
+  max-width: 14ch;
+  font-size: clamp(56px, 7.6vw, 160px);
+  text-align: center;
+  user-select: none;
+}
+
+.about-personal[data-intro="desk"] .intro-desk__add {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: clamp(44px, 3.4vw, 60px);
+  height: clamp(44px, 3.4vw, 60px);
+  padding: 0;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: clamp(22px, 1.7vw, 30px);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 300ms ease,
+    color 300ms ease,
+    transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.about-personal[data-intro="desk"] .intro-desk__add:hover {
+  background: var(--ink);
+  color: #f1f1ed;
+}
+
+.about-personal[data-intro="desk"] .intro-desk__plus {
+  display: block;
+  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.about-personal[data-intro="desk"] .intro-desk__add:hover .intro-desk__plus {
+  transform: rotate(90deg);
+}
+
+/* What the plus is for: shown on hover and focus, and once on its own after
+   the desk has landed. */
+.about-personal[data-intro="desk"] .intro-desk__add-label {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 16px);
+  color: var(--ink);
+  font-size: clamp(12px, 0.85vw, 15px);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-8px, -50%);
+  transition:
+    opacity 300ms ease,
+    transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.about-personal[data-intro="desk"] .intro-desk__add:hover .intro-desk__add-label,
+.about-personal[data-intro="desk"] .intro-desk__add:focus-visible .intro-desk__add-label,
+.about-personal[data-intro="desk"] .intro-desk__add.is-hinting .intro-desk__add-label {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+.about-personal[data-intro="desk"] .intro-desk__thanks {
+  min-height: 1.4em;
+  margin: -12px 0 0;
+  font-size: clamp(12px, 0.85vw, 15px);
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+
+.about-personal[data-intro="desk"] .intro-desk__thanks.is-shown {
+  opacity: 0.7;
+}
+
+.about-personal[data-intro="desk"] .intro-desk__add:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+
+.about-personal[data-intro="desk"] .intro-desk__hint {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+.about-personal[data-intro="desk"] .intro-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: clamp(240px, 21vw, 380px);
+  margin: 0;
+  padding: clamp(18px, 1.6vw, 28px);
+  background: #fbfbf8;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 18px 40px -18px rgba(0, 0, 0, 0.28);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  transition: box-shadow 300ms ease;
+  will-change: transform;
+}
+
+.about-personal[data-intro="desk"] .intro-card.is-held {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 40px 70px -24px rgba(0, 0, 0, 0.4);
+  cursor: grabbing;
+}
+
+.about-personal[data-intro="desk"] .intro-card__tape {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 82px;
+  height: 24px;
+  background: rgba(226, 221, 196, 0.72);
+  transform: translateX(-50%) rotate(-3deg);
+}
+
+.about-personal[data-intro="desk"] .intro-card__no {
+  margin: 0 0 1.4em;
+  font-family: "Marcellus", Georgia, serif;
+  font-size: clamp(14px, 1vw, 18px);
+}
+
+.about-personal[data-intro="desk"] .intro-card__text {
+  margin: 0;
+  font-size: clamp(15px, 1.05vw, 19px);
+  line-height: 1.35;
+}
+
+/* A blank note to write to Raheem on: a yellow sticky. */
+.about-personal[data-intro="desk"] .intro-card--note {
+  width: clamp(260px, 22vw, 380px);
+  background: #f6e7a1;
+}
+
+.about-personal[data-intro="desk"] .intro-card__field {
+  display: block;
+  width: 100%;
+  min-height: 7.5em;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: clamp(16px, 1.15vw, 20px);
+  line-height: 1.35;
+  resize: none;
+  outline: none;
+  cursor: text;
+}
+
+.about-personal[data-intro="desk"] .intro-card__field::placeholder {
+  color: rgba(11, 11, 11, 0.42);
+}
+
+.about-personal[data-intro="desk"] .intro-card__from {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.about-personal[data-intro="desk"] .intro-card__from::placeholder {
+  color: rgba(11, 11, 11, 0.4);
+}
+
+.about-personal[data-intro="desk"] .intro-card__actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(11, 11, 11, 0.25);
+}
+
+.about-personal[data-intro="desk"] .intro-card__status {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.about-personal[data-intro="desk"] .intro-card__send {
+  padding: 0.7em 1.2em;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #f6e7a1;
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.about-personal[data-intro="desk"] .intro-card__send:hover {
+  transform: translateY(-2px);
+}
+
+/* Sending with nothing written gives the note a little shake. */
+.about-personal[data-intro="desk"] .intro-card--note.is-empty .intro-card__field {
+  animation: intro-note-shake 420ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes intro-note-shake {
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+.about-personal[data-intro="desk"] .intro-card__send:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Crumpling: the sent note bent on a canvas (aboutIntroCrumple). */
+.about-personal[data-intro="desk"] .intro-crumple {
+  position: absolute;
+  pointer-events: none;
+}
+
+.about-personal[data-intro="desk"] .intro-card--print {
+  width: clamp(170px, 14vw, 260px);
+  padding: 10px 10px 34px;
+}
+
+.about-personal[data-intro="desk"] .intro-card--print img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.about-personal[data-intro="desk"] .intro-card--print figcaption {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+/* Margins ------------------------------------------------------------------- */
+
+.about-personal[data-intro="margins"] .intro-margins {
+  position: relative;
+}
+
+/* Wide enough that the circled words share the last line. */
+.about-personal[data-intro="margins"] .intro-margins__title {
+  max-width: 17ch;
+  font-size: clamp(56px, 8vw, 168px);
+}
+
+.about-personal[data-intro="margins"] .intro-mark {
+  position: relative;
+  background: none;
+  color: inherit;
+}
+
+.about-personal[data-intro="margins"] .intro-mark::after {
+  position: absolute;
+  top: 0.05em;
+  right: -0.32em;
+  color: #d8432f;
+  content: attr(data-key);
+  font-family: "Marcellus", Georgia, serif;
+  font-size: 0.24em;
+  letter-spacing: 0;
+}
+
+.about-personal[data-intro="margins"] .intro-margins__ink {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.about-personal[data-intro="margins"] .intro-margins__loop,
+.about-personal[data-intro="margins"] .intro-margins__leader {
+  fill: none;
+  stroke: #d8432f;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.about-personal[data-intro="margins"] .intro-margins__loop {
+  stroke-width: 2.2;
+}
+
+.about-personal[data-intro="margins"] .intro-margins__leader {
+  stroke-width: 1;
+}
+
+.about-personal[data-intro="margins"] .intro-margins__notes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(28px, 4vw, 80px);
+  margin-top: clamp(120px, 18vh, 220px);
+}
+
+/* Staggered down the page, like notes squeezed into the margin. */
+.about-personal[data-intro="margins"] .intro-note:nth-child(2) { margin-top: clamp(60px, 9vh, 120px); }
+.about-personal[data-intro="margins"] .intro-note:nth-child(3) { margin-top: clamp(20px, 3vh, 40px); }
+
+.about-personal[data-intro="margins"] .intro-note {
+  max-width: 30ch;
+  font-size: clamp(16px, 1.15vw, 21px);
+  line-height: 1.35;
+  opacity: calc(0.15 + var(--shown, 1) * 0.85);
+}
+
+.about-personal[data-intro="margins"] .intro-note p {
+  margin: 0;
+}
+
+.about-personal[data-intro="margins"] .intro-note__key {
+  display: inline-block;
+  margin-bottom: 0.7em;
+  color: #d8432f;
+  font-family: "Marcellus", Georgia, serif;
+  font-size: 1.3em;
+}
+
+/* Slot ------------------------------------------------------------------------ */
+
+.about-personal[data-intro="slot"] {
+  padding-block: 0;
+}
+
+.about-personal[data-intro="slot"] .intro-slot {
+  height: 320svh;
+}
+
+.about-personal[data-intro="slot"] .intro-slot__pin {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100svh;
+}
+
+.about-personal[data-intro="slot"] .intro-slot__title {
+  max-width: none;
+  font-size: clamp(44px, 6vw, 128px);
+  line-height: 1.04;
+}
+
+/* The blank: a window onto a column of phrases, rolled by the scroll. */
+.about-personal[data-intro="slot"] .intro-slot__reel {
+  position: relative;
+  display: inline-block;
+  height: 1.04em;
+  overflow: hidden;
+  vertical-align: bottom;
+  border-bottom: 0.04em solid currentColor;
+}
+
+.about-personal[data-intro="slot"] .intro-slot__track {
+  display: block;
+  will-change: transform;
+}
+
+.about-personal[data-intro="slot"] .intro-slot__track span {
+  display: block;
+  width: max-content;
+  height: 1.04em;
+  font-family: "Marcellus", Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.about-personal[data-intro="slot"] .intro-slot__count {
+  margin: clamp(24px, 3vw, 48px) 0 0;
+  color: rgba(11, 11, 11, 0.45);
+  font-size: clamp(11px, 0.8vw, 15px);
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+.about-personal[data-intro="slot"] .intro-slot__notes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(28px, 4vw, 80px);
+  margin-top: clamp(40px, 7vh, 90px);
+  padding-top: clamp(18px, 2vw, 28px);
+  border-top: 1px solid var(--rule);
+  font-size: clamp(15px, 1.1vw, 20px);
+  line-height: 1.35;
+}
+
+.about-personal[data-intro="slot"] .intro-slot__notes p {
+  margin: 0;
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 600ms ease,
+    transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.about-personal[data-intro="slot"] .intro-slot__notes p:nth-child(2) { transition-delay: 90ms; }
+.about-personal[data-intro="slot"] .intro-slot__notes p:nth-child(3) { transition-delay: 180ms; }
+
+.about-personal[data-intro="slot"] .is-landed .intro-slot__notes p {
+  opacity: 1;
+  transform: none;
+}
+
+.about-personal[data-intro="slot"] .intro-slot__notes span {
+  display: block;
+  margin-bottom: 0.8em;
+  color: rgba(11, 11, 11, 0.45);
+  font-size: 0.7em;
+  letter-spacing: 0.06em;
+}
+
+/* Narrow screens -------------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  .about-personal[data-intro="lens"] .intro-lens {
+    cursor: auto;
+  }
+
+  .about-personal[data-intro="lens"] .intro-lens__text,
+  .about-personal[data-intro="slot"] .intro-slot__notes,
+  .about-personal[data-intro="margins"] .intro-margins__notes {
+    grid-template-columns: 1fr;
+  }
+
+  .about-personal[data-intro="lens"] .intro-lens__text {
+    color: var(--ink);
+  }
+
+  .about-personal[data-intro="lens"] .intro-lens__glass,
+  .about-personal[data-intro="lens"] .intro-lens__ring,
+  .about-personal[data-intro="lens"] .intro-hint {
+    display: none;
+  }
+
+  .about-personal[data-intro="transcript"] .intro-line {
+    grid-template-columns: 52px 30px minmax(0, 1fr);
+  }
+
+  .about-personal[data-intro="desk"] .intro-desk {
+    display: grid;
+    gap: 22px;
+    height: auto;
+  }
+
+  .about-personal[data-intro="desk"] .intro-desk__centre {
+    position: static;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    transform: none;
+  }
+
+  .about-personal[data-intro="desk"] .intro-desk__title {
+    text-align: left;
+  }
+
+  .about-personal[data-intro="desk"] .intro-card {
+    position: relative;
+    width: auto;
+    transform: none !important;
+  }
+
+  .about-personal[data-intro="desk"] .intro-desk__hint {
+    display: none;
+  }
+
+  .about-personal[data-intro="margins"] .intro-note {
+    margin-top: 0 !important;
+    opacity: 1;
+  }
+
+  .about-personal[data-intro="slot"] .intro-slot {
+    height: 220svh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-personal[data-intro="transcript"] .intro-word,
+  .about-personal[data-intro="transcript"] .intro-line__text,
+  .about-personal[data-intro="slot"] .intro-slot__notes p {
+    transition: none;
+  }
+}

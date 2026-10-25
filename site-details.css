@@ -1,0 +1,225 @@
+/* Site-wide details: the corner marks' cue game (corner-marks.ts), the
+   footer wordmark and clock (navigation.ts), and the homepage's placeholder
+   project cards. */
+
+/* Corner marks ------------------------------------------------------------ */
+
+/* The marks move every frame. */
+html.is-marks-loose .corner-mark:not(.corner-mark--home) {
+  will-change: transform;
+}
+
+/* The marks can be picked up and struck. */
+.corner-mark.is-tossable {
+  cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  will-change: transform;
+}
+
+.corner-mark.is-held {
+  cursor: grabbing;
+}
+
+/* Cue: the stick behind a letter as it's drawn back, and a faint guide
+   ahead of it showing where the shot will go. */
+.corner-cue,
+.corner-guide {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2147483646;
+  height: 2px;
+  background: #fff;
+  mix-blend-mode: difference;
+  opacity: 0;
+  transform-origin: 0 50%;
+  pointer-events: none;
+}
+
+.corner-cue {
+  width: min(22vw, 150px);
+  margin-top: -1px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #fff 0 8px, transparent 8px 11px, #fff 11px);
+  transition:
+    transform 70ms cubic-bezier(0.5, 0, 1, 0.5),
+    opacity 360ms ease 90ms;
+}
+
+.corner-guide {
+  height: 1px;
+  background: repeating-linear-gradient(90deg, #fff 0 4px, transparent 4px 10px);
+  transition: opacity 240ms ease;
+}
+
+html.is-cue-aiming .corner-cue {
+  opacity: 1;
+  transition: none;
+}
+
+html.is-cue-aiming .corner-guide {
+  transition: none;
+}
+
+html:not(.is-cue-aiming) .corner-guide {
+  opacity: 0 !important;
+}
+
+html.is-cue-aiming,
+html.is-cue-aiming * {
+  cursor: crosshair !important;
+}
+
+/* A word knocked by a letter moves by itself. */
+.corner-word {
+  display: inline-block;
+}
+
+/* The count, and the hello once the name is whole, beside "Ra". */
+.corner-greeting {
+  position: fixed;
+  z-index: 2147483647;
+  color: #fff;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  mix-blend-mode: difference;
+  opacity: 0;
+  transform: translate3d(-6px, -50%, 0);
+  pointer-events: none;
+  transition:
+    opacity 400ms ease,
+    transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.corner-greeting.is-shown {
+  opacity: 1;
+  transform: translate3d(0, -50%, 0);
+}
+
+/* Footer ------------------------------------------------------------------ */
+
+/* The wordmark rises into place as the footer arrives. */
+.portfolio-footer__wordmark span {
+  translate: 0 0;
+  transition: translate 1200ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--letter, 0) * 70ms);
+}
+
+.portfolio-footer__wordmark.is-waiting span {
+  translate: 0 105%;
+}
+
+/* Temporary picker for comparing them. */
+.footer-modes {
+  position: absolute;
+  top: 36%;
+  left: 1.5%;
+  z-index: 3;
+  display: flex;
+  padding: 4px;
+  border-radius: 999px;
+  background: #f4f4f1;
+}
+
+.footer-modes button {
+  padding: 0.7em 1em;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(8, 8, 8, 0.6);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.footer-modes button[aria-pressed="true"] {
+  background: #080808;
+  color: #f4f4f1;
+}
+
+.portfolio-footer__clock {
+  font-variant-numeric: tabular-nums;
+}
+
+.portfolio-footer__clock i {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 0.5em;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: 0.1em;
+  animation: footer-clock-pulse 2s ease-in-out infinite;
+}
+
+@keyframes footer-clock-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* Homepage placeholder projects ------------------------------------------- */
+
+/* Work still in the studio shows its number large and a slow-moving surface
+   rather than an empty grey slab. */
+.featured-project__media[data-number] {
+  isolation: isolate;
+  background:
+    radial-gradient(120% 90% at var(--studio-x, 30%) var(--studio-y, 20%), rgba(255, 255, 255, 0.09), transparent 60%),
+    #151514;
+  animation: studio-surface 14s ease-in-out infinite alternate;
+}
+
+.featured-project__media[data-number]::before {
+  position: absolute;
+  top: 0.04em;
+  left: 0.06em;
+  z-index: -1;
+  color: rgba(244, 244, 241, 0.08);
+  content: attr(data-number);
+  font-family: "Marcellus", Georgia, serif;
+  font-size: clamp(120px, 18vw, 360px);
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.featured-project__media[data-number]::after {
+  color: rgba(244, 244, 241, 0.6);
+  content: "● In the studio";
+  font-size: clamp(11px, 0.8vw, 14px);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@property --studio-x {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 30%;
+}
+
+@property --studio-y {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 20%;
+}
+
+@keyframes studio-surface {
+  to {
+    --studio-x: 75%;
+    --studio-y: 85%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portfolio-footer__wordmark span {
+    transition: none;
+  }
+
+  .featured-project__media[data-number],
+  .portfolio-footer__clock i {
+    animation: none;
+  }
+}

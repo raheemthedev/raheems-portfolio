@@ -25,9 +25,11 @@
       crossorigin
     />
     <link rel="stylesheet" href="styles.css?v=20260928-frames-reverted" />
-    <link rel="stylesheet" href="what-i-shape.css?v=20260922-2" />
+    <link rel="stylesheet" href="shape.css?v=20261025-9" />
     <link rel="stylesheet" href="editorial-work.css?v=20260920-1" />
     <link rel="stylesheet" href="about-reveal.css?v=20260920-21" />
+    <link rel="stylesheet" href="index-list.css?v=20261024-3" />
+    <link rel="stylesheet" href="hero-modes.css?v=20261025-1" />
     <noscript>
       <style>
         body.is-loader-active { height: auto; overflow: auto; }
@@ -40,6 +42,7 @@
         body.is-loader-active .project-stage { clip-path: none; }
       </style>
     </noscript>
+    <link rel="stylesheet" href="site-details.css?v=20261025-11" />
   </head>
   <body class="home-page is-loader-active">
     <div class="site-loader" aria-hidden="true">
@@ -86,6 +89,9 @@
           <div class="project-track" role="list" tabindex="0" aria-label="Scroll or drag to explore projects"></div>
         </div>
 
+        <!-- Alternative heroes from hero-modes.ts render here; the wheel above stays intact. -->
+        <div class="hero-alt" aria-label="Selected projects"></div>
+
         <a class="scroll-cue" href="#availability" aria-label="Scroll to the availability section">
           <span aria-hidden="true">( ↓</span> Scroll down <span aria-hidden="true">↓ )</span>
         </a>
@@ -113,10 +119,10 @@
             <span class="featured-project__caption"><strong>Electronic Botanica</strong><span>View case study</span></span>
             <span class="featured-project__summary">A generative art exhibition exploring the collision between organic forms and digital systems.</span>
           </a>
-        <a class="featured-project featured-project--small" href="case-study.html?project=03" style="--project-order: 2;"><span class="featured-project__media featured-project__media--03" aria-hidden="true"></span><span class="featured-project__caption"><strong>Project 03</strong><span>Placeholder</span></span><span class="featured-project__summary">Art Direction — artwork to come.</span></a>
-        <a class="featured-project featured-project--large" href="case-study.html?project=04" style="--project-order: 3;"><span class="featured-project__media featured-project__media--04" aria-hidden="true"></span><span class="featured-project__caption"><strong>Project 04</strong><span>Placeholder</span></span><span class="featured-project__summary">Packaging — artwork to come.</span></a>
-        <a class="featured-project featured-project--medium" href="case-study.html?project=05" style="--project-order: 4;"><span class="featured-project__media featured-project__media--05" aria-hidden="true"></span><span class="featured-project__caption"><strong>Project 05</strong><span>Placeholder</span></span><span class="featured-project__summary">Campaign Design — artwork to come.</span></a>
-        <a class="featured-project featured-project--end" href="case-study.html?project=06" style="--project-order: 5;"><span class="featured-project__media featured-project__media--06" aria-hidden="true"></span><span class="featured-project__caption"><strong>Project 06</strong><span>Placeholder</span></span><span class="featured-project__summary">Digital Expression — artwork to come.</span></a>
+        <a class="featured-project featured-project--small" href="case-study.html?project=03" style="--project-order: 2;"><span class="featured-project__media featured-project__media--03" data-number="03" aria-hidden="true"></span><span class="featured-project__caption"><strong>Project 03</strong><span>Placeholder</span></span><span class="featured-project__summary">Art Direction — artwork to come.</span></a>
+        <a class="featured-project featured-project--large" href="case-study.html?project=04" style="--project-order: 3;"><span class="featured-project__media featured-project__media--04" data-number="04" aria-hidden="true"></span><span class="featured-project__caption"><strong>Project 04</strong><span>Placeholder</span></span><span class="featured-project__summary">Packaging — artwork to come.</span></a>
+        <a class="featured-project featured-project--medium" href="case-study.html?project=05" style="--project-order: 4;"><span class="featured-project__media featured-project__media--05" data-number="05" aria-hidden="true"></span><span class="featured-project__caption"><strong>Project 05</strong><span>Placeholder</span></span><span class="featured-project__summary">Campaign Design — artwork to come.</span></a>
+        <a class="featured-project featured-project--end" href="case-study.html?project=06" style="--project-order: 5;"><span class="featured-project__media featured-project__media--06" data-number="06" aria-hidden="true"></span><span class="featured-project__caption"><strong>Project 06</strong><span>Placeholder</span></span><span class="featured-project__summary">Digital Expression — artwork to come.</span></a>
         </div>
         <a class="featured-work__all" href="work.html">View all work <span aria-hidden="true">↗</span></a>
       </section>
@@ -147,84 +153,138 @@
       </section>
 
       <section class="content-section content-section--contact" aria-labelledby="contact-title">
-        <div class="services" id="what-i-shape" data-services>
-          <p class="services__eyebrow">/ What I shape</p>
-          <h2 class="services__title" data-char-reveal>Ideas become clearer through perspective.</h2>
-          <p class="services__lede">My work moves between identity, digital expression, and art direction. Each project starts with a question worth looking at twice.</p>
-          <!-- Kayak's 3 ways: sequential blocks, text left / 3-image asymmetric group right -->
-          <div class="service-stack">
-            <article class="service-card service-card--dark">
-              <div class="service-card__text">
-                <p class="service-card__index">All the visuals <span>01 / Identity</span></p>
-                <h3>I give an idea a visual language of its own.</h3>
-                <ul class="service-card__tags">
-                  <li>Brand identities</li>
-                  <li>Creative direction</li>
-                  <li>Visual systems</li>
-                  <li>Motion design</li>
-                </ul>
-                <a class="kayak-btn kayak-btn--paper" href="work.html"><span class="kayak-btn__text">See selected work <span class="kayak-btn__arrow" aria-hidden="true">↗</span></span><span class="kayak-btn__bg" aria-hidden="true"></span></a>
-              </div>
-              <div class="service-card__media-group" data-image-group>
-                <figure class="service-card__media service-card__media--a">
-                  <img src="assets/projects/flip/LCover.jpg" alt="Flip cryptocurrency exchange visual identity" draggable="false" />
-                </figure>
-                <figure class="service-card__media service-card__media--b">
-                  <img src="assets/projects/flip/L1.jpg" alt="Flip brand identity detail" draggable="false" />
-                </figure>
-                <figure class="service-card__media service-card__media--c">
-                  <img src="assets/projects/flip/L3.jpg" alt="Flip identity system detail" draggable="false" />
-                </figure>
-              </div>
-            </article>
-            <article class="service-card service-card--grey">
-              <div class="service-card__text">
-                <p class="service-card__index">All things verbal, made visual <span>02 / Digital &amp; Motion</span></p>
-                <h3>I explore how an identity moves and behaves.</h3>
-                <ul class="service-card__tags">
-                  <li>Digital experiences</li>
-                  <li>Web design &amp; development</li>
-                  <li>Motion systems</li>
-                  <li>Content direction</li>
-                </ul>
-                <a class="kayak-btn kayak-btn--paper" href="about.html"><span class="kayak-btn__text">More about me <span class="kayak-btn__arrow" aria-hidden="true">↗</span></span><span class="kayak-btn__bg" aria-hidden="true"></span></a>
-              </div>
-              <div class="service-card__media-group" data-image-group>
-                <figure class="service-card__media service-card__media--a">
-                  <img src="assets/projects/electronic-botanica/l4-cover.jpg" alt="Electronic Botanica generative art exhibition identity" draggable="false" />
-                </figure>
-                <figure class="service-card__media service-card__media--b">
-                  <img src="assets/projects/electronic-botanica/l6.jpg" alt="Electronic Botanica visual detail" draggable="false" />
-                </figure>
-                <figure class="service-card__media service-card__media--c">
-                  <img src="assets/projects/electronic-botanica/p9-1.jpg" alt="Electronic Botanica exhibition detail" draggable="false" />
-                </figure>
-              </div>
-            </article>
-            <article class="service-card service-card--paper">
-              <div class="service-card__text">
-                <p class="service-card__index">A few critical constructs <span>03 / Campaigns &amp; Direction</span></p>
-                <h3>I carry the idea into the places people meet it.</h3>
-                <ul class="service-card__tags">
-                  <li>Campaigns</li>
-                  <li>Launch systems</li>
-                  <li>Pitch decks</li>
-                  <li>Creative direction</li>
-                </ul>
-                <a class="kayak-btn kayak-btn--dark" href="mailto:animashaunraheem05@gmail.com"><span class="kayak-btn__text">Drop me an email <span class="kayak-btn__arrow" aria-hidden="true">↗</span></span><span class="kayak-btn__bg" aria-hidden="true"></span></a>
-              </div>
-              <div class="service-card__media-group" data-image-group>
-                <figure class="service-card__media service-card__media--a">
-                  <img src="assets/projects/flip/L2.jpg" alt="Flip brand campaign visual" draggable="false" />
-                </figure>
-                <figure class="service-card__media service-card__media--b">
-                  <img src="assets/projects/flip/L4.jpg" alt="Flip campaign detail" draggable="false" />
-                </figure>
-                <figure class="service-card__media service-card__media--c">
-                  <img src="assets/projects/flip/P9-1.jpg" alt="Flip campaign system detail" draggable="false" />
-                </figure>
-              </div>
-            </article>
+        <div class="shape" id="what-i-shape" data-shape>
+          <!-- What I shape: shared markup for the layouts in shape.ts. Each chapter is a
+               sentence with image pills set in its type (filled from its frames), its
+               disciplines, a link, and six frames. -->
+          <header class="shape__head">
+            <p>/ What I shape</p>
+            <p class="shape__intro">Ideas become clearer through perspective — three ways in.</p>
+            <p>01 — 03</p>
+          </header>
+          <div class="shape__stage">
+            <div class="shape__track">
+              <article class="shape-chapter" data-tone="dark">
+                <div class="shape-chapter__meta">
+                  <p class="shape-chapter__number">01</p>
+                  <p class="shape-chapter__kind">Identity<span>All the visuals</span></p>
+                  <ul class="shape-chapter__tags">
+                    <li>Brand identities</li>
+                    <li>Creative direction</li>
+                    <li>Visual systems</li>
+                    <li>Motion design</li>
+                  </ul>
+                  <a class="shape-chapter__link" href="work.html">See selected work <span aria-hidden="true">↗</span></a>
+                </div>
+                <h3 class="shape-chapter__line">I give an idea <span class="shape-pill" data-frames="0 1 2" aria-hidden="true"></span> a visual language <span class="shape-pill" data-frames="3 4 5" aria-hidden="true"></span> of its own.</h3>
+                <div class="shape-chapter__frames">
+                  <figure class="shape-frame">
+                    <img src="assets/projects/flip/LCover.jpg" alt="Flip cryptocurrency exchange visual identity" draggable="false" />
+                    <figcaption><span>01.1</span> Flip cryptocurrency exchange visual identity</figcaption>
+                  </figure>
+                  <figure class="shape-frame">
+                    <img src="assets/projects/flip/L1.jpg" alt="Flip brand identity detail" draggable="false" />
+                    <figcaption><span>01.2</span> Flip brand identity detail</figcaption>
+                  </figure>
+                  <figure class="shape-frame">
+                    <img src="assets/projects/flip/L3.jpg" alt="Flip identity system detail" draggable="false" />
+                    <figcaption><span>01.3</span> Flip identity system detail</figcaption>
+                  </figure>
+                  <figure class="shape-frame">
+                    <img src="assets/projects/flip/L5.jpg" alt="Flip identity applications" draggable="false" loading="lazy" />
+                    <figcaption><span>01.4</span> Flip identity applications</figcaption>
+                  </figure>
+                  <figure class="shape-frame">
+                    <img src="assets/projects/flip/L7.jpg" alt="Flip brand system detail" draggable="false" loading="lazy" />
+                    <figcaption><span>01.5</span> Flip brand system detail</figcaption>
+                  </figure>
+                  <figure class="shape-frame">
+                    <img src="assets/projects/flip/P7-1.jpg" alt="Flip identity in use" draggable="false" loading="lazy" />
+                    <figcaption><span>01.6</span> Flip identity in use</figcaption>
+                  </figure>
+                </div>
+              </article>
+              <article class="shape-chapter" data-tone="grey">
+                <div class="shape-chapter__meta">
+                  <p class="shape-chapter__number">02</p>
+                  <p class="shape-chapter__kind">Digital &amp; Motion<span>All things verbal, made visual</span></p>
+                  <ul class="shape-chapter__tags">
+                    <li>Digital experiences</li>
+                    <li>Web design &amp; development</li>
+                    <li>Motion systems</li>
+                    <li>Content direction</li>
+                  </ul>
+                  <a class="shape-chapter__link" href="about.html">More about me <span aria-hidden="true">↗</span></a>
+                </div>
+                <h3 class="shape-chapter__line">I explore how an identity <span class="shape-pill" data-frames="0 1 2" aria-hidden="true"></span> moves <span class="shape-pill" data-frames="3 4 5" aria-hidden="true"></span> and behaves.</h3>
+                <div class="shape-chapter__frames">
+                  <figure class="shape-frame">
+                    <img src="assets/projects/electronic-botanica/l4-cover.jpg" alt="Electronic Botanica generative art exhibition identity" draggable="false" />
+                    <figcaption><span>02.1</span> Electronic Botanica generative art exhibition identity</figcaption>
+                  </figure>
+                  <figure class="shape-frame">
+                    <img src="assets/projects/electronic-botanica/l6.jpg" alt="Electronic Botanica visual detail" draggable="false" />
+                    <figcaption><span>02.2</span> Electronic Botanica visual detail</figcaption>
+                  </figure>
+                  <figure class="shape-frame">
+                    <img src="assets/projects/electronic-botanica/p9-1.jpg" alt="Electronic Botanica exhibition detail" draggable="false" />
+                    <figcaption><span>02.3</span> Electronic Botanica exhibition detail</figcaption>
+                  </figure>
+                  <figure class="shape-frame">
+                    <img src="assets/projects/electronic-botanica/l5.jpg" alt="Electronic Botanica motion still" draggable="false" loading="lazy" />
+                    <figcaption><span>02.4</span> Electronic Botanica motion still</figcaption>
+                  </figure>
+                  <figure class="shape-frame">
+                    <img src="assets/projects/electronic-botanica/l8.jpg" alt="Electronic Botanica poster series" draggable="false" loading="lazy" />
+                    <figcaption><span>02.5</span> Electronic Botanica poster series</figcaption>
+                  </figure>
+                  <figure class="shape-frame">
+                    <img src="assets/projects/electronic-botanica/p10-1.jpg" alt="Electronic Botanica digital detail" draggable="false" loading="lazy" />
+                    <figcaption><span>02.6</span> Electronic Botanica digital detail</figcaption>
+                  </figure>
+                </div>
+              </article>
+              <article class="shape-chapter" data-tone="paper">
+                <div class="shape-chapter__meta">
+                  <p class="shape-chapter__number">03</p>
+                  <p class="shape-chapter__kind">Campaigns &amp; Direction<span>A few critical constructs</span></p>
+                  <ul class="shape-chapter__tags">
+                    <li>Campaigns</li>
+                    <li>Launch systems</li>
+                    <li>Pitch decks</li>
+                    <li>Creative direction</li>
+                  </ul>
+                  <a class="shape-chapter__link" href="mailto:animashaunraheem05@gmail.com">Drop me an email <span aria-hidden="true">↗</span></a>
+                </div>
+                <h3 class="shape-chapter__line">I carry the idea <span class="shape-pill" data-frames="0 1 2" aria-hidden="true"></span> into the places people <span class="shape-pill" data-frames="3 4 5" aria-hidden="true"></span> meet it.</h3>
+                <div class="shape-chapter__frames">
+                  <figure class="shape-frame">
+                    <img src="assets/projects/flip/L2.jpg" alt="Flip brand campaign visual" draggable="false" />
+                    <figcaption><span>03.1</span> Flip brand campaign visual</figcaption>
+                  </figure>
+                  <figure class="shape-frame">
+                    <img src="assets/projects/flip/L4.jpg" alt="Flip campaign detail" draggable="false" />
+                    <figcaption><span>03.2</span> Flip campaign detail</figcaption>
+                  </figure>
+                  <figure class="shape-frame">
+                    <img src="assets/projects/flip/P9-1.jpg" alt="Flip campaign system detail" draggable="false" />
+                    <figcaption><span>03.3</span> Flip campaign system detail</figcaption>
+                  </figure>
+                  <figure class="shape-frame">
+                    <img src="assets/projects/flip/L10.jpg" alt="Flip campaign artwork" draggable="false" loading="lazy" />
+                    <figcaption><span>03.4</span> Flip campaign artwork</figcaption>
+                  </figure>
+                  <figure class="shape-frame">
+                    <img src="assets/projects/flip/L14.jpg" alt="Flip launch visual" draggable="false" loading="lazy" />
+                    <figcaption><span>03.5</span> Flip launch visual</figcaption>
+                  </figure>
+                  <figure class="shape-frame">
+                    <img src="assets/projects/flip/P13-1.jpg" alt="Flip campaign in context" draggable="false" loading="lazy" />
+                    <figcaption><span>03.6</span> Flip campaign in context</figcaption>
+                  </figure>
+                </div>
+              </article>
+            </div>
           </div>
         </div>
         <footer class="portfolio-footer portfolio-footer--home" id="contact">
@@ -251,7 +311,13 @@
       </section>
     </main>
 
-    <script src="script.js?v=20260928-1"></script>
-    <script src="navigation.js?v=20260920-6"></script>
+    <script src="script.js?v=20261025-3"></script>
+    <script src="shape.js?v=20261025-7"></script>
+    <script src="index-list.js?v=20261024-3"></script>
+    <script src="hero-modes.js?v=20261025-3"></script>
+    <script src="navigation.js?v=20261025-3"></script>
+    <script src="footer-wordmark.js?v=20261025-5"></script>
+    <script src="projects-data.js?v=20261024-1"></script>
+    <script src="corner-marks.js?v=20261025-12"></script>
   </body>
 </html>

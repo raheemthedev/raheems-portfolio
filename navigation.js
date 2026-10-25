@@ -31,75 +31,7 @@ document.addEventListener("keydown", (event) => {
 });
 const footerReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const footerWordmarks = [...document.querySelectorAll(".portfolio-footer__wordmark")];
-const footerMeasureCanvas = document.createElement("canvas");
-const footerMeasureContext = footerMeasureCanvas.getContext("2d");
-footerWordmarks.forEach((wordmark) => {
-    const letters = [...wordmark.querySelectorAll("span")];
-    if (letters.length === 0)
-        return;
-    const measureGlyphFloors = () => {
-        if (!footerMeasureContext)
-            return;
-        letters.forEach((letter) => {
-            const styles = getComputedStyle(letter);
-            const lineHeight = Number.parseFloat(styles.lineHeight);
-            footerMeasureContext.font = `${styles.fontStyle} ${styles.fontWeight} ${styles.fontSize} ${styles.fontFamily}`;
-            const metrics = footerMeasureContext.measureText(letter.textContent ?? "");
-            const ascent = metrics.fontBoundingBoxAscent || metrics.actualBoundingBoxAscent;
-            const descent = metrics.fontBoundingBoxDescent || metrics.actualBoundingBoxDescent;
-            const leading = lineHeight - ascent - descent;
-            const glyphFloor = leading / 2 + ascent + metrics.actualBoundingBoxDescent;
-            letter.style.setProperty("--footer-glyph-floor", `${glyphFloor.toFixed(2)}px`);
-        });
-    };
-    measureGlyphFloors();
-    document.fonts.ready.then(measureGlyphFloors).catch(() => undefined);
-    window.addEventListener("resize", measureGlyphFloors);
-    const currentScales = letters.map(() => 1);
-    const targetScales = letters.map(() => 1);
-    let animationFrame = null;
-    const renderWave = () => {
-        animationFrame = null;
-        let isSettled = true;
-        letters.forEach((letter, index) => {
-            const difference = targetScales[index] - currentScales[index];
-            currentScales[index] += difference * 0.2;
-            if (Math.abs(difference) > 0.002)
-                isSettled = false;
-            letter.style.setProperty("--footer-letter-scale", currentScales[index].toFixed(4));
-        });
-        if (!isSettled)
-            animationFrame = requestAnimationFrame(renderWave);
-    };
-    const requestWaveRender = () => {
-        if (animationFrame === null)
-            animationFrame = requestAnimationFrame(renderWave);
-    };
-    const resetWave = () => {
-        targetScales.fill(1);
-        requestWaveRender();
-    };
-    wordmark.addEventListener("pointermove", (event) => {
-        if (footerReducedMotion.matches)
-            return;
-        const letterCenters = letters.map((letter) => {
-            const bounds = letter.getBoundingClientRect();
-            return bounds.left + bounds.width / 2;
-        });
-        const influenceWidth = letterCenters.length > 1
-            ? (letterCenters[letterCenters.length - 1] - letterCenters[0]) / (letterCenters.length - 1)
-            : wordmark.getBoundingClientRect().width;
-        letters.forEach((_letter, index) => {
-            const distance = Math.abs(event.clientX - letterCenters[index]);
-            const normalizedDistance = distance / Math.max(influenceWidth, 1);
-            const influence = Math.exp(-0.5 * Math.pow(normalizedDistance / 0.58, 2));
-            targetScales[index] = 1 - influence * 0.58;
-        });
-        requestWaveRender();
-    });
-    wordmark.addEventListener("pointerleave", resetWave);
-    footerReducedMotion.addEventListener("change", resetWave);
-});
+// How RAHEEM answers the cursor lives in footer-wordmark.ts.
 const sharedReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let sharedScrollFrame = null;
 const renderSharedScrollEffects = () => {
@@ -247,3 +179,37 @@ scrollWordTargets.forEach((target) => {
     footerReducedMotion.addEventListener("change", requestRender);
     requestRender();
 });
+// Footer details: the wordmark rises into place as the footer arrives, and
+// the base keeps Lagos time.
+footerWordmarks.forEach((wordmark) => {
+    const letters = [...wordmark.querySelectorAll("span")];
+    letters.forEach((letter, index) => {
+        letter.style.setProperty("--letter", String(index));
+    });
+    if (!sharedReducedMotion.matches && "IntersectionObserver" in window) {
+        wordmark.classList.add("is-waiting");
+        const riseObserver = new IntersectionObserver((entries) => {
+            if (!entries.some((entry) => entry.isIntersecting))
+                return;
+            wordmark.classList.remove("is-waiting");
+            riseObserver.disconnect();
+        }, { threshold: 0.25 });
+        riseObserver.observe(wordmark);
+    }
+});
+const footerClocks = [...document.querySelectorAll(".portfolio-footer__base")].map((base) => {
+    const clock = document.createElement("span");
+    clock.className = "portfolio-footer__clock";
+    base.append(clock);
+    return clock;
+});
+if (footerClocks.length > 0) {
+    const tellFooterTime = () => {
+        const time = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Africa/Lagos" }).format(new Date());
+        footerClocks.forEach((clock) => {
+            clock.innerHTML = `<i aria-hidden="true"></i>Lagos ${time}`;
+        });
+    };
+    tellFooterTime();
+    window.setInterval(tellFooterTime, 20000);
+}
