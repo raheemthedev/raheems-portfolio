@@ -2440,3 +2440,32 @@
     z-index: 5;
   }
 }
+
+/* Experience rows use the shared hover index (index-list.ts). Each row blends
+   with difference so its type inverts where the preview passes beneath. */
+.about-record__list[data-index-list] {
+  --index-dim: 0.3;
+  --index-lens-width: clamp(240px, 21vw, 400px);
+}
+
+.about-record__row[data-index-row] {
+  position: relative;
+  z-index: 2;
+  mix-blend-mode: difference;
+}
+
+/* The rolling title is built from spans; keep them out of the label style
+   that .about-record__row span gives the company names. */
+.about-record__row strong span {
+  color: inherit;
+  font-size: inherit;
+  text-transform: none;
+}
+
+.about-record__row strong .index-roll__word {
+  line-height: 1;
+}
+
+.about-record__preview {
+  background: #2a2a28;
+}

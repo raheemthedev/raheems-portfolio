@@ -15,16 +15,54 @@ const projects = [
         title: "FLIP",
         tags: ["BRAND IDENTITY", "FINTECH"],
         style: "identity",
-        image: "assets/projects/flip/LCover.jpg",
+        image: "assets/projects/flip/LCover.webp",
         imageAlt: "Flip cryptocurrency exchange visual identity",
+        hoverImage: "assets/projects/flip/flip-hover-all.gif?v=3",
+        gallery: [
+            "assets/projects/flip/L1.webp",
+            "assets/projects/flip/L2.webp",
+            "assets/projects/flip/L3.webp",
+            "assets/projects/flip/L4.webp",
+            "assets/projects/flip/L5.webp",
+            "assets/projects/flip/L6.webp",
+            "assets/projects/flip/L7.webp",
+            "assets/projects/flip/L8.webp",
+            "assets/projects/flip/L10.webp",
+            "assets/projects/flip/L11.webp",
+            "assets/projects/flip/L12.webp",
+            "assets/projects/flip/L14.webp",
+            "assets/projects/flip/L15.webp",
+            "assets/projects/flip/L16.webp",
+            "assets/projects/flip/L17.webp",
+            "assets/projects/flip/P7-1.webp",
+            "assets/projects/flip/P7-2.webp",
+            "assets/projects/flip/P9-1.webp",
+            "assets/projects/flip/P9-2.webp",
+            "assets/projects/flip/P13-1.webp",
+            "assets/projects/flip/P13-2.webp",
+        ],
     },
     {
         number: "02",
         title: "ELECTRONIC BOTANICA",
         tags: ["EXHIBITION IDENTITY", "GENERATIVE ART"],
         style: "brand",
-        image: "assets/projects/electronic-botanica/l4-cover.jpg",
+        image: "assets/projects/electronic-botanica/l4-cover.webp",
         imageAlt: "Electronic Botanica generative art exhibition identity",
+        hoverImage: "assets/projects/electronic-botanica/hover.gif?v=1",
+        gallery: [
+            "assets/projects/electronic-botanica/l5.webp",
+            "assets/projects/electronic-botanica/l6.webp",
+            "assets/projects/electronic-botanica/l8.webp",
+            "assets/projects/electronic-botanica/l11.webp",
+            "assets/projects/electronic-botanica/p7-1.webp",
+            "assets/projects/electronic-botanica/p7-2.webp",
+            "assets/projects/electronic-botanica/p9-1.webp",
+            "assets/projects/electronic-botanica/p9-2.webp",
+            "assets/projects/electronic-botanica/p10-1.webp",
+            "assets/projects/electronic-botanica/p10-2.webp",
+            "assets/projects/electronic-botanica/p13.webp",
+        ],
     },
 ];
 projects.push({ number: "03", title: "PROJECT 03", tags: ["ART DIRECTION", "PLACEHOLDER"], style: "direction" }, { number: "04", title: "PROJECT 04", tags: ["PACKAGING", "PLACEHOLDER"], style: "packaging" }, { number: "05", title: "PROJECT 05", tags: ["CAMPAIGN DESIGN", "PLACEHOLDER"], style: "campaign" }, { number: "06", title: "PROJECT 06", tags: ["DIGITAL EXPRESSION", "PLACEHOLDER"], style: "digital" });
@@ -200,8 +238,13 @@ if (heroContactCta && heroCtaIdleLabel && heroCtaEmailLabel) {
     heroContactCta.addEventListener("focus", () => setCtaExpanded(true));
     heroContactCta.addEventListener("blur", () => setCtaExpanded(false));
 }
+// hero-modes.ts can swap this original ("classic") wheel for another hero;
+// the wheel then pauses.
+const isWheelHidden = () => (document.body.dataset.hero ?? "classic") !== "classic";
+const revealHero = () => document.dispatchEvent(new CustomEvent("hero:reveal"));
 const finishSiteLoader = async (fadeDuration = 140) => {
     document.body.classList.remove("is-loader-active");
+    revealHero();
     if (!siteLoader)
         return;
     if (fadeDuration <= 0 || !("animate" in siteLoader)) {
@@ -402,7 +445,11 @@ const runSiteLoader = async () => {
             { opacity: 1, translate: "0 0" },
         ], { duration: 500, delay: 250, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }));
     }
-    landingAnimations.push(stage.animate([
+    const heroStage = isWheelHidden()
+        ? document.querySelector(".hero-alt") ?? stage
+        : stage;
+    revealHero();
+    landingAnimations.push(heroStage.animate([
         { opacity: 0, clipPath: "inset(48% 0 48% 0 round 14px)" },
         { opacity: 1, clipPath: "inset(0% 0 0% 0 round 0px)" },
     ], { duration: 900, delay: 150, easing: "cubic-bezier(0.16, 1, 0.3, 1)", fill: "forwards" }));
@@ -602,6 +649,8 @@ const renderFramePhysics = (deltaTime) => {
 };
 const renderRail = (timestamp) => {
     animationFrame = null;
+    if (isWheelHidden())
+        return;
     const deltaTime = clamp(timestamp - lastFrameTime || FRAME_DURATION, 4, 34);
     lastFrameTime = timestamp;
     const gyroEase = 1 - Math.exp(-deltaTime / 190);
@@ -801,6 +850,10 @@ window.addEventListener("resize", () => {
     measureRail();
     requestRender();
 });
+document.addEventListener("hero:change", () => {
+    measureRail();
+    requestRender();
+});
 reducedMotion.addEventListener("change", () => {
     stage.classList.remove("is-moving");
     metadataHidden = false;
@@ -873,48 +926,6 @@ if (revealTargets.length > 0) {
         }, { rootMargin: "0px 0px -7%", threshold: 0.08 });
         revealTargets.forEach((target) => revealObserver.observe(target));
     }
-}
-// Kayak-style service sections behave on scroll in AND scroll out:
-// they settle in when entered and ease back out when left.
-const serviceCards = [
-    ...document.querySelectorAll(".service-card"),
-];
-if (serviceCards.length > 0) {
-    if (reducedMotion.matches || !("IntersectionObserver" in window)) {
-        serviceCards.forEach((card) => card.classList.add("is-visible"));
-    }
-    else {
-        const serviceObserver = new IntersectionObserver((entries) => {
-            entries.forEach((entry) => {
-                entry.target.classList.toggle("is-visible", entry.isIntersecting);
-            });
-        }, { rootMargin: "0px 0px -12%", threshold: 0.15 });
-        serviceCards.forEach((card) => serviceObserver.observe(card));
-    }
-}
-// Subtle scroll parallax on service images: each image drifts its crop
-// at its own rate as its card travels through the viewport.
-const serviceParallaxImages = serviceCards.flatMap((card) => [...card.querySelectorAll(".service-card__media img")].map((img, index) => ({ img, rate: [18, 34, 26][index] ?? 24 })));
-if (serviceParallaxImages.length > 0 && !reducedMotion.matches) {
-    let parallaxFrame = null;
-    const renderParallax = () => {
-        parallaxFrame = null;
-        const viewportHeight = window.innerHeight || 1;
-        for (const { img, rate } of serviceParallaxImages) {
-            const bounds = img.getBoundingClientRect();
-            if (bounds.bottom < -viewportHeight || bounds.top > viewportHeight * 2)
-                continue;
-            const progress = Math.min(Math.max((viewportHeight - bounds.top) / (viewportHeight + bounds.height), 0), 1);
-            img.style.objectPosition = `50% ${(50 + (0.5 - progress) * rate).toFixed(2)}%`;
-        }
-    };
-    const requestParallax = () => {
-        if (parallaxFrame === null)
-            parallaxFrame = requestAnimationFrame(renderParallax);
-    };
-    window.addEventListener("scroll", requestParallax, { passive: true });
-    window.addEventListener("resize", requestParallax);
-    requestParallax();
 }
 measureRail();
 renderRail(performance.now());

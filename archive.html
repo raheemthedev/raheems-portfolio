@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="The full archive of work by Raheem Animashaun: identities, exhibitions, art direction, packaging, campaigns, and digital work."
+    />
+    <meta name="theme-color" content="#f4f4f1" />
+    <title>Archive — Raheem</title>
+    <link rel="icon" type="image/png" href="reference/favicon.png" />
+    <link
+      rel="preload"
+      href="overused_grotesk/fonts/variable/OverusedGrotesk-VF.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="styles.css?v=20260928-frames-reverted" />
+    <link rel="stylesheet" href="index-list.css?v=20261024-3" />
+    <link rel="stylesheet" href="archive.css?v=20261024-3" />
+    <link rel="stylesheet" href="site-details.css?v=20261025-11" />
+  </head>
+  <body class="work-page archive-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <a class="corner-mark corner-mark--top-left corner-mark--home" href="index.html" aria-label="Go to homepage">Ra</a>
+    <div class="corner-mark corner-mark--top-right" aria-hidden="true">he</div>
+    <div class="corner-mark corner-mark--bottom-left" aria-hidden="true">e</div>
+    <div class="corner-mark corner-mark--bottom-right" aria-hidden="true">m</div>
+
+    <header class="site-header" aria-label="Primary navigation">
+      <nav class="site-nav">
+        <a class="is-current" href="work.html">
+          / WORK <span aria-hidden="true">W</span>
+        </a>
+        <a href="about.html">/ ABOUT <span aria-hidden="true">A</span></a>
+        <a href="#contact">/ CONTACT <span aria-hidden="true">C</span></a>
+      </nav>
+    </header>
+
+    <main id="main" class="work-main archive-main">
+      <header class="work-hero archive-hero">
+        <p class="work-eyebrow">
+          / ARCHIVE <span><span>(<span data-archive-total>00</span>)</span><a href="work.html">Selected work ↗</a></span>
+        </p>
+        <h1>Archive</h1>
+      </header>
+
+      <section class="archive" aria-labelledby="archive-title">
+        <h2 id="archive-title" class="visually-hidden">All work</h2>
+        <div class="work-toolbar archive-toolbar">
+          <div class="work-filters" role="group" aria-label="Filter the archive by discipline" data-archive-filters></div>
+          <div class="work-view-toggle" role="group" aria-label="Sort the archive">
+            <button class="work-view-button is-active" type="button" data-archive-sort="number" aria-pressed="true">Index</button>
+            <button class="work-view-button" type="button" data-archive-sort="year" aria-pressed="false">Year</button>
+            <button class="work-view-button" type="button" data-archive-sort="title" aria-pressed="false">A–Z</button>
+          </div>
+        </div>
+
+        <div class="archive-index" data-index-list>
+          <div class="archive-head" aria-hidden="true">
+            <span>No.</span>
+            <span>Project</span>
+            <span>Discipline</span>
+            <span>Services</span>
+            <span>Year</span>
+            <span></span>
+          </div>
+          <ol class="archive-list" aria-live="polite"></ol>
+          <p class="archive-empty" hidden>Nothing in this discipline yet.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="portfolio-footer" id="contact" aria-labelledby="archive-footer-title">
+      <h2 id="archive-footer-title" class="visually-hidden">Contact Raheem</h2>
+      <div class="portfolio-footer__lead">
+        <h3>Let’s make<br />something clear.</h3>
+        <div class="portfolio-footer__actions">
+          <a href="mailto:animashaunraheem05@gmail.com">Drop me an email <span aria-hidden="true">@</span></a>
+          <a href="about.html">More about me <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+      <nav class="portfolio-footer__socials" aria-label="Social links"><a href="https://x.com/const_neo">X</a><a href="mailto:animashaunraheem05@gmail.com">Email</a><a href="https://be.net/animashraheem">Behance</a></nav>
+      <p class="portfolio-footer__wordmark" aria-label="Raheem"><span>R</span><span>A</span><span>H</span><span>E</span><span>E</span><span>M</span></p>
+      <div class="portfolio-footer__base"><span>© 2026 — Raheem Animashaun</span><span>Independent designer / Working worldwide</span><a href="#main">Back to top ↑</a></div>
+    </footer>
+
+    <script src="projects-data.js?v=20261025-perf"></script>
+    <script src="index-list.js?v=20261024-3"></script>
+    <script src="archive.js?v=20261024-1"></script>
+    <script src="navigation.js?v=20261025-3"></script>
+    <script src="footer-wordmark.js?v=20261025-6"></script>
+    <script src="corner-marks.js?v=20261025-perf"></script>
+  </body>
+</html>

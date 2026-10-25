@@ -1,0 +1,691 @@
+/* "What I shape" (shape.ts). The sentence is the base, on every screen; the
+   reel takes over on desktop. */
+
+.shape {
+  --gutter: clamp(20px, 2.25vw, 44px);
+  --rule: color-mix(in srgb, currentColor 18%, transparent);
+  position: relative;
+  padding: clamp(96px, 10vw, 170px) var(--gutter) clamp(60px, 8vw, 140px);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.shape__head {
+  display: grid;
+  grid-template-columns: minmax(170px, 19vw) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(20px, 3vw, 60px);
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--rule);
+  font-size: clamp(11px, 0.78vw, 14px);
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.shape__head p {
+  margin: 0;
+}
+
+.shape__intro {
+  opacity: 0.6;
+}
+
+/* Sentence ------------------------------------------------------------------ */
+
+.shape-chapter {
+  display: grid;
+  grid-template-columns: minmax(170px, 19vw) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 60px);
+  padding: clamp(56px, 10vh, 130px) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* The chapter's details stay in view while its sentence is read. */
+.shape-chapter__meta {
+  position: sticky;
+  top: clamp(90px, 12vh, 130px);
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 1.6vw, 24px);
+}
+
+.shape-chapter__number {
+  margin: 0;
+  font-family: "Marcellus", Georgia, serif;
+  font-size: clamp(56px, 6vw, 124px);
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+}
+
+.shape-chapter__kind {
+  margin: 0;
+  font-size: clamp(11px, 0.78vw, 14px);
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.shape-chapter__kind span {
+  display: block;
+  margin-top: 0.4em;
+  opacity: 0.5;
+}
+
+.shape-chapter__tags {
+  margin: 0;
+  padding: 0;
+  font-size: clamp(13px, 0.9vw, 16px);
+  line-height: 1.55;
+  list-style: none;
+}
+
+.shape-chapter__tags li {
+  opacity: 0.68;
+}
+
+.shape-chapter__link {
+  width: max-content;
+  padding-bottom: 3px;
+  border-bottom: 1px solid currentColor;
+  color: inherit;
+  font-size: clamp(11px, 0.78vw, 14px);
+  letter-spacing: 0.045em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: opacity 300ms ease;
+}
+
+.shape-chapter__link:hover {
+  opacity: 0.55;
+}
+
+.shape-chapter__line {
+  margin: 0;
+  font-size: clamp(46px, 7.2vw, 156px);
+  font-weight: 430;
+  line-height: 0.95;
+  letter-spacing: -0.062em;
+}
+
+/* Words ink in as they rise into view. */
+.shape-word {
+  opacity: calc(0.12 + var(--ink, 1) * 0.88);
+}
+
+/* An image set in the type: it widens as it inks in, and further under the
+   cursor. */
+.shape-pill {
+  position: relative;
+  display: inline-block;
+  width: calc(0.7em + var(--ink, 1) * 1.05em);
+  height: 0.74em;
+  margin: 0 0.04em;
+  overflow: hidden;
+  border-radius: 0.37em;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  cursor: zoom-in;
+  transition:
+    width 700ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 500ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 300ms ease;
+}
+
+/* Under the cursor it lifts a little — by transform only, so the line
+   doesn't reflow out from under the pointer. */
+.shape-pill.is-open {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 0.05em currentColor;
+}
+
+.shape-pill img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.12);
+  transition:
+    opacity 500ms ease,
+    transform 1200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.shape-pill img.is-current {
+  opacity: 1;
+  transform: none;
+}
+
+/* The frames feed the pills; in the sentence they're only for screen readers. */
+.shape-chapter__frames {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The large preview that trails the cursor over a pill. */
+.shape-preview {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  width: clamp(220px, 21vw, 400px);
+  margin: 24px 0 0 24px;
+  pointer-events: none;
+}
+
+.shape-preview img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: 6px;
+  object-fit: cover;
+  opacity: 0;
+  scale: 0.86;
+  transition:
+    opacity 300ms ease,
+    scale 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.shape-preview p {
+  margin: 10px 0 0;
+  color: #fff;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  mix-blend-mode: difference;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.shape-preview p span {
+  margin-right: 0.6em;
+  opacity: 0.6;
+}
+
+.shape-preview.is-shown img {
+  opacity: 1;
+  scale: 1;
+}
+
+.shape-preview.is-shown p {
+  opacity: 1;
+}
+
+.shape-hud,
+.shape-reel-card,
+.shape-chapter__ghost {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .shape__head {
+    grid-template-columns: 1fr auto;
+  }
+
+  .shape__intro {
+    display: none;
+  }
+
+  .shape-chapter {
+    grid-template-columns: 1fr;
+  }
+
+  .shape-chapter__meta {
+    position: static;
+  }
+
+  .shape-chapter__line {
+    order: -1;
+    font-size: clamp(40px, 12vw, 60px);
+  }
+}
+
+/* Reel ------------------------------------------------------------------------ */
+
+@media (min-width: 761px) {
+  .shape[data-layout="reel"] {
+    --tone-bg: #17163d;
+    --tone-ink: #aaa8ff;
+    padding: 0;
+    background: var(--tone-bg);
+    color: var(--tone-ink);
+    transition:
+      background-color 800ms ease,
+      color 800ms ease;
+  }
+
+  .shape[data-layout="reel"][data-tone-now="grey"] {
+    --tone-bg: #24214d;
+    --tone-ink: #bbb9ff;
+  }
+
+  .shape[data-layout="reel"][data-tone-now="paper"] {
+    --tone-bg: #e8e7ff;
+    --tone-ink: #17163d;
+  }
+
+  .shape[data-layout="reel"] .shape__head {
+    padding: clamp(96px, 10vw, 170px) var(--gutter) 14px;
+  }
+
+  /* As tall as the track is wide (set in shape.ts); its window pins. */
+  .shape[data-layout="reel"] .shape__stage {
+    overflow-x: clip;
+  }
+
+  .shape[data-layout="reel"] .shape__viewport {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: hidden;
+    cursor: grab;
+    touch-action: pan-y;
+    user-select: none;
+  }
+
+  .shape[data-layout="reel"] .shape__viewport.is-dragging {
+    cursor: grabbing;
+  }
+
+  /* Opening and closing cards. */
+  .shape[data-layout="reel"] .shape-reel-card {
+    box-sizing: border-box;
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(20px, 3vh, 40px);
+    width: clamp(420px, 46vw, 900px);
+    height: 100%;
+    padding-right: clamp(80px, 10vw, 200px);
+  }
+
+  .shape[data-layout="reel"] .shape-reel-card--closing {
+    width: clamp(460px, 52vw, 1000px);
+    padding: 0 var(--gutter) 0 clamp(40px, 6vw, 120px);
+  }
+
+  .shape[data-layout="reel"] .shape-reel-card__label,
+  .shape[data-layout="reel"] .shape-reel-card__hint {
+    margin: 0;
+    font-size: clamp(11px, 0.78vw, 14px);
+    letter-spacing: 0.045em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+
+  .shape[data-layout="reel"] .shape-reel-card__title {
+    margin: 0;
+    font-size: clamp(56px, 6.6vw, 140px);
+    font-weight: 430;
+    line-height: 0.92;
+    letter-spacing: -0.065em;
+  }
+
+  .shape[data-layout="reel"] .shape-reel-card__hint span {
+    display: inline-block;
+    animation: shape-nudge 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
+
+  @keyframes shape-nudge {
+    50% { transform: translateX(10px); }
+  }
+
+  .shape[data-layout="reel"] .shape-reel-card__link {
+    width: max-content;
+    color: inherit;
+    font-size: clamp(56px, 7vw, 150px);
+    font-weight: 430;
+    line-height: 0.95;
+    letter-spacing: -0.065em;
+    text-decoration: none;
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0 0.06em no-repeat;
+    transition: background-size 700ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .shape[data-layout="reel"] .shape-reel-card__link:hover {
+    background-size: 100% 0.06em;
+  }
+
+  /* The chapter's word, sliding huge behind its frames. */
+  .shape[data-layout="reel"] .shape-chapter__ghost {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    z-index: 0;
+    display: block;
+    margin-top: -0.5em;
+    color: transparent;
+    font-size: clamp(180px, 30vh, 380px);
+    font-weight: 430;
+    line-height: 1;
+    letter-spacing: -0.06em;
+    white-space: nowrap;
+    -webkit-text-stroke: 1.5px var(--tone-ink);
+    opacity: 0;
+    pointer-events: none;
+    will-change: transform;
+  }
+
+  .shape[data-layout="reel"] .shape-chapter > :not(.shape-chapter__ghost) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .shape[data-layout="reel"] .shape__track {
+    position: relative;
+    display: flex;
+    width: max-content;
+    height: 100%;
+    padding-left: var(--gutter);
+    will-change: transform;
+  }
+
+  .shape[data-layout="reel"] .shape-chapter {
+    position: relative;
+    box-sizing: border-box;
+    grid-template-columns: clamp(380px, 40vw, 760px) max-content;
+    grid-template-rows: minmax(0, 1fr) auto;
+    column-gap: clamp(40px, 6vw, 120px);
+    row-gap: 0;
+    height: 100%;
+    padding: clamp(100px, 14vh, 150px) clamp(120px, 14vw, 260px) clamp(150px, 22vh, 210px) 0;
+    border: 0;
+  }
+
+  .shape[data-layout="reel"] .shape-chapter__line {
+    grid-area: 1 / 1;
+    align-self: end;
+    max-width: 10ch;
+    font-size: clamp(42px, 4.8vw, 104px);
+  }
+
+  .shape[data-layout="reel"] .shape-chapter__meta {
+    position: static;
+    grid-area: 2 / 1;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: end;
+    column-gap: clamp(18px, 2vw, 36px);
+    row-gap: 14px;
+    margin-top: clamp(28px, 5vh, 56px);
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+  }
+
+  .shape[data-layout="reel"] .shape-chapter__number {
+    grid-row: 1 / 4;
+    font-size: clamp(48px, 4.4vw, 92px);
+  }
+
+  .shape[data-layout="reel"] .shape-chapter__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1.1em;
+    font-size: clamp(12px, 0.8vw, 15px);
+  }
+
+  .shape[data-layout="reel"] .shape-chapter__link {
+    grid-column: 2;
+  }
+
+  /* The six frames, at different sizes and heights along the strip. */
+  .shape[data-layout="reel"] .shape-chapter__frames {
+    position: relative;
+    grid-area: 1 / 2 / 3 / 3;
+    display: flex;
+    align-items: center;
+    gap: clamp(28px, 3.2vw, 64px);
+    width: auto;
+    height: 100%;
+    overflow: visible;
+    clip-path: none;
+  }
+
+  .shape[data-layout="reel"] .shape-frame {
+    --size: 56vh;
+    --aspect: 0.8;
+    position: relative;
+    flex: none;
+    width: calc(var(--size) * var(--aspect));
+    height: var(--size);
+    margin: 0;
+    cursor: zoom-in;
+    transform: translate3d(var(--drift, 0px), 0, 0) skewX(var(--lean, 0deg)) scale(var(--squash, 1));
+    transition: opacity 400ms ease;
+  }
+
+  .shape[data-layout="reel"] .shape__viewport.is-dragging .shape-frame {
+    cursor: grabbing;
+  }
+
+  /* Hovering one frame quiets the rest of its chapter. */
+  .shape[data-layout="reel"] .shape-chapter__frames:hover .shape-frame:not(:hover) {
+    opacity: 0.45;
+  }
+
+  .shape[data-layout="reel"] .shape-frame:focus-visible {
+    outline: 1px solid currentColor;
+    outline-offset: 8px;
+  }
+
+  /* Wiped in from the left as it comes on, its image panning inside. */
+  .shape[data-layout="reel"] .shape-frame__window {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 6px;
+    clip-path: inset(0 calc((1 - var(--reveal, 1)) * 100%) 0 0 round 6px);
+  }
+
+  .shape[data-layout="reel"] .shape-frame:nth-child(2) { --size: 34vh; --aspect: 1; align-self: flex-start; margin-top: 4vh; }
+  .shape[data-layout="reel"] .shape-frame:nth-child(3) { --size: 46vh; --aspect: 1.45; align-self: flex-end; margin-bottom: 6vh; }
+  .shape[data-layout="reel"] .shape-frame:nth-child(4) { --size: 40vh; --aspect: 0.76; }
+  .shape[data-layout="reel"] .shape-frame:nth-child(5) { --size: 28vh; --aspect: 1.2; align-self: flex-start; margin-top: 10vh; }
+  .shape[data-layout="reel"] .shape-frame:nth-child(6) { --size: 52vh; --aspect: 1.25; }
+
+  .shape[data-layout="reel"] .shape-frame img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    object-fit: cover;
+    transform: translate3d(var(--pan, 0px), 0, 0) scale(1.14);
+    transition: scale 900ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .shape[data-layout="reel"] .shape-frame:hover img {
+    scale: 1.03;
+  }
+
+  .shape[data-layout="reel"] .shape-frame figcaption {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    font-size: clamp(10px, 0.66vw, 12px);
+    letter-spacing: 0.05em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+    opacity: calc(var(--reveal, 1) * 0.7);
+  }
+
+  .shape[data-layout="reel"] .shape-frame figcaption span {
+    margin-right: 0.6em;
+    opacity: 0.6;
+  }
+
+  /* The chapter strip at the foot, with how far along the reel is. */
+  .shape[data-layout="reel"] .shape-hud {
+    position: absolute;
+    bottom: clamp(22px, 3vh, 34px);
+    left: 50%;
+    display: flex;
+    gap: clamp(18px, 2.4vw, 44px);
+    padding-top: 12px;
+    transform: translateX(-50%);
+  }
+
+  .shape[data-layout="reel"] .shape-hud__bar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  .shape[data-layout="reel"] .shape-hud__bar i {
+    position: absolute;
+    inset: 0;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+  }
+
+  .shape[data-layout="reel"] .shape-hud__count {
+    margin-right: clamp(6px, 1vw, 20px);
+    font-size: clamp(11px, 0.74vw, 14px);
+    letter-spacing: 0.045em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .shape[data-layout="reel"] .shape-hud__count b {
+    font-family: "Marcellus", Georgia, serif;
+    font-weight: 400;
+  }
+
+  .shape[data-layout="reel"] .shape-hud button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: clamp(11px, 0.74vw, 14px);
+    letter-spacing: 0.045em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    opacity: 0.45;
+    transition: opacity 300ms ease;
+  }
+
+  .shape[data-layout="reel"] .shape-hud button span {
+    margin-right: 0.4em;
+    font-family: "Marcellus", Georgia, serif;
+  }
+
+  .shape[data-layout="reel"] .shape-hud button:hover,
+  .shape[data-layout="reel"] .shape-hud button[aria-current="true"] {
+    opacity: 1;
+  }
+}
+
+/* Full screen ------------------------------------------------------------------ */
+
+/* Above everything, the corner marks and navigation included. */
+.shape-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: grid;
+  place-items: center;
+  background: rgba(12, 11, 34, 0.94);
+  color: #f1f1ed;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.shape-lightbox.is-open {
+  opacity: 1;
+}
+
+.shape-lightbox[hidden] {
+  display: none;
+}
+
+.shape-lightbox__frame {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  transform: scale(0.94);
+  transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.shape-lightbox.is-open .shape-lightbox__frame {
+  transform: none;
+}
+
+.shape-lightbox__frame img {
+  display: block;
+  max-width: min(84vw, 1500px);
+  max-height: 78svh;
+  border-radius: 6px;
+  object-fit: contain;
+}
+
+.shape-lightbox__frame figcaption,
+.shape-lightbox__count {
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.shape-lightbox__frame figcaption span {
+  margin-right: 0.6em;
+  opacity: 0.6;
+}
+
+.shape-lightbox__count {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  margin: 0;
+  transform: translateX(-50%);
+}
+
+.shape-lightbox button {
+  position: absolute;
+  padding: 10px 14px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.shape-lightbox__close {
+  top: 18px;
+  right: 24px;
+}
+
+.shape-lightbox__step {
+  top: 50%;
+  font-size: 22px !important;
+  transform: translateY(-50%);
+}
+
+.shape-lightbox__step[data-step="-1"] {
+  left: 24px;
+}
+
+.shape-lightbox__step[data-step="1"] {
+  right: 24px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shape-pill,
+  .shape-pill img,
+  .shape-preview img {
+    transition: none;
+  }
+}
