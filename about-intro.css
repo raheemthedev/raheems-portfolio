@@ -534,10 +534,28 @@
   cursor: default;
 }
 
-/* Crumpling: the sent note bent on a canvas (aboutIntroCrumple). */
-.about-personal[data-intro="desk"] .intro-crumple {
-  position: absolute;
+/* Sent: an ink stamp, then the note floats away (sendAway in about-intro.ts). */
+.about-personal[data-intro="desk"] .intro-card--note.is-sent {
   pointer-events: none;
+}
+
+.about-personal[data-intro="desk"] .intro-card__stamp {
+  position: absolute;
+  top: 46%;
+  left: 50%;
+  padding: 0.18em 0.6em 0.1em;
+  border: 2px solid currentColor;
+  border-radius: 6px;
+  color: rgba(176, 52, 32, 0.88);
+  font-family: "Marcellus", Georgia, serif;
+  font-size: clamp(26px, 2.2vw, 38px);
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+  mix-blend-mode: multiply;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) rotate(-12deg);
 }
 
 .about-personal[data-intro="desk"] .intro-card--print {
