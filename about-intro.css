@@ -307,6 +307,23 @@
   transform: rotate(90deg);
 }
 
+/* The paper plane the plus becomes when a note goes in. */
+.about-personal[data-intro="desk"] .intro-desk__plane {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 46%;
+  height: 46%;
+  margin: -23% 0 0 -23%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .about-personal[data-intro="desk"] .intro-desk__add:hover .intro-desk__plus {
   transform: rotate(90deg);
 }
