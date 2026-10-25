@@ -169,12 +169,13 @@ const aboutIntroPaintNote = (card: HTMLElement, scale: number) => {
 // facets (cells around scattered points, each tilted its own way), lit from
 // the top left, with a dark crease where neighbouring facets meet. It's mapped
 // onto the bending sheet like the note itself, so the wrinkles fold with it.
-const aboutIntroWrinkle = (texture: HTMLCanvasElement) => {
-  const scale = 0.5;
-  const width = Math.max(1, Math.round(texture.width * scale));
-  const height = Math.max(1, Math.round(texture.height * scale));
-  const light = { x: -0.5, y: -0.62, z: 0.6 };
-  const flat = light.z;
+// Crumpled paper's small-scale surface: two scales of facets (cells around
+// scattered points, each tilted its own way and bowed a little), with a crease
+// where neighbouring facets meet. Per pixel: the tilt, and how creased it is.
+const aboutIntroFacets = (width: number, height: number) => {
+  const tiltX = new Float32Array(width * height);
+  const tiltY = new Float32Array(width * height);
+  const crease = new Float32Array(width * height);
   const layers = [
     { cell: Math.max(width, height) / 6, tilt: 0.7, crease: 0.035 },
     { cell: Math.max(width, height) / 16, tilt: 0.38, crease: 0.05 },
@@ -189,23 +190,9 @@ const aboutIntroWrinkle = (texture: HTMLCanvasElement) => {
     }));
     return { ...layer, columns, rows, seeds };
   });
-
-  const shade = document.createElement("canvas");
-  shade.width = width;
-  shade.height = height;
-  const shadeContext = shade.getContext("2d");
-  const shine = document.createElement("canvas");
-  shine.width = width;
-  shine.height = height;
-  const shineContext = shine.getContext("2d");
-  if (!shadeContext || !shineContext) return texture;
-  const shadePixels = shadeContext.createImageData(width, height);
-  const shinePixels = shineContext.createImageData(width, height);
-
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
-      let tiltX = 0;
-      let tiltY = 0;
+      const index = y * width + x;
       let creased = 1;
       layers.forEach((layer) => {
         const cellX = Math.floor(x / layer.cell);
@@ -230,14 +217,45 @@ const aboutIntroWrinkle = (texture: HTMLCanvasElement) => {
           }
         }
         // Each facet bows a little, so its light shifts across it.
-        const bowX = (x - chosen.x) / layer.cell;
-        const bowY = (y - chosen.y) / layer.cell;
-        tiltX += chosen.tiltX + bowX * layer.tilt * 0.5;
-        tiltY += chosen.tiltY + bowY * layer.tilt * 0.5;
+        tiltX[index] += chosen.tiltX + ((x - chosen.x) / layer.cell) * layer.tilt * 0.5;
+        tiltY[index] += chosen.tiltY + ((y - chosen.y) / layer.cell) * layer.tilt * 0.5;
         // Near the boundary between two facets: the crease itself, a thin line.
         const edge = Math.min((second - nearest) / (layer.cell * layer.crease), 1);
-        creased = Math.min(creased, 0.62 + 0.38 * Math.sqrt(edge));
+        creased = Math.min(creased, Math.sqrt(edge));
       });
+      crease[index] = creased;
+    }
+  }
+  return { tiltX, tiltY, crease };
+};
+
+// The same note, crumpled flat for the 2D crumple: the facets lit from the top
+// left and laid over it.
+const aboutIntroWrinkle = (texture: HTMLCanvasElement) => {
+  const scale = 0.5;
+  const width = Math.max(1, Math.round(texture.width * scale));
+  const height = Math.max(1, Math.round(texture.height * scale));
+  const light = { x: -0.5, y: -0.62, z: 0.6 };
+  const flat = light.z;
+  const facets = aboutIntroFacets(width, height);
+
+  const shade = document.createElement("canvas");
+  shade.width = width;
+  shade.height = height;
+  const shadeContext = shade.getContext("2d");
+  const shine = document.createElement("canvas");
+  shine.width = width;
+  shine.height = height;
+  const shineContext = shine.getContext("2d");
+  if (!shadeContext || !shineContext) return texture;
+  const shadePixels = shadeContext.createImageData(width, height);
+  const shinePixels = shineContext.createImageData(width, height);
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const tiltX = facets.tiltX[y * width + x];
+      const tiltY = facets.tiltY[y * width + x];
+      const creased = 0.62 + 0.38 * facets.crease[y * width + x];
       const length = Math.hypot(tiltX, tiltY, 1);
       const lit = ((-tiltX * light.x - tiltY * light.y + light.z) / length) / flat;
       const index = (y * width + x) * 4;
@@ -271,13 +289,117 @@ const aboutIntroWrinkle = (texture: HTMLCanvasElement) => {
   return crumpled;
 };
 
-// Crumple a note the way paper crumples: the sheet is simulated as a cloth
-// of points that won't stretch and resists bending a little, and a sphere
-// closes in on it like cupped hands. With nowhere to go, the paper buckles —
-// folding over itself into ridges and pockets — until it's a lumpy ball.
-// Each facet is drawn with the note (or the blank back, where the sheet has
-// flipped over), lit by the way it really faces, and darker deep inside the
-// ball. `onBall` hears when it's done, with the canvas to throw.
+// A sheet of paper as a cloth of points: neighbours keep their spacing (it
+// can't stretch), diagonals hold it square (it can't shear), and points two
+// apart resist bending, so folds come out sharp. `step(squeeze)` closes a
+// sphere around it like cupped hands, from just around the flat sheet down to
+// a ball; with nowhere to go, the paper buckles and folds over itself. Points
+// are in the sheet's own pixels, `z` toward the viewer.
+const aboutIntroPaperSim = (width: number, height: number, columns: number) => {
+  const rows = Math.max(Math.round(columns * 0.7), Math.round(columns * (height / width)));
+  const across = columns + 1;
+  const count = across * (rows + 1);
+  const x = new Float32Array(count);
+  const y = new Float32Array(count);
+  const z = new Float32Array(count);
+  const lastX = new Float32Array(count);
+  const lastY = new Float32Array(count);
+  const lastZ = new Float32Array(count);
+  const lump = new Float32Array(count);
+  for (let row = 0; row <= rows; row += 1) {
+    for (let column = 0; column <= columns; column += 1) {
+      const index = row * across + column;
+      x[index] = lastX[index] = (column / columns) * width;
+      y[index] = lastY[index] = (row / rows) * height;
+      // The faintest unevenness, so it knows which way to buckle.
+      z[index] = lastZ[index] = (Math.random() - 0.5) * 2;
+      // Some of the ball's surface sits further out than the rest.
+      lump[index] = 0.84 + Math.random() * 0.24;
+    }
+  }
+  // Stiffer against bending on a finer sheet, so the folds stay large.
+  const bend = Math.min(0.2 + columns * 0.006, 0.5);
+  const links: [number, number, number, number][] = [];
+  const link = (first: number, second: number, stiffness: number) => {
+    links.push([first, second, Math.hypot(x[first] - x[second], y[first] - y[second]), stiffness]);
+  };
+  for (let row = 0; row <= rows; row += 1) {
+    for (let column = 0; column <= columns; column += 1) {
+      const index = row * across + column;
+      if (column < columns) link(index, index + 1, 1);
+      if (row < rows) link(index, index + across, 1);
+      if (column < columns && row < rows) {
+        link(index, index + across + 1, 0.6 + Math.random() * 0.3);
+        link(index + 1, index + across, 0.6 + Math.random() * 0.3);
+      }
+      if (column < columns - 1) link(index, index + 2, bend);
+      if (row < rows - 1) link(index, index + across * 2, bend);
+    }
+  }
+  const centreX = width / 2;
+  const centreY = height / 2;
+  const openRadius = Math.hypot(width, height) / 2 + 4;
+  const ballRadius = Math.max(width, height) * 0.26;
+
+  const step = (squeeze: number) => {
+    const radius = openRadius + (ballRadius - openRadius) * squeeze;
+    for (let index = 0; index < count; index += 1) {
+      const moveX = (x[index] - lastX[index]) * 0.82;
+      const moveY = (y[index] - lastY[index]) * 0.82;
+      const moveZ = (z[index] - lastZ[index]) * 0.82;
+      lastX[index] = x[index];
+      lastY[index] = y[index];
+      lastZ[index] = z[index];
+      x[index] += moveX;
+      y[index] += moveY;
+      z[index] += moveZ + (Math.random() - 0.5) * 0.35 * (1 - squeeze);
+    }
+    for (let pass = 0; pass < 12; pass += 1) {
+      for (let index = 0; index < count; index += 1) {
+        const offsetX = x[index] - centreX;
+        const offsetY = y[index] - centreY;
+        const offsetZ = z[index];
+        const distance = Math.hypot(offsetX, offsetY, offsetZ) || 1;
+        // The lumps only show as it closes, so the sheet starts square.
+        const limit = radius * (1 + (lump[index] - 1) * squeeze);
+        if (distance > limit) {
+          const pull = limit / distance;
+          x[index] = centreX + offsetX * pull;
+          y[index] = centreY + offsetY * pull;
+          z[index] = offsetZ * pull;
+        }
+      }
+      links.forEach(([first, second, rest, stiffness]) => {
+        const dx = x[second] - x[first];
+        const dy = y[second] - y[first];
+        const dz = z[second] - z[first];
+        const length = Math.hypot(dx, dy, dz) || 1;
+        // Paper won't stretch and won't squash either, so being squeezed it
+        // can only fold.
+        const strain = (length - rest) / length;
+        const amount = stiffness * 0.5;
+        const shiftX = dx * strain * amount;
+        const shiftY = dy * strain * amount;
+        const shiftZ = dz * strain * amount;
+        x[first] += shiftX;
+        y[first] += shiftY;
+        z[first] += shiftZ;
+        x[second] -= shiftX;
+        y[second] -= shiftY;
+        z[second] -= shiftZ;
+      });
+    }
+    return radius;
+  };
+
+  return { x, y, z, count, columns, rows, across, centreX, centreY, ballRadius, step };
+};
+
+// The flat fallback for crumpling a note, on a 2D canvas: the paper is
+// simulated (aboutIntroPaperSim) and each facet drawn with the note (or the
+// blank back, where the sheet has flipped over), lit by the way it faces and
+// darker deep inside the ball. `onBall` hears when it's done, with the canvas
+// to throw.
 const aboutIntroCrumple = (card: HTMLElement, host: HTMLElement, duration: number, onBall: (canvas: HTMLCanvasElement) => void) => {
   const width = card.offsetWidth;
   const height = card.offsetHeight;
@@ -305,56 +427,8 @@ const aboutIntroCrumple = (card: HTMLElement, host: HTMLElement, duration: numbe
     return;
   }
 
-  // The sheet as a grid of points, lying flat with the faintest unevenness
-  // so it knows which way to buckle.
-  const columns = 20;
-  const rows = Math.max(14, Math.round(columns * (height / width)));
-  const across = columns + 1;
-  const count = across * (rows + 1);
-  const x = new Float32Array(count);
-  const y = new Float32Array(count);
-  const z = new Float32Array(count);
-  const lastX = new Float32Array(count);
-  const lastY = new Float32Array(count);
-  const lastZ = new Float32Array(count);
-  const lump = new Float32Array(count);
-  for (let row = 0; row <= rows; row += 1) {
-    for (let column = 0; column <= columns; column += 1) {
-      const index = row * across + column;
-      x[index] = lastX[index] = (column / columns) * width;
-      y[index] = lastY[index] = (row / rows) * height;
-      z[index] = lastZ[index] = (Math.random() - 0.5) * 1.2;
-      // Some of the ball's surface sits further out than the rest.
-      lump[index] = 0.84 + Math.random() * 0.24;
-    }
-  }
-
-  // What holds it together: neighbours at their spacing (the paper can't
-  // stretch), diagonals (it can't shear), and points two apart (it resists
-  // bending, so folds come out sharp rather than floppy).
-  const links: [number, number, number, number][] = [];
-  const link = (first: number, second: number, stiffness: number) => {
-    links.push([first, second, Math.hypot(x[first] - x[second], y[first] - y[second]), stiffness]);
-  };
-  for (let row = 0; row <= rows; row += 1) {
-    for (let column = 0; column <= columns; column += 1) {
-      const index = row * across + column;
-      if (column < columns) link(index, index + 1, 1);
-      if (row < rows) link(index, index + across, 1);
-      if (column < columns && row < rows) {
-        link(index, index + across + 1, 0.6 + Math.random() * 0.3);
-        link(index + 1, index + across, 0.6 + Math.random() * 0.3);
-      }
-      if (column < columns - 1) link(index, index + 2, 0.18);
-      if (row < rows - 1) link(index, index + across * 2, 0.18);
-    }
-  }
-
-  const centreX = width / 2;
-  const centreY = height / 2;
-  const longest = Math.max(width, height);
-  const openRadius = Math.hypot(width, height) / 2 + 4;
-  const ballRadius = longest * 0.26;
+  const sheet = aboutIntroPaperSim(width, height, 20);
+  const { x, y, z, columns, rows, across, centreX, centreY, ballRadius } = sheet;
   const light = { x: -0.42, y: -0.55, z: 0.72 };
   const started = performance.now();
 
@@ -372,54 +446,7 @@ const aboutIntroCrumple = (card: HTMLElement, host: HTMLElement, duration: numbe
   const frame = (now: number) => {
     const progress = Math.min((now - started) / duration, 1);
     const squeeze = 1 - Math.pow(1 - progress, 2.2);
-    const radius = openRadius + (ballRadius - openRadius) * squeeze;
-
-    // Move, then keep inside the closing hands, then hold the paper together.
-    for (let index = 0; index < count; index += 1) {
-      const moveX = (x[index] - lastX[index]) * 0.82;
-      const moveY = (y[index] - lastY[index]) * 0.82;
-      const moveZ = (z[index] - lastZ[index]) * 0.82;
-      lastX[index] = x[index];
-      lastY[index] = y[index];
-      lastZ[index] = z[index];
-      x[index] += moveX;
-      y[index] += moveY;
-      z[index] += moveZ + (Math.random() - 0.5) * 0.35 * (1 - squeeze);
-    }
-    for (let pass = 0; pass < 10; pass += 1) {
-      for (let index = 0; index < count; index += 1) {
-        const offsetX = x[index] - centreX;
-        const offsetY = y[index] - centreY;
-        const offsetZ = z[index];
-        const distance = Math.hypot(offsetX, offsetY, offsetZ) || 1;
-        // The lumps only show as it closes, so the sheet starts square.
-        const limit = radius * (1 + (lump[index] - 1) * squeeze);
-        if (distance > limit) {
-          const pull = limit / distance;
-          x[index] = centreX + offsetX * pull;
-          y[index] = centreY + offsetY * pull;
-          z[index] = offsetZ * pull;
-        }
-      }
-      links.forEach(([first, second, rest, stiffness]) => {
-        const dx = x[second] - x[first];
-        const dy = y[second] - y[first];
-        const dz = z[second] - z[first];
-        const length = Math.hypot(dx, dy, dz) || 1;
-        // Only stretching is resisted hard; squeezing a link is what folds it.
-        const strain = (length - rest) / length;
-        const amount = strain > 0 ? stiffness * 0.5 : stiffness * 0.12;
-        const shiftX = dx * strain * amount;
-        const shiftY = dy * strain * amount;
-        const shiftZ = dz * strain * amount;
-        x[first] += shiftX;
-        y[first] += shiftY;
-        z[first] += shiftZ;
-        x[second] -= shiftX;
-        y[second] -= shiftY;
-        z[second] -= shiftZ;
-      });
-    }
+    const radius = sheet.step(squeeze);
 
     context.setTransform(1, 0, 0, 1, 0, 0);
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -531,6 +558,164 @@ const aboutIntroCrumple = (card: HTMLElement, host: HTMLElement, duration: numbe
     else onBall(canvas);
   };
   requestAnimationFrame(frame);
+};
+
+// three.js for the WebGL crumple, loaded only once someone opens a note.
+declare const THREE: any;
+let aboutThree: Promise<boolean> | null = null;
+const aboutLoadThree = () => {
+  aboutThree ??= new Promise<boolean>((resolve) => {
+    if (typeof THREE !== "undefined") {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
+    script.onload = () => resolve(typeof THREE !== "undefined");
+    script.onerror = () => resolve(false);
+    document.head.append(script);
+  });
+  return aboutThree;
+};
+
+// The paper's fine wrinkles as a normal map, so each catches the light.
+const aboutIntroPaperNormals = (width: number, height: number) => {
+  const facets = aboutIntroFacets(width, height);
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  if (!context) return canvas;
+  const pixels = context.createImageData(width, height);
+  for (let index = 0; index < width * height; index += 1) {
+    // Creases dip, so their sides tilt in more steeply.
+    const depth = 1 + (1 - facets.crease[index]) * 1.6;
+    const nx = -facets.tiltX[index] * depth;
+    const ny = facets.tiltY[index] * depth;
+    const length = Math.hypot(nx, ny, 1);
+    pixels.data[index * 4] = Math.round(((nx / length) * 0.5 + 0.5) * 255);
+    pixels.data[index * 4 + 1] = Math.round(((ny / length) * 0.5 + 0.5) * 255);
+    pixels.data[index * 4 + 2] = Math.round(((1 / length) * 0.5 + 0.5) * 255);
+    pixels.data[index * 4 + 3] = 255;
+  }
+  context.putImageData(pixels, 0, 0);
+  return canvas;
+};
+
+// Crumple a note in WebGL: the simulated sheet (aboutIntroPaperSim) as a
+// lit paper surface — the note on the front, blank paper on the back, the fine
+// wrinkles in its normal map deepening as it's squeezed — lit from the top
+// left with soft shadows, on itself and on the desk beneath. Returns false if
+// WebGL isn't to be had, so the flat crumple can step in.
+const aboutIntroCrumple3D = (card: HTMLElement, host: HTMLElement, duration: number, onBall: (canvas: HTMLCanvasElement) => void) => {
+  if (typeof THREE === "undefined") return false;
+  const width = card.offsetWidth;
+  const height = card.offsetHeight;
+  const margin = 40;
+  const fullWidth = width + margin * 2;
+  const fullHeight = height + margin * 2;
+  let renderer: any;
+  try {
+    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  } catch {
+    return false;
+  }
+  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+  renderer.setPixelRatio(ratio);
+  renderer.setSize(fullWidth, fullHeight);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const canvas: HTMLCanvasElement = renderer.domElement;
+  canvas.className = "intro-crumple";
+  canvas.setAttribute("aria-hidden", "true");
+  canvas.style.left = `${-margin}px`;
+  canvas.style.top = `${-margin}px`;
+  canvas.style.transform = card.style.transform;
+  canvas.style.zIndex = card.style.zIndex;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(-fullWidth / 2, fullWidth / 2, fullHeight / 2, -fullHeight / 2, -2000, 2000);
+  camera.position.set(0, 0, 1000);
+
+  // Soft daylight from above, and a key light from the top left that casts
+  // the shadows; together they light the flat sheet as it looked.
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xa89870, 0.5));
+  const key = new THREE.DirectionalLight(0xffffff, 0.72);
+  key.position.set(-0.45, 0.6, 1).multiplyScalar(600);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  const reach = Math.max(fullWidth, fullHeight);
+  Object.assign(key.shadow.camera, { left: -reach, right: reach, top: reach, bottom: -reach, near: 1, far: 3000 });
+  key.shadow.bias = -0.0015;
+  key.shadow.radius = 4;
+  scene.add(key);
+
+  const ratioCanvas = Math.min(window.devicePixelRatio || 1, 2);
+  const note = new THREE.CanvasTexture(aboutIntroPaintNote(card, ratioCanvas));
+  note.encoding = THREE.sRGBEncoding;
+  note.anisotropy = 4;
+  const wrinkles = new THREE.CanvasTexture(aboutIntroPaperNormals(Math.round(width * 1.5), Math.round(height * 1.5)));
+  const paperColor = new THREE.Color(getComputedStyle(card).backgroundColor);
+  paperColor.convertSRGBToLinear();
+  const normalScale = new THREE.Vector2(0, 0);
+  const front = new THREE.MeshStandardMaterial({ map: note, normalMap: wrinkles, normalScale, roughness: 0.92, metalness: 0, side: THREE.FrontSide });
+  const back = new THREE.MeshStandardMaterial({ color: paperColor, normalMap: wrinkles, normalScale, roughness: 0.92, metalness: 0, side: THREE.BackSide });
+
+  const sheet = aboutIntroPaperSim(width, height, 40);
+  const geometry = new THREE.PlaneGeometry(width, height, sheet.columns, sheet.rows);
+  const positions = geometry.attributes.position;
+  [front, back].forEach((material) => {
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+  });
+  // The desk under it, only there to catch its shadow.
+  const desk = new THREE.Mesh(new THREE.PlaneGeometry(fullWidth * 2, fullHeight * 2), new THREE.ShadowMaterial({ opacity: 0.22 }));
+  desk.receiveShadow = true;
+  scene.add(desk);
+
+  host.append(canvas);
+  card.style.visibility = "hidden";
+  const started = performance.now();
+
+  const frame = (now: number) => {
+    const progress = Math.min((now - started) / duration, 1);
+    // Quick to start, slow to finish, like a hand squeezing.
+    const squeeze = 1 - Math.pow(1 - progress, 2.2);
+    const radius = sheet.step(squeeze);
+    for (let index = 0; index < sheet.count; index += 1) {
+      positions.setXYZ(index, sheet.x[index] - sheet.centreX, sheet.centreY - sheet.y[index], sheet.z[index]);
+    }
+    positions.needsUpdate = true;
+    geometry.computeVertexNormals();
+    geometry.computeBoundingSphere();
+    const wrinkling = Math.min(squeeze * 1.8, 1);
+    normalScale.set(wrinkling * 1.4, wrinkling * 1.4);
+    // The ball sits on the desk.
+    desk.position.z = -Math.max(radius, sheet.ballRadius) - 2;
+    renderer.render(scene, camera);
+    if (progress < 1) {
+      requestAnimationFrame(frame);
+      return;
+    }
+    onBall(canvas);
+    // Free the GPU once the ball has been thrown and removed.
+    const release = new MutationObserver(() => {
+      if (canvas.isConnected) return;
+      release.disconnect();
+      geometry.dispose();
+      note.dispose();
+      wrinkles.dispose();
+      front.dispose();
+      back.dispose();
+      renderer.dispose();
+    });
+    release.observe(host, { childList: true });
+  };
+  requestAnimationFrame(frame);
+  return true;
 };
 
 if (aboutIntroSection) {
@@ -680,7 +865,7 @@ if (aboutIntroSection) {
         <div class="intro-desk__centre">
           <h2 class="intro-title intro-desk__title" id="${titleId}">${aboutIntroEscape(title)}</h2>
           <button type="button" class="intro-desk__add" aria-label="Add a note: ask Raheem something">
-            <span class="intro-desk__plus" aria-hidden="true">+</span>
+            <span class="intro-desk__plus" aria-hidden="true"></span>
             <span class="intro-desk__add-label" aria-hidden="true">Want to ask Raheem something?</span>
           </button>
           <p class="intro-desk__thanks" aria-live="polite"></p>
@@ -815,8 +1000,8 @@ if (aboutIntroSection) {
       let lastTime = 0;
       body.card.addEventListener("pointerdown", (event) => {
         if (!aboutIntroWide.matches) return;
-        // Writing in a note or pressing its button doesn't pick it up.
-        if (event.target instanceof Element && event.target.closest("textarea, button")) return;
+        // Writing in a note or pressing its buttons doesn't pick it up.
+        if (event.target instanceof Element && event.target.closest("textarea, input, button")) return;
         event.preventDefault();
         body.held = true;
         body.settled = true;
@@ -864,8 +1049,8 @@ if (aboutIntroSection) {
     const thanks = root.querySelector<HTMLElement>(".intro-desk__thanks");
     let written = 0;
 
-    // Crumple a sent note into a ball (aboutIntroCrumple), then squeeze it
-    // once and toss it up off the desk.
+    // Crumple a sent note into a ball (aboutIntroCrumple3D, or the flat
+    // aboutIntroCrumple), then squeeze it once and toss it up off the desk.
     const crumple = (body: DeskBody) => {
       const index = bodies.indexOf(body);
       if (index >= 0) bodies.splice(index, 1);
@@ -878,7 +1063,7 @@ if (aboutIntroSection) {
         finish();
         return;
       }
-      aboutIntroCrumple(card, desk, 1150, (ball) => {
+      const toBall = (ball: HTMLCanvasElement) => {
         const toss = (Math.random() < 0.5 ? -1 : 1) * window.innerWidth * 0.45;
         const flight = ball.animate(
           [
@@ -890,6 +1075,10 @@ if (aboutIntroSection) {
           { duration: 1000, delay: 140, easing: "cubic-bezier(0.33, 0, 0.25, 1)", fill: "forwards" },
         );
         flight.finished.then(() => finish(ball)).catch(() => finish(ball));
+      };
+      // In WebGL with real lighting when three.js is there; drawn flat otherwise.
+      void aboutLoadThree().then((ready: boolean) => {
+        if (!ready || !aboutIntroCrumple3D(card, desk, 1300, toBall)) aboutIntroCrumple(card, desk, 1150, toBall);
       });
     };
 
@@ -910,11 +1099,14 @@ if (aboutIntroSection) {
 
     add.addEventListener("click", () => {
       if (desk.querySelectorAll(".intro-card--note").length >= 4) return;
+      // Get the 3D crumple ready while they write.
+      void aboutLoadThree();
       written += 1;
       const card = document.createElement("article");
       card.className = "intro-card intro-card--note";
       card.innerHTML = `
         <span class="intro-card__tape" aria-hidden="true"></span>
+        <button type="button" class="intro-card__close" aria-label="Discard this note">×</button>
         <p class="intro-card__no">For Raheem</p>
         <label class="visually-hidden" for="intro-note-${written}">Your note to Raheem</label>
         <textarea id="intro-note-${written}" class="intro-card__field" rows="5" placeholder="Want to know more about Raheem?"></textarea>
@@ -931,6 +1123,19 @@ if (aboutIntroSection) {
       const from = card.querySelector<HTMLInputElement>(".intro-card__from");
       const send = card.querySelector<HTMLButtonElement>(".intro-card__send");
       const status = card.querySelector<HTMLElement>(".intro-card__status");
+      // The × discards the note: it drops away and is gone.
+      card.querySelector<HTMLButtonElement>(".intro-card__close")?.addEventListener("click", () => {
+        const body = bodies.find((candidate) => candidate.card === card);
+        if (body) bodies.splice(bodies.indexOf(body), 1);
+        const away = card.animate(
+          [
+            { scale: "1", translate: "0 0", opacity: 1 },
+            { scale: "0.9", translate: "0 24px", opacity: 0 },
+          ],
+          { duration: aboutIntroStill.matches ? 1 : 260, easing: "cubic-bezier(0.5, 0, 0.75, 0)", fill: "forwards" },
+        );
+        away.finished.then(() => card.remove()).catch(() => card.remove());
+      }, { signal: abort.signal });
       send?.addEventListener("click", async () => {
         const message = field?.value.trim() ?? "";
         if (!message) {

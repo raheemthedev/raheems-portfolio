@@ -282,9 +282,29 @@
   color: #f1f1ed;
 }
 
+/* The plus drawn as two bars, so it sits dead centre and turns about it. */
 .about-personal[data-intro="desk"] .intro-desk__plus {
+  position: relative;
   display: block;
+  width: 36%;
+  height: 36%;
   transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.about-personal[data-intro="desk"] .intro-desk__plus::before,
+.about-personal[data-intro="desk"] .intro-desk__plus::after {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1.5px;
+  margin-top: -0.75px;
+  background: currentColor;
+  content: "";
+}
+
+.about-personal[data-intro="desk"] .intro-desk__plus::after {
+  transform: rotate(90deg);
 }
 
 .about-personal[data-intro="desk"] .intro-desk__add:hover .intro-desk__plus {
@@ -411,6 +431,39 @@
 
 .about-personal[data-intro="desk"] .intro-card__field::placeholder {
   color: rgba(11, 11, 11, 0.42);
+}
+
+/* Discard a note: a small × in its top-left corner. */
+.about-personal[data-intro="desk"] .intro-card__close {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(11, 11, 11, 0.5);
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
+}
+
+.about-personal[data-intro="desk"] .intro-card__close:hover,
+.about-personal[data-intro="desk"] .intro-card__close:focus-visible {
+  background: rgba(11, 11, 11, 0.08);
+  color: var(--ink);
+}
+
+.about-personal[data-intro="desk"] .intro-card--note .intro-card__no {
+  margin-left: 22px;
 }
 
 .about-personal[data-intro="desk"] .intro-card__from {
