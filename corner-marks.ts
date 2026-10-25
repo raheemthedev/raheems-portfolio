@@ -121,10 +121,12 @@ const cornerRoll = (body: CornerBody, delta: number, radius: number, friction = 
   const height = window.innerHeight;
   if (body.x < radius || body.x > width - radius) {
     body.x = Math.max(radius, Math.min(width - radius, body.x));
+    if (Math.abs(body.velocityX) > 2) siteSound.bump(Math.min(Math.abs(body.velocityX) / 30, 1));
     body.velocityX *= -0.8;
   }
   if (body.y < radius || body.y > height - radius) {
     body.y = Math.max(radius, Math.min(height - radius, body.y));
+    if (Math.abs(body.velocityY) > 2) siteSound.bump(Math.min(Math.abs(body.velocityY) / 30, 1));
     body.velocityY *= -0.8;
   }
   body.turn += (body.velocityX + body.velocityY) * 0.4 * step;
@@ -148,6 +150,7 @@ const cornerCollide = (all: CornerBody[], radius: number, bounce: number) => {
       b.x += normalX * overlap * 0.5;
       b.y += normalY * overlap * 0.5;
       const closing = (b.velocityX - a.velocityX) * normalX + (b.velocityY - a.velocityY) * normalY;
+      if (closing < -1.5) siteSound.clack(Math.min(-closing / 24, 1));
       if (closing < 0) {
         const impulse = closing * (1 + bounce) * 0.5;
         a.velocityX += normalX * impulse;
@@ -304,6 +307,7 @@ const cornerKnock = (body: CornerBody, pointX: number, pointY: number, force: nu
   const across = (pointX - (bounds.left + bounds.width / 2)) / Math.max(bounds.width, 1);
   knocked.spin += Math.max(-4, Math.min(4, ((body.velocityY * across - body.velocityX * 0.1) * force * 0.8) / heft));
   cornerKnocked.set(target, knocked);
+  siteSound.tick(0.18);
   if (cornerKnockFrame === null) cornerKnockFrame = requestAnimationFrame(cornerSettle);
 };
 
@@ -440,6 +444,8 @@ const cornerCue = () => {
       const atName = cornerX === 0 && cornerY === 0;
       if (speed > 5 && !atName && Math.hypot(body.x - cornerX, body.y - cornerY) < POCKET) {
         sinking.add(body);
+        siteSound.plop();
+        siteSound.buzz(25);
         return;
       }
       cornerRoll(body, delta, RADIUS, 0.978);
@@ -449,10 +455,14 @@ const cornerCue = () => {
       const target = cornerSpot(body, all);
       if (Math.hypot(body.x - target.x, body.y - target.y) < 70 && Math.hypot(body.velocityX, body.velocityY) < 16) {
         placed.add(body);
+        siteSound.pop();
+        siteSound.buzz(12);
         // Clear of the whole name, wherever its letters have landed.
         const nameWidth = all.reduce((width, other) => width + other.mark.offsetWidth - 1, 0);
         if (all.every((other) => placed.has(other))) {
           whole = 1;
+          siteSound.chime();
+          siteSound.buzz([15, 40, 15]);
           say("— hi, that's me.", nameWidth);
         } else {
           say(`${placed.size} of ${all.length}`, nameWidth);
@@ -504,6 +514,8 @@ const cornerCue = () => {
       // A pointer still on the letter has nothing to aim at.
       if (Math.hypot(shot.pointerX - shot.body.x, shot.pointerY - shot.body.y) < 24) return;
       const power = 10 + load * 62;
+      siteSound.strike(load);
+      siteSound.buzz(Math.round(10 + load * 25));
       shot.body.velocityX = directionX * power;
       shot.body.velocityY = directionY * power;
       rolled.set(shot.body, now);

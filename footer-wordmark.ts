@@ -96,7 +96,15 @@ const footerSetups = footerWordmarks.map((wordmark) => {
     if (frame === null) frame = requestAnimationFrame(tick);
   };
 
+  // The letter under the cursor, for its notch.
+  let sounding = -1;
   wordmark.addEventListener("pointermove", (event) => {
+    const reach = influences(event.clientX, 0.58);
+    const nearest = reach.indexOf(Math.max(...reach));
+    if (nearest !== sounding) {
+      sounding = nearest;
+      siteSound.notch(nearest);
+    }
     if (footerReducedMotion.matches) return;
     if (mode === "classic") {
       influences(event.clientX, 0.58).forEach((influence, index) => {
@@ -132,7 +140,10 @@ const footerSetups = footerWordmarks.map((wordmark) => {
     });
     request();
   };
-  wordmark.addEventListener("pointerleave", settle);
+  wordmark.addEventListener("pointerleave", () => {
+    sounding = -1;
+    settle();
+  });
   footerReducedMotion.addEventListener("change", settle);
 
   const setMode = (next: FooterMode) => {

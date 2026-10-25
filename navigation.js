@@ -4,6 +4,7 @@ const keyboardNavigationTargets = {
     w: '.site-nav a[href*="work.html"]',
     a: '.site-nav a[href*="about.html"]',
     c: '.site-nav a[href*="#contact"]',
+    s: "[data-sound-toggle]",
 };
 const isTypingTarget = (target) => {
     if (!(target instanceof HTMLElement))
