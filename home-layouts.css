@@ -262,6 +262,272 @@ a:hover .home-media img {
 }
 
 
+/* Scrub: the cursor flips through each project's gallery. */
+.home-scrub__media {
+  aspect-ratio: 4 / 3;
+  cursor: ew-resize;
+  touch-action: pan-y;
+}
+
+.home-scrub__media .home-scrub__frame {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 90ms linear;
+}
+
+.home-scrub__media .home-scrub__frame.is-on {
+  opacity: 1;
+}
+
+.home-scrub__frame.is-wide {
+  object-fit: contain;
+  background: #121212;
+}
+
+.home-scrub:hover .home-media img {
+  scale: 1;
+}
+
+.home-scrub__track {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.home-scrub__ticks {
+  display: grid;
+  flex: 1;
+  grid-auto-flow: column;
+  gap: 4px;
+}
+
+.home-scrub__ticks i {
+  height: 2px;
+  background: var(--home-rule);
+  transition: background-color 120ms linear;
+}
+
+.home-scrub__ticks i.is-on {
+  background: var(--ink);
+}
+
+.home-scrub__count {
+  font-family: "Marcellus", Georgia, serif;
+  font-size: clamp(12px, 0.85vw, 15px);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.6;
+}
+
+.home-scrub__count b {
+  font-weight: 400;
+}
+
+/* Stack: pinned cards that slide over one another. */
+.home-stack {
+  display: grid;
+  gap: clamp(28px, 5vh, 56px);
+  padding-bottom: 8vh;
+}
+
+.home-stack__card {
+  position: sticky;
+  top: calc(clamp(78px, 10vh, 104px) + var(--i) * 14px);
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: clamp(24px, 3vw, 56px);
+  height: min(calc(100svh - clamp(110px, 15vh, 150px)), 820px);
+  padding: clamp(16px, 1.6vw, 28px);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgba(8, 8, 8, 0.06),
+    0 30px 60px -40px rgba(8, 8, 8, 0.35);
+  transform: scale(calc(1 - var(--covered, 0) * 0.06));
+  transform-origin: 50% 0;
+  filter: brightness(calc(1 - var(--covered, 0) * 0.3));
+}
+
+.home-stack__card--ink {
+  --home-rule: rgba(244, 244, 241, 0.2);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.home-stack__media {
+  height: 100%;
+  border-radius: 8px;
+}
+
+.home-stack__info {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(8px, 1vw, 18px) clamp(4px, 0.6vw, 12px) clamp(4px, 0.6vw, 10px) 0;
+}
+
+.home-stack__number {
+  font-family: "Marcellus", Georgia, serif;
+  font-size: clamp(40px, 4.6vw, 88px);
+  line-height: 1;
+  opacity: 0.4;
+}
+
+.home-stack__title {
+  margin-top: auto;
+  font-size: clamp(40px, 4.6vw, 92px);
+  font-weight: 450;
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+}
+
+.home-stack__summary {
+  max-width: 34ch;
+  margin: clamp(14px, 2vh, 22px) 0 clamp(20px, 3vh, 32px);
+  font-size: clamp(15px, 1.1vw, 20px);
+  line-height: 1.38;
+}
+
+.home-stack__cta {
+  align-self: flex-start;
+  display: inline-flex;
+  gap: 0.6em;
+  padding: 0.85em 1.4em;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: clamp(12px, 0.8vw, 14px);
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  transition:
+    background-color 300ms ease,
+    color 300ms ease;
+}
+
+.home-stack__card:hover .home-stack__cta {
+  background: currentColor;
+}
+
+.home-stack__card:hover .home-stack__cta,
+.home-stack__card:hover .home-stack__cta span {
+  color: #fff;
+}
+
+.home-stack__card--ink:hover .home-stack__cta,
+.home-stack__card--ink:hover .home-stack__cta span {
+  color: var(--ink);
+}
+
+/* Strips: a title line over a slow film of the project. */
+.home-strip {
+  margin-bottom: clamp(56px, 10vh, 120px);
+}
+
+.home-strip__head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: end;
+  gap: clamp(14px, 2vw, 36px);
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--home-rule);
+}
+
+.home-strip__number {
+  align-self: start;
+  font-family: "Marcellus", Georgia, serif;
+  font-size: clamp(14px, 1vw, 18px);
+  opacity: 0.55;
+}
+
+.home-strip__title {
+  font-size: clamp(48px, 7vw, 140px);
+  font-weight: 450;
+  line-height: 0.86;
+  letter-spacing: -0.065em;
+}
+
+.home-strip__meta {
+  padding-bottom: 0.4em;
+  font-size: clamp(11px, 0.76vw, 14px);
+  letter-spacing: 0.045em;
+  line-height: 1.5;
+  text-align: right;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.home-strip__arrow {
+  font-size: clamp(28px, 2.6vw, 48px);
+  line-height: 1;
+  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.home-strip__head:hover .home-strip__arrow {
+  transform: translateX(8px);
+}
+
+.home-strip__reel {
+  display: block;
+  overflow: hidden;
+  margin: clamp(18px, 2.6vh, 28px) calc(-1 * var(--home-gutter)) 0;
+  padding: 10px 0;
+}
+
+.home-strip__track {
+  display: flex;
+  width: max-content;
+  animation: home-strip-run calc(var(--frames) * 7s) linear infinite;
+  animation-play-state: paused;
+}
+
+.home-strip--reverse .home-strip__track {
+  animation-direction: reverse;
+}
+
+.home-strip__reel.is-running .home-strip__track {
+  animation-play-state: running;
+}
+
+.home-strip__reel.is-running:hover .home-strip__track {
+  animation-play-state: paused;
+}
+
+.home-strip__track img {
+  flex: none;
+  width: auto;
+  height: clamp(180px, 24vw, 380px);
+  margin-right: 12px;
+  border-radius: 6px;
+  background: #e6e5e0;
+  transition:
+    transform 600ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 400ms ease;
+}
+
+.home-strip__reel:hover .home-strip__track img {
+  filter: grayscale(0.6) opacity(0.7);
+}
+
+.home-strip__reel:hover .home-strip__track img:hover {
+  filter: none;
+  transform: translateY(-8px) scale(1.03);
+}
+
+@keyframes home-strip-run {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-strip__track {
+    animation: none;
+  }
+
+  .home-strip__reel {
+    overflow-x: auto;
+  }
+}
+
 /* Temporary picker for comparing homepages. */
 .home-picker {
   position: fixed;
@@ -300,5 +566,37 @@ a:hover .home-media img {
 
   .home-spread--flip .home-spread__media-link {
     order: 0;
+  }
+
+  .home-stack__card {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    gap: 18px;
+    height: auto;
+  }
+
+  .home-stack__media {
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+
+  .home-stack__number {
+    display: none;
+  }
+
+  .home-stack__title {
+    margin-top: 0;
+  }
+
+  .home-stack__summary {
+    margin-block: 10px 16px;
+  }
+
+  .home-strip__head {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .home-strip__meta {
+    display: none;
   }
 }
