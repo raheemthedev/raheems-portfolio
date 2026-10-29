@@ -1,5 +1,5 @@
 /* Work-first homepages (home-layouts.ts). Each starts with the statement and
-   puts the case studies right beneath it (or beside it, in the split). */
+   puts the case studies right beneath it. */
 
 html[data-home]:not([data-home="hero"]) {
   --home-gutter: clamp(20px, 2.25vw, 44px);
@@ -106,16 +106,16 @@ html[data-home]:not([data-home="hero"]) .landing .hero-cta {
   opacity: 0;
 }
 
-a:hover > .home-media .home-media__hover,
-a:focus-visible > .home-media .home-media__hover {
+a:hover .home-media .home-media__hover,
+a:focus-visible .home-media .home-media__hover {
   opacity: 1;
 }
 
-a:hover > .home-media img {
+a:hover .home-media img {
   scale: 1.02;
 }
 
-/* Cards (work, split) */
+/* Work: cards */
 .home-work__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -174,22 +174,6 @@ a:hover > .home-media img {
   max-width: 44ch;
   font-size: clamp(15px, 1.05vw, 19px);
   line-height: 1.4;
-}
-
-/* Index */
-.home-index {
-  margin: 0;
-}
-
-.home-index__strip {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(20px, 2vw, 40px);
-  margin-top: clamp(28px, 4vh, 48px);
-}
-
-.home-index__thumb {
-  aspect-ratio: 16 / 10;
 }
 
 /* Feature: one spread per case study, alternating sides. */
@@ -277,33 +261,373 @@ a:hover > .home-media img {
   color: var(--paper);
 }
 
-/* Split: the statement held on the left, the work scrolling on the right. */
-@media (min-width: 761px) {
-  .home-split {
-    display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  }
 
-  html[data-home="split"]:not([data-home="hero"]) .landing {
-    position: sticky;
-    top: 0;
-    justify-content: center;
-    height: 100svh;
-    padding-top: 0;
-    padding-bottom: 0;
-  }
+/* Proofs: printer's proofs on the desk, waiting for his "Ra". */
+.home-proofs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(36px, 4vw, 80px);
+  padding: clamp(10px, 2vh, 24px) clamp(0px, 1vw, 16px);
+}
 
-  html[data-home="split"]:not([data-home="hero"]) .landing .statement {
-    font-size: clamp(28px, 2.6vw, 54px);
-  }
+.proof {
+  --proof-pad: clamp(28px, 2.8vw, 52px);
+  --proof-stamp: #d2381f;
+  position: relative;
+  display: grid;
+  gap: clamp(14px, 1.6vh, 20px);
+  padding: var(--proof-pad);
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgba(8, 8, 8, 0.06),
+    0 26px 50px -30px rgba(8, 8, 8, 0.32);
+  transform: rotate(var(--tilt, 0deg));
+  transition:
+    transform 700ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
 
-  .home-work--split {
-    padding-top: clamp(120px, 18vh, 200px);
-  }
+.proof:hover,
+.proof:focus-visible {
+  box-shadow:
+    0 1px 2px rgba(8, 8, 8, 0.06),
+    0 44px 70px -34px rgba(8, 8, 8, 0.4);
+  transform: translateY(-10px) rotate(0deg);
+}
 
-  .home-work--split .home-card {
-    margin-bottom: clamp(56px, 10vh, 110px);
-  }
+.proof__crop {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 0 solid var(--ink);
+}
+
+.proof__crop--tl { top: 12px; left: 12px; border-top-width: 1px; border-left-width: 1px; }
+.proof__crop--tr { top: 12px; right: 12px; border-top-width: 1px; border-right-width: 1px; }
+.proof__crop--bl { bottom: 12px; left: 12px; border-bottom-width: 1px; border-left-width: 1px; }
+.proof__crop--br { right: 12px; bottom: 12px; border-right-width: 1px; border-bottom-width: 1px; }
+
+.proof__slug,
+.proof__foot,
+.proof__sign em {
+  font-size: clamp(9px, 0.62vw, 11px);
+  font-style: normal;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+.proof__slug {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  opacity: 0.55;
+}
+
+.proof__plate {
+  position: relative;
+}
+
+.proof__media {
+  aspect-ratio: 4 / 3;
+  border-radius: 0;
+}
+
+.proof__reg {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  translate: 0 -50%;
+}
+
+.proof__reg--left { left: calc(var(--proof-pad) / -2 - 7px); }
+.proof__reg--right { right: calc(var(--proof-pad) / -2 - 7px); }
+
+.proof__reg svg {
+  display: block;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.2;
+}
+
+.proof__bar {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  height: 12px;
+}
+
+.proof__bar i {
+  background: #e6e5e0;
+}
+
+.proof__bar .proof__k { background: #080808; }
+.proof__bar .proof__k--50 { background: #808080; }
+.proof__bar .proof__k--25 { background: #c4c4c4; }
+
+.proof__body {
+  display: grid;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.proof__title {
+  font-size: clamp(30px, 3vw, 58px);
+  font-weight: 450;
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+}
+
+.proof__summary {
+  max-width: 40ch;
+  font-size: clamp(15px, 1.05vw, 19px);
+  line-height: 1.38;
+}
+
+.proof__sign {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--home-rule);
+  font-size: clamp(12px, 0.82vw, 15px);
+  line-height: 1.3;
+}
+
+.proof__sign em {
+  display: block;
+  margin-bottom: 4px;
+  opacity: 0.5;
+}
+
+.proof__approve b {
+  position: relative;
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--ink);
+}
+
+.proof__approve b::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--proof-stamp);
+  border-width: 0 2px 2px 0;
+  opacity: 0;
+  transform: rotate(40deg) scale(0.4);
+  transition:
+    opacity 160ms ease 260ms,
+    transform 300ms cubic-bezier(0.2, 1.3, 0.4, 1) 260ms;
+}
+
+.proof.is-stamped .proof__approve b::after {
+  opacity: 1;
+  transform: rotate(40deg) scale(1);
+}
+
+.proof__foot {
+  overflow: hidden;
+  opacity: 0.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.proof__stamp {
+  position: absolute;
+  right: 7%;
+  bottom: 15%;
+  width: clamp(104px, 9vw, 150px);
+  color: var(--proof-stamp);
+  mix-blend-mode: multiply;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(1.7) rotate(-34deg);
+}
+
+.proof.is-stamped .proof__stamp {
+  opacity: 0.86;
+  transform: scale(1) rotate(-14deg);
+  transition:
+    opacity 90ms ease,
+    transform 260ms cubic-bezier(0.2, 1.2, 0.4, 1);
+}
+
+.proof__stamp svg {
+  display: block;
+  overflow: visible;
+}
+
+.proof__stamp circle {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+}
+
+.proof__stamp circle + circle {
+  stroke-width: 1.2;
+}
+
+.proof__stamp text {
+  fill: currentColor;
+  font-size: 9.6px;
+  font-weight: 600;
+  letter-spacing: 1.3px;
+}
+
+.proof__stamp .proof__stamp-ra {
+  font-family: "Marcellus", Georgia, serif;
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* Exhibition: each piece framed on a warm wall under its own light. */
+@property --light-x {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 40%;
+}
+
+@property --light-y {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 40%;
+}
+
+.home-work--exhibition {
+  --wall: #d8d3c8;
+  --mat: #fbfaf6;
+  padding: clamp(40px, 6vh, 72px) 0 clamp(90px, 14vh, 160px);
+  background: var(--wall);
+}
+
+.home-work--exhibition .home-work__header,
+.home-work--exhibition .home-work__all {
+  margin-inline: var(--home-gutter);
+}
+
+.home-work--exhibition .home-work__header {
+  border-bottom-color: rgba(8, 8, 8, 0.2);
+}
+
+.exhibit {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 8fr) minmax(0, 3fr);
+  align-items: end;
+  gap: clamp(32px, 5vw, 96px);
+  padding: clamp(56px, 9vh, 110px) clamp(32px, 8vw, 160px);
+  transition:
+    --light-x 1200ms cubic-bezier(0.16, 1, 0.3, 1),
+    --light-y 1200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.exhibit::before {
+  content: "";
+  position: absolute;
+  inset: -22% 0;
+  z-index: -1;
+  background: radial-gradient(ellipse 46% 46% at var(--light-x) var(--light-y), rgba(255, 251, 238, 0.95), rgba(255, 249, 232, 0.4) 45%, rgba(255, 249, 232, 0) 72%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1600ms ease;
+}
+
+.exhibit.is-lit::before {
+  opacity: 1;
+}
+
+.exhibit__frame {
+  display: block;
+  justify-self: end;
+  width: min(100%, calc(84svh + 80px));
+  padding: clamp(16px, 2.2vw, 40px);
+  border: clamp(6px, 0.6vw, 10px) solid #171513;
+  background: var(--mat);
+  box-shadow:
+    0 2px 3px rgba(30, 22, 12, 0.18),
+    0 44px 60px -34px rgba(30, 22, 12, 0.55);
+}
+
+.exhibit__media {
+  aspect-ratio: 4 / 3;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px rgba(8, 8, 8, 0.08);
+}
+
+.exhibit__label {
+  max-width: 300px;
+  margin-bottom: 10%;
+  padding: 20px 22px 22px;
+  background: var(--mat);
+  box-shadow:
+    0 1px 1px rgba(30, 22, 12, 0.12),
+    0 10px 20px -12px rgba(30, 22, 12, 0.35);
+  font-size: clamp(12px, 0.8vw, 14px);
+  line-height: 1.42;
+}
+
+.exhibit__label p,
+.exhibit__label h3 {
+  margin: 0;
+}
+
+.exhibit__number {
+  margin-bottom: 16px !important;
+  font-family: "Marcellus", Georgia, serif;
+  opacity: 0.5;
+}
+
+.exhibit__artist {
+  font-weight: 600;
+}
+
+.exhibit__artist span {
+  display: block;
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+.exhibit__title {
+  margin: 14px 0 4px !important;
+  font-family: "Marcellus", Georgia, serif;
+  font-size: clamp(19px, 1.4vw, 26px);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.exhibit__title em {
+  font-style: normal;
+}
+
+.exhibit__medium {
+  opacity: 0.7;
+}
+
+.exhibit__note {
+  margin-top: 14px !important;
+}
+
+.exhibit__sector {
+  margin-top: 14px !important;
+  font-size: 0.82em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+
+.exhibit__link {
+  display: inline-block;
+  margin-top: 18px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid currentColor;
+  font-size: 0.86em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 /* Temporary picker for comparing homepages. */
@@ -338,8 +662,9 @@ a:hover > .home-media img {
 
 @media (max-width: 760px) {
   .home-work__grid,
-  .home-index__strip,
-  .home-spread {
+  .home-spread,
+  .home-proofs,
+  .exhibit {
     grid-template-columns: 1fr;
   }
 
@@ -347,9 +672,11 @@ a:hover > .home-media img {
     order: 0;
   }
 
-  .home-index .archive-head,
-  .home-index .archive-row__services,
-  .home-index .archive-row__discipline {
-    display: none;
+  .proof {
+    --tilt: 0deg !important;
+  }
+
+  .exhibit__label {
+    max-width: none;
   }
 }

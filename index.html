@@ -29,8 +29,7 @@
     <link rel="stylesheet" href="editorial-work.css?v=20260920-1" />
     <link rel="stylesheet" href="about-reveal.css?v=20260920-21" />
     <link rel="stylesheet" href="index-list.css?v=20261024-3" />
-    <link rel="stylesheet" href="archive.css?v=20261029-1" />
-    <link rel="stylesheet" href="home-layouts.css?v=20261029-3" />
+    <link rel="stylesheet" href="home-layouts.css?v=20261029-4" />
     <link rel="stylesheet" href="hero-modes.css?v=20261025-1" />
     <noscript>
       <style>
@@ -48,7 +47,7 @@
     <script>
       // Which homepage layout (home-layouts.ts), settled before anything draws.
       (function () {
-        var layouts = ["hero", "work", "index", "feature", "split"];
+        var layouts = ["hero", "work", "feature", "proofs", "exhibition"];
         var requested = new URLSearchParams(window.location.search).get("home");
         var stored = null;
         try { stored = window.localStorage.getItem("raheem-home-layout"); } catch (error) {}
@@ -330,7 +329,7 @@
     <script src="navigation.js?v=20261025-3"></script>
     <script src="footer-wordmark.js?v=20261025-6"></script>
     <script src="projects-data.js?v=20261025-perf"></script>
-    <script src="home-layouts.js?v=20261029-1"></script>
+    <script src="home-layouts.js?v=20261029-2"></script>
     <script src="corner-marks.js?v=20261025-perf"></script>
   </body>
 </html>
