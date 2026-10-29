@@ -262,13 +262,23 @@ a:hover .home-media img {
 }
 
 
-/* Row (after Ross Mason and the original rail): frames drifting through a
-   lens, over a large title naming the project in it. */
+/* Row (after Ross Mason and the original rail): frames stepping through a
+   lens. The statement sits higher so it and the row share one screen. */
+html[data-home][data-home="row"] .landing {
+  gap: clamp(20px, 3vh, 36px);
+  padding-top: clamp(96px, 15vh, 190px);
+  padding-bottom: clamp(28px, 5vh, 64px);
+}
+
+.home-work--row .home-work__header {
+  margin-bottom: clamp(14px, 2.4vh, 28px);
+}
+
 .home-row {
   --row-label: 4.6em;
   position: relative;
   margin: 0 calc(-1 * var(--home-gutter));
-  padding: clamp(10px, 2vh, 24px) 0;
+  padding: 0 0 clamp(10px, 2vh, 24px);
   overflow: hidden;
 }
 
