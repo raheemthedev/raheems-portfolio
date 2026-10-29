@@ -9,8 +9,8 @@
 //              big image beside its details, alternating sides.
 //   row      — after Ross Mason (iamrossmason.com) and the original rail: a
 //              row of frames drifting through a lens that opens whichever is
-//              in it, over a large title naming that project. The lens follows
-//              the cursor; the row can be dragged and thrown.
+//              in it. The lens follows the cursor; the row can be dragged,
+//              thrown, stepped with the arrow keys and nudged by page scroll.
 // "hero" is the original homepage.
 
 type HomeLayout = "hero" | "work" | "feature" | "row";
@@ -50,15 +50,6 @@ const homeGallery: Record<string, string[]> = {
 };
 const homeFrames = (project: ArchiveProject) => homeGallery[project.number] ?? [project.image as string];
 
-// A title in the site's two voices: the last word set in Marcellus (a single
-// word stays in the grotesk).
-const homeMixed = (text: string) => {
-  const words = text.split(" ");
-  if (words.length < 2) return text;
-  const last = words.pop();
-  return `${words.join(" ")} <em>${last}</em>`;
-};
-
 const homeBuilders: Record<Exclude<HomeLayout, "hero">, () => string> = {
   work: () => `
     <div class="home-work__grid">
@@ -86,7 +77,7 @@ const homeBuilders: Record<Exclude<HomeLayout, "hero">, () => string> = {
     </article>`).join(""),
   row: () => `
     <div class="home-row" data-row>
-      <div class="home-row__strip">
+      <div class="home-row__strip" tabindex="0" aria-label="Selected work. Drag, or use the arrow keys, to move through it.">
         ${homeProjects.map((project, index) => homeFrames(project).map((src, n) => `
           <a class="home-row__item" href="${homeHref(project)}" draggable="false" data-project="${index}">
             <span class="home-row__label">${project.number}.${n + 1}<br />${project.title}<br /><em>[${project.services[n % project.services.length]}]</em></span>
@@ -96,8 +87,7 @@ const homeBuilders: Record<Exclude<HomeLayout, "hero">, () => string> = {
             </span>
           </a>`).join("")).join("")}
       </div>
-      <p class="home-row__title" aria-hidden="true">${homeMixed("Selected work")}</p>
-      <p class="home-row__meta" aria-live="polite"></p>
+      <span class="home-row__cursor" aria-hidden="true">Drag</span>
     </div>`,
 };
 
@@ -119,15 +109,18 @@ if (homeLanding && homeLayout && homeLayout !== "hero") {
 
 // Row: every frame sits in one row that drifts slowly left on a loop. A lens
 // opens whichever frames are near it (taller and wider, falling off smoothly
-// like a dock); it rests at the centre, and follows the cursor while it's over
-// the row, when the drift eases almost to a stop. The row can be dragged and
-// thrown. The large title below names the project in the lens.
+// like a dock, growing about the row's centre line) and each image shifts a
+// little inside its frame as it passes. The lens rests at the centre and
+// follows the cursor while it's over the row, when the drift eases almost to a
+// stop. The row can be dragged and thrown (on touch it settles with a frame in
+// the lens), stepped with the arrow keys, and is nudged along by page scroll.
+// Clicking a side frame glides it into the lens; clicking the open one opens
+// its case study with the site's page transition.
 function mountRow(section: HTMLElement) {
   const root = section.querySelector<HTMLElement>("[data-row]");
   const strip = root?.querySelector<HTMLElement>(".home-row__strip");
-  const title = root?.querySelector<HTMLElement>(".home-row__title");
-  const meta = root?.querySelector<HTMLElement>(".home-row__meta");
-  if (!root || !strip || !title || !meta) return;
+  const cursor = root?.querySelector<HTMLElement>(".home-row__cursor");
+  if (!root || !strip || !cursor) return;
 
   // Three copies, so the loop never shows a gap.
   const originals = [...strip.querySelectorAll<HTMLAnchorElement>(".home-row__item")];
@@ -135,11 +128,14 @@ function mountRow(section: HTMLElement) {
   [1, 2].forEach(() => originals.forEach((item) => {
     const copy = item.cloneNode(true) as HTMLAnchorElement;
     copy.setAttribute("aria-hidden", "true");
-    copy.tabIndex = -1;
     strip.append(copy);
   }));
   const items = [...strip.querySelectorAll<HTMLAnchorElement>(".home-row__item")];
+  items.forEach((item) => { item.tabIndex = -1; });
+  const media = items.map((item) => item.querySelector<HTMLElement>(".home-row__media") as HTMLElement);
+  const stills = items.map((item) => item.querySelector<HTMLImageElement>(".home-row__media img") as HTMLImageElement);
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
   let size = { base: 0, gap: 0, short: 0, tall: 0, open: 0, spread: 0 };
   const measure = () => {
@@ -150,50 +146,49 @@ function mountRow(section: HTMLElement) {
       gap: narrow ? 6 : 8,
       short: narrow ? width * 0.2 : Math.min(190, Math.max(110, width * 0.1)),
       tall: narrow ? width * 0.62 : Math.min(560, Math.max(260, width * 0.3)),
-      open: narrow ? 3.6 : 3.6,
+      open: 3.6,
       spread: narrow ? width * 0.14 : Math.min(260, Math.max(140, width * 0.11)),
     };
     root.style.setProperty("--row-tall", `${size.tall}px`);
   };
   measure();
+  const pitch = () => size.base + size.gap;
+  const period = () => count * pitch();
 
   let offset = 0;
   let velocity = 0;
+  let glide: number | null = null;
+  let restUntil = 0;
   let lensX = root.clientWidth / 2;
   let lensTarget = lensX;
   let hovering = false;
   let held = false;
   let dragged = false;
+  let pressX = 0;
   let lastX = 0;
   let lastTime = 0;
   let visible = true;
   let frame = 0;
   let previous = 0;
-  let shown = -1;
+  let open = -1;
+  let pointer = { x: 0, y: 0 };
+  let cursorAt = { x: 0, y: 0 };
   const drift = reduced ? 0 : 0.35;
 
-  const describe = (index: number) => {
-    if (index === shown) return;
-    shown = index;
-    const item = originals[index % count];
-    const project = homeProjects[Number(item.dataset.project)];
-    const n = index % count - originals.findIndex((other) => other.dataset.project === item.dataset.project) + 1;
-    title.innerHTML = homeMixed(project.title);
-    meta.innerHTML = `<span>${project.number}.${n}</span><span>${project.discipline}, ${project.year}</span><a href="${homeHref(project)}">View case study <span aria-hidden="true">→</span></a>`;
-    title.animate([{ opacity: 0, transform: "translateY(0.08em)" }, { opacity: 1, transform: "none" }], { duration: 500, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
-    const motion = originals[index % count].querySelector<HTMLImageElement>(".home-row__motion[data-src]");
-    if (motion) {
-      motion.src = motion.dataset.src as string;
-      motion.removeAttribute("data-src");
-    }
+  // The offset that puts frame k (counting across all three copies) in the lens.
+  const offsetFor = (k: number) => k * pitch() - period() + size.gap + size.base / 2 - lensTarget;
+  const frameAt = (value: number) => Math.round((lensTarget + value + period() - size.gap - size.base / 2) / pitch());
+  const glideTo = (k: number) => {
+    const target = offsetFor(k);
+    glide = target + period() * Math.round((offset - target) / period());
   };
 
   const layout = () => {
-    const pitch = size.base + size.gap;
-    const period = count * pitch;
-    offset = ((offset % period) + period) % period;
+    const step = pitch();
+    const loop = period();
+    const wrapped = ((offset % loop) + loop) % loop;
     // Where each frame would sit with no lens, and how far it opens.
-    const starts = items.map((_, index) => index * pitch - offset - period + size.gap);
+    const starts = items.map((_, index) => index * step - wrapped - loop + size.gap);
     const grow = starts.map((start) => {
       const distance = (start + size.base / 2 - lensX) / size.spread;
       return Math.exp(-distance * distance);
@@ -207,31 +202,64 @@ function mountRow(section: HTMLElement) {
       x += width + size.gap;
       return left;
     });
-    const under = Math.max(0, Math.min(items.length - 1, Math.floor((lensX - starts[0]) / pitch)));
-    const fraction = (lensX - starts[under]) / pitch;
+    const under = Math.max(0, Math.min(items.length - 1, Math.floor((lensX - starts[0]) / step)));
+    const fraction = (lensX - starts[under]) / step;
     const shift = lensX - (lefts[under] + fraction * (widths[under] + size.gap));
     let biggest = 0;
     items.forEach((item, index) => {
-      item.style.transform = `translate3d(${lefts[index] + shift}px, 0, 0)`;
+      const height = size.short + (size.tall - size.short) * grow[index];
+      const left = lefts[index] + shift;
+      item.style.transform = `translate3d(${left}px, ${(size.tall - height) / 2}px, 0)`;
       item.style.width = `${widths[index]}px`;
       item.style.setProperty("--open", grow[index].toFixed(3));
-      (item.querySelector(".home-row__media") as HTMLElement).style.height = `${size.short + (size.tall - size.short) * grow[index]}px`;
+      media[index].style.height = `${height}px`;
+      // A little depth: the image slides inside its frame as it crosses.
+      const across = Math.max(-1, Math.min(1, (left + widths[index] / 2 - lensX) / (root.clientWidth / 2)));
+      stills[index].style.transform = `translate3d(${(-across * 6).toFixed(2)}%, 0, 0) scale(1.14)`;
       if (grow[index] > grow[biggest]) biggest = index;
     });
-    items.forEach((item, index) => item.classList.toggle("is-open", index === biggest));
-    describe(biggest);
+    if (biggest !== open) {
+      items[open]?.classList.remove("is-open");
+      items[biggest].classList.add("is-open");
+      open = biggest;
+      const motion = originals[biggest % count].querySelector<HTMLImageElement>(".home-row__motion[data-src]");
+      if (motion) {
+        motion.src = motion.dataset.src as string;
+        motion.removeAttribute("data-src");
+        items.forEach((item, index) => {
+          if (index % count !== biggest % count || item === originals[biggest % count]) return;
+          const copy = item.querySelector<HTMLImageElement>(".home-row__motion[data-src]");
+          if (copy) {
+            copy.src = motion.src;
+            copy.removeAttribute("data-src");
+          }
+        });
+      }
+    }
   };
 
   const tick = (now: number) => {
     const delta = previous ? Math.min(48, now - previous) / 16.67 : 1;
     previous = now;
-    if (!held) {
-      // Glide back toward the drift once let go.
-      const rest = hovering ? drift * 0.08 : drift;
-      velocity += (rest - velocity) * (Math.abs(velocity) > Math.abs(rest) ? 0.05 : 0.08) * delta;
+    if (glide !== null && !held) {
+      const gap = glide - offset;
+      offset += gap * Math.min(1, 0.11 * delta);
+      velocity = 0;
+      if (Math.abs(gap) < 0.4) {
+        offset = glide;
+        glide = null;
+        restUntil = now + 2200;
+      }
+    } else if (!held) {
+      // Settle back toward the drift once let go.
+      const rest = now < restUntil ? 0 : hovering ? drift * 0.08 : drift;
+      velocity += (rest - velocity) * (Math.abs(velocity) > Math.abs(rest) ? 0.05 : 0.04) * delta;
       offset += velocity * delta;
     }
     lensX += (lensTarget - lensX) * 0.14 * delta;
+    cursorAt.x += (pointer.x - cursorAt.x) * 0.3 * delta;
+    cursorAt.y += (pointer.y - cursorAt.y) * 0.3 * delta;
+    cursor.style.transform = `translate3d(${cursorAt.x}px, ${cursorAt.y}px, 0) translate(-50%, -50%)`;
     layout();
     frame = visible ? requestAnimationFrame(tick) : 0;
   };
@@ -251,21 +279,36 @@ function mountRow(section: HTMLElement) {
     start();
   });
 
-  const canHover = window.matchMedia("(hover: hover)").matches;
-  strip.addEventListener("pointerenter", () => {
-    if (canHover) hovering = true;
+  // The pill that stands in for the cursor: "Drag" over the row, "View" over
+  // the open frame.
+  const label = (event: PointerEvent) => {
+    const item = (event.target as Element).closest(".home-row__item");
+    const text = held && dragged ? "Drag" : item && item === items[open] ? "View" : "Drag";
+    if (cursor.textContent !== text) cursor.textContent = text;
+  };
+  strip.addEventListener("pointerenter", (event) => {
+    if (!canHover) return;
+    hovering = true;
+    const box = root.getBoundingClientRect();
+    pointer = cursorAt = { x: event.clientX - box.left, y: event.clientY - box.top };
+    root.classList.add("is-hovering");
   });
   strip.addEventListener("pointerleave", () => {
     hovering = false;
     lensTarget = root.clientWidth / 2;
+    root.classList.remove("is-hovering");
   });
   strip.addEventListener("pointermove", (event) => {
-    if (canHover && !held) lensTarget = event.clientX - root.getBoundingClientRect().left;
+    if (!canHover) return;
+    const box = root.getBoundingClientRect();
+    pointer = { x: event.clientX - box.left, y: event.clientY - box.top };
+    if (!held) lensTarget = pointer.x;
+    label(event);
   });
   window.addEventListener("pointermove", (event) => {
     if (!held) return;
     const dx = event.clientX - lastX;
-    if (Math.abs(dx) > 2) dragged = true;
+    if (Math.abs(event.clientX - pressX) > 4) dragged = true;
     offset -= dx;
     velocity = -(dx / Math.max(8, event.timeStamp - lastTime)) * 16;
     lastX = event.clientX;
@@ -275,33 +318,61 @@ function mountRow(section: HTMLElement) {
     if (event.button !== 0) return;
     held = true;
     dragged = false;
-    lastX = event.clientX;
+    glide = null;
+    pressX = lastX = event.clientX;
     lastTime = event.timeStamp;
     velocity = 0;
+    root.classList.add("is-held");
   });
   const release = () => {
+    if (!held) return;
     held = false;
+    root.classList.remove("is-held");
+    // On touch, a swipe comes to rest with a frame in the lens.
+    if (dragged && !canHover) glideTo(frameAt(offset + velocity * 22));
   };
   window.addEventListener("pointerup", release);
   window.addEventListener("pointercancel", release);
   strip.addEventListener("dragstart", (event) => event.preventDefault());
-  items.forEach((item) => {
+
+  items.forEach((item, index) => {
     item.addEventListener("click", (event) => {
-      if (dragged) event.preventDefault();
+      event.preventDefault();
+      if (dragged) return;
+      if (index !== open) {
+        // A side frame glides into the lens first.
+        if (canHover) lensTarget = root.clientWidth / 2;
+        glideTo(index);
+        return;
+      }
+      const image = stills[index];
+      transitionToPage(item.href, `<img src="${image.currentSrc || image.src}" alt="" />`, media[index].getBoundingClientRect(), homeProjects[Number(item.dataset.project)].title);
     });
   });
-  // Trackpads can push the row sideways too.
+
+  // Trackpads can push the row sideways, and the page's own scroll nudges it.
   strip.addEventListener("wheel", (event) => {
     if (Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
     event.preventDefault();
+    glide = null;
     offset += event.deltaX;
   }, { passive: false });
-  // Tabbing to a frame brings it into the lens.
-  originals.forEach((item, index) => {
-    item.addEventListener("focus", () => {
-      const pitch = size.base + size.gap;
-      offset = index * pitch + size.gap + size.base / 2 - lensTarget + count * pitch;
-    });
+  let scrolled = window.scrollY;
+  window.addEventListener("scroll", () => {
+    const change = window.scrollY - scrolled;
+    scrolled = window.scrollY;
+    if (visible && !held && glide === null && !reduced) offset += change * 0.35;
+  }, { passive: true });
+
+  // Arrow keys step a frame at a time; Enter opens the frame in the lens.
+  strip.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+      event.preventDefault();
+      glideTo(frameAt(glide ?? offset) + (event.key === "ArrowRight" ? 1 : -1));
+    } else if (event.key === "Enter" && open >= 0) {
+      event.preventDefault();
+      items[open].click();
+    }
   });
 
   let resizeTimer = 0;
@@ -313,29 +384,4 @@ function mountRow(section: HTMLElement) {
     }, 120);
   });
   start();
-}
-
-// Temporary: the picker for comparing homepages, at the foot of the landing.
-if (homeLanding && homeLayout) {
-  const picker = document.createElement("div");
-  picker.className = "home-picker";
-  picker.setAttribute("role", "group");
-  picker.setAttribute("aria-label", "Homepage layout");
-  picker.innerHTML = homeLayouts
-    .map((layout) => `<button type="button" data-home-layout="${layout.id}" aria-pressed="${layout.id === homeLayout}">${layout.label}</button>`)
-    .join("");
-  picker.addEventListener("click", (event) => {
-    const button = event.target instanceof Element ? event.target.closest<HTMLButtonElement>("button[data-home-layout]") : null;
-    const choice = button?.dataset.homeLayout;
-    if (!choice || choice === homeLayout) return;
-    try {
-      window.localStorage.setItem(homeLayoutKey, choice);
-    } catch {
-      // The reload below still carries the choice in the address.
-    }
-    const url = new URL(window.location.href);
-    url.searchParams.set("home", choice);
-    window.location.href = url.toString();
-  });
-  document.body.append(picker);
 }

@@ -268,6 +268,7 @@ a:hover .home-media img {
   --row-label: 4.6em;
   position: relative;
   margin: 0 calc(-1 * var(--home-gutter));
+  padding: clamp(10px, 2vh, 24px) 0;
   overflow: hidden;
 }
 
@@ -275,6 +276,7 @@ a:hover .home-media img {
   position: relative;
   z-index: 1;
   height: calc(var(--row-label) + var(--row-tall, 420px));
+  outline: none;
   font-size: clamp(10px, 0.72vw, 13px);
   cursor: grab;
   touch-action: pan-y;
@@ -318,6 +320,11 @@ a:hover .home-media img {
   background: #e6e5e0;
 }
 
+.home-row__strip:focus-visible .home-row__item.is-open .home-row__media {
+  outline: 1px solid var(--ink);
+  outline-offset: 4px;
+}
+
 .home-row__media img {
   position: absolute;
   inset: 0;
@@ -337,61 +344,41 @@ a:hover .home-media img {
   opacity: 1;
 }
 
-.home-row__title {
-  position: relative;
-  z-index: 0;
-  margin: calc(-0.16 * var(--row-tall, 420px)) 0 0;
-  padding: 0 var(--home-gutter);
-  font-size: clamp(64px, 11.5vw, 230px);
-  font-weight: 450;
-  line-height: 0.88;
-  letter-spacing: -0.065em;
-  white-space: nowrap;
-}
-
-.home-row__title em {
-  font-family: "Marcellus", Georgia, serif;
-  font-style: normal;
-  letter-spacing: -0.04em;
-}
-
-.home-row__meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px clamp(16px, 2vw, 32px);
-  margin: clamp(14px, 2vh, 24px) 0 0;
-  padding: 0 var(--home-gutter);
-  font-size: clamp(11px, 0.78vw, 14px);
-  letter-spacing: 0.045em;
+.home-row__cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  padding: 0.75em 1.15em;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  line-height: 1;
   text-transform: uppercase;
+  pointer-events: none;
+  opacity: 0;
+  scale: 0.6;
+  transition:
+    opacity 250ms ease,
+    scale 350ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.home-row__meta span:first-child {
-  font-family: "Marcellus", Georgia, serif;
-  font-size: 1.3em;
-  letter-spacing: 0;
+.home-row.is-hovering .home-row__cursor {
+  opacity: 1;
+  scale: 1;
 }
 
-.home-row__meta span:nth-child(2) {
-  opacity: 0.55;
+.home-row.is-held .home-row__cursor {
+  scale: 0.85;
 }
 
-.home-row__meta a {
-  margin-left: auto;
-  padding-bottom: 2px;
-  border-bottom: 1px solid currentColor;
-}
-
-@media (max-width: 760px) {
-  .home-row__title {
-    margin-top: calc(-0.06 * var(--row-tall, 300px));
-    font-size: 15vw;
-    white-space: normal;
-  }
-
-  .home-row__meta a {
-    margin-left: 0;
+@media (hover: hover) and (pointer: fine) {
+  .home-row__strip,
+  .home-row__strip:active,
+  .home-row__strip a {
+    cursor: none;
   }
 }
 
