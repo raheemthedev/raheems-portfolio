@@ -1409,8 +1409,14 @@ catch {
 // "wheel" is the original rail's old name.
 const requestedHero = new URLSearchParams(window.location.search).get("hero");
 const requestedHeroVariant = requestedHero === "wheel" ? "classic" : requestedHero;
-setHeroVariant(isHeroVariant(requestedHeroVariant)
-    ? requestedHeroVariant
-    : isOfferedVariant(storedHeroVariant)
-        ? storedHeroVariant
-        : "horizon");
+// The work-first homepages (home-layouts.ts) leave the hero unmounted.
+if ((document.documentElement.dataset.home ?? "hero") === "hero") {
+    setHeroVariant(isHeroVariant(requestedHeroVariant)
+        ? requestedHeroVariant
+        : isOfferedVariant(storedHeroVariant)
+            ? storedHeroVariant
+            : "horizon");
+}
+else {
+    document.body.dataset.hero = "off";
+}
