@@ -8,19 +8,21 @@
 //              with its sector, year, summary and services.
 //   feature  — the statement, then each case study as a full-width spread: a
 //              big image beside its details, alternating sides.
-//   scrub    — the work cards, but moving across an image flips through the
-//              project's whole gallery, with a frame counter beneath it.
-//   stack    — one full-screen card per project, pinned as you scroll so the
-//              next slides over it while the one beneath sinks back.
-//   strips   — each project as a title line over a slow film strip of its
-//              gallery; hovering pauses it and lifts the frame you're on.
+//   sentence — the statement keeps talking: the work named inside a sentence,
+//              each name with an image pill that grows and plays on hover.
+//   trail    — the names set huge and loose; moving across one leaves a trail
+//              of that project's images behind the cursor.
+//   scatter  — the work thrown loosely across the page, to grab and throw.
+//   toss     — a messy pile of the work: flick the top image off and it goes
+//              to the bottom, and the details follow whichever is on top.
 // "hero" is the original homepage.
 const homeLayouts = [
     { id: "work", label: "Work" },
-    { id: "scrub", label: "Scrub" },
-    { id: "stack", label: "Stack" },
-    { id: "strips", label: "Strips" },
     { id: "feature", label: "Feature" },
+    { id: "sentence", label: "Sentence" },
+    { id: "trail", label: "Trail" },
+    { id: "scatter", label: "Scatter" },
+    { id: "toss", label: "Toss" },
     { id: "hero", label: "Original" },
 ];
 const homeLayoutKey = "raheem-home-layout";
@@ -40,13 +42,14 @@ const homeDetails = (project) => `
     <div><dt>Role</dt><dd>${project.services.join(", ")}</dd></div>
     <div><dt>Year</dt><dd>${project.year}</dd></div>
   </dl>`;
-// The cover first, then the rest of the project's gallery.
-const homeFrames = (project) => [project.image, ...(project.gallery ?? []).filter((src) => src !== project.image)];
-const homeCardText = (project) => `
-  <span class="home-card__head"><span class="home-card__number">${project.number}</span><strong>${project.title}</strong><span class="home-card__arrow" aria-hidden="true">→</span></span>
-  <span class="home-card__meta">${project.discipline} · ${project.year}</span>
-  <span class="home-card__summary">${project.summary}</span>
-  <span class="home-card__services">${project.services.join(" · ")}</span>`;
+// The cover, then up to five more images from the project's gallery.
+const homeFrames = (project, count = 6) => [project.image, ...(project.gallery ?? []).filter((src) => src !== project.image)].slice(0, count);
+// How each project reads inside a sentence.
+const homeLines = {
+    "01": "a crypto exchange that makes trading feel as simple as flipping a coin",
+    "02": "a generative art show where organic forms collide with digital systems",
+};
+const homeYear = (project) => `’${project.year.slice(-2)}`;
 const homeBuilders = {
     work: () => `
     <div class="home-work__grid">
@@ -72,53 +75,47 @@ const homeBuilders = {
         <a class="home-spread__cta" href="${homeHref(project)}">View case study <span aria-hidden="true">→</span></a>
       </div>
     </article>`).join(""),
-    scrub: () => `
-    <div class="home-work__grid">
-      ${homeProjects.map((project) => {
-        const frames = homeFrames(project);
-        return `
-        <a class="home-card home-scrub" href="${homeHref(project)}" data-scrub>
-          <span class="home-scrub__media home-media">
-            ${frames.map((src, index) => `<img class="home-scrub__frame${index ? "" : " is-on"}" ${index ? `data-src="${src}"` : `src="${src}"`} alt="${index ? "" : project.imageAlt ?? project.title}" draggable="false" loading="lazy" decoding="async" />`).join("")}
-          </span>
-          <span class="home-scrub__track" aria-hidden="true">
-            <span class="home-scrub__ticks">${"<i></i>".repeat(frames.length)}</span>
-            <span class="home-scrub__count"><b>01</b> / ${String(frames.length).padStart(2, "0")}</span>
-          </span>
-          ${homeCardText(project)}
-        </a>`;
-    }).join("")}
-    </div>`,
-    stack: () => `
-    <div class="home-stack">
+    sentence: () => `
+    <p class="home-sentence">
+      Lately, that’s looked like${homeProjects.map((project, index) => `${index ? (index === homeProjects.length - 1 ? " and" : ",") : ""}
+        <a class="home-sentence__project" href="${homeHref(project)}"><span class="home-sentence__pill">${homeMedia(project, "home-media")}</span>${project.title}<sup>${homeYear(project)}</sup></a><span class="home-sentence__line">, ${homeLines[project.number] ?? project.summary.toLowerCase().replace(/\.$/, "")}</span>`).join("")}.
+      <span class="home-sentence__more">There’s more in the <a href="work.html">archive&nbsp;↗</a></span>
+    </p>`,
+    trail: () => `
+    <div class="home-trail" data-trail>
       ${homeProjects.map((project, index) => `
-        <a class="home-stack__card${index % 2 ? " home-stack__card--ink" : ""}" href="${homeHref(project)}" style="--i: ${index};" data-stack-card>
-          ${homeMedia(project, "home-stack__media home-media")}
-          <span class="home-stack__info">
-            <span class="home-stack__number">${project.number}</span>
-            <strong class="home-stack__title">${project.title}</strong>
-            <span class="home-stack__summary">${project.summary}</span>
-            ${homeDetails(project)}
-            <span class="home-stack__cta">View case study <span aria-hidden="true">→</span></span>
-          </span>
+        <a class="home-trail__item" href="${homeHref(project)}" style="--indent: ${[0, 10, 4, 14][index % 4]}vw;" data-trail-item="${index}">
+          <span class="home-trail__number">${project.number}</span>
+          <strong class="home-trail__title">${project.title}</strong>
+          <span class="home-trail__meta">${project.discipline}<br />${project.services.join(", ")} · ${project.year}</span>
+          ${homeMedia(project, "home-trail__cover home-media")}
         </a>`).join("")}
     </div>`,
-    strips: () => homeProjects.map((project, index) => {
-        const frames = homeFrames(project);
-        const reel = frames.map((src) => `<img data-src="${src}" alt="" draggable="false" decoding="async" />`).join("");
-        return `
-    <article class="home-strip${index % 2 ? " home-strip--reverse" : ""}">
-      <a class="home-strip__head" href="${homeHref(project)}">
-        <span class="home-strip__number">${project.number}</span>
-        <strong class="home-strip__title">${project.title}</strong>
-        <span class="home-strip__meta">${project.discipline}<br />${project.services.join(", ")} · ${project.year}</span>
-        <span class="home-strip__arrow" aria-hidden="true">→</span>
-      </a>
-      <a class="home-strip__reel" href="${homeHref(project)}" aria-label="${project.title}: ${project.summary}" data-strip>
-        <span class="home-strip__track" style="--frames: ${frames.length};">${reel}${reel}</span>
-      </a>
-    </article>`;
-    }).join(""),
+    scatter: () => `
+    <div class="home-scatter" data-scatter>
+      ${homeScatterItems().map(({ project, src, cover }, index) => `
+        <a class="home-scatter__item${cover ? " home-scatter__item--cover" : ""}" href="${homeHref(project)}" draggable="false" data-scatter-item="${index}">
+          <img src="${src}" alt="${cover ? project.imageAlt ?? project.title : ""}" draggable="false" loading="lazy" decoding="async" />
+          <span class="home-scatter__tag">${cover ? `${project.number} ${project.title} · ${project.discipline}` : `${project.title} ${homeYear(project)}`}</span>
+        </a>`).join("")}
+    </div>`,
+    toss: () => `
+    <div class="home-toss" data-toss>
+      <div class="home-toss__info" aria-live="polite">
+        <p class="home-toss__number"></p>
+        <h3 class="home-toss__title"></h3>
+        <p class="home-toss__summary"></p>
+        <p class="home-toss__meta"></p>
+        <a class="home-toss__cta" href="#">View case study <span aria-hidden="true">→</span></a>
+        <button class="home-toss__next" type="button">Flick to the next <span aria-hidden="true">↻</span></button>
+      </div>
+      <div class="home-toss__pile">
+        ${homeTossCards().map(({ project, src }, index) => `
+          <a class="home-toss__card" href="${homeHref(project)}" draggable="false" data-project="${homeProjects.indexOf(project)}" style="--r: ${((index * 47) % 13) - 6}deg; --x: ${((index * 29) % 17) - 8}px; --y: ${((index * 31) % 15) - 7}px;">
+            <img src="${src}" alt="" draggable="false" decoding="async" />
+          </a>`).join("")}
+      </div>
+    </div>`,
 };
 if (homeLanding && homeLayout && homeLayout !== "hero") {
     const section = document.createElement("section");
@@ -132,92 +129,305 @@ if (homeLanding && homeLayout && homeLayout !== "hero") {
     ${homeBuilders[homeLayout]()}
     <a class="home-work__all" href="work.html">See all work <span aria-hidden="true">↗</span></a>`;
     homeLanding.after(section);
-    if (homeLayout === "scrub")
-        mountScrub(section);
-    if (homeLayout === "stack")
-        mountStack(section);
-    if (homeLayout === "strips")
-        mountStrips(section);
+    if (homeLayout === "trail")
+        mountTrail(section);
+    if (homeLayout === "scatter")
+        mountScatter(section);
+    if (homeLayout === "toss")
+        mountToss(section);
 }
-// Fill in deferred images once they're needed.
-const homeLoad = (root) => {
-    root.querySelectorAll("img[data-src]").forEach((image) => {
-        image.src = image.dataset.src;
-        image.removeAttribute("data-src");
-        // Wide banners would crop to a sliver, so they sit whole on a dark ground.
-        image.addEventListener("load", () => {
-            if (image.naturalWidth / image.naturalHeight > 2.2)
-                image.classList.add("is-wide");
-        }, { once: true });
-    });
-};
-// Scrub: the cursor's place across the image picks the frame. A horizontal
-// drag does the same on a phone.
-function mountScrub(section) {
-    section.querySelectorAll("[data-scrub]").forEach((card) => {
-        const media = card.querySelector(".home-scrub__media");
-        const frames = [...card.querySelectorAll(".home-scrub__frame")];
-        const ticks = [...card.querySelectorAll(".home-scrub__ticks i")];
-        const count = card.querySelector(".home-scrub__count b");
-        if (!media)
-            return;
-        let current = 0;
-        const show = (index) => {
-            if (index === current)
+// Scatter: each project's cover and three more frames, interleaved so the two
+// projects mix on the table.
+function homeScatterItems() {
+    const lists = homeProjects.map((project) => homeFrames(project, 4).map((src, index) => ({ project, src, cover: index === 0 })));
+    const items = [];
+    for (let index = 0; index < 4; index += 1)
+        lists.forEach((list) => list[index] && items.push(list[index]));
+    return items;
+}
+// Toss: the pile, bottom card first, so the first project's cover ends on top.
+function homeTossCards() {
+    return homeProjects
+        .flatMap((project) => homeFrames(project, 3).map((src) => ({ project, src })))
+        .reverse();
+}
+// Trail: moving across a name leaves that project's images behind the cursor.
+function mountTrail(section) {
+    const root = section.querySelector("[data-trail]");
+    if (!root || !window.matchMedia("(hover: hover)").matches)
+        return;
+    const frames = homeProjects.map((project) => homeFrames(project));
+    const loaded = new Set();
+    const turn = homeProjects.map(() => 0);
+    let last = null;
+    root.querySelectorAll("[data-trail-item]").forEach((item) => {
+        const index = Number(item.dataset.trailItem);
+        item.addEventListener("pointerenter", () => {
+            if (loaded.has(index))
                 return;
-            frames[current].classList.remove("is-on");
-            ticks[current]?.classList.remove("is-on");
-            frames[index].classList.add("is-on");
-            ticks[index]?.classList.add("is-on");
-            if (count)
-                count.textContent = String(index + 1).padStart(2, "0");
-            current = index;
-        };
-        ticks[0]?.classList.add("is-on");
-        media.addEventListener("pointerenter", () => homeLoad(media), { once: true });
-        media.addEventListener("pointermove", (event) => {
-            const box = media.getBoundingClientRect();
-            const ratio = Math.min(0.999, Math.max(0, (event.clientX - box.left) / box.width));
-            show(Math.floor(ratio * frames.length));
+            loaded.add(index);
+            frames[index].forEach((src) => { new Image().src = src; });
         });
-        card.addEventListener("pointerleave", () => show(0));
+        item.addEventListener("pointermove", (event) => {
+            const box = root.getBoundingClientRect();
+            const x = event.clientX - box.left;
+            const y = event.clientY - box.top;
+            if (last && Math.hypot(x - last[0], y - last[1]) < 90)
+                return;
+            last = [x, y];
+            const image = document.createElement("img");
+            image.className = "home-trail__drop";
+            image.src = frames[index][turn[index] % frames[index].length];
+            image.alt = "";
+            image.style.left = `${x}px`;
+            image.style.top = `${y}px`;
+            turn[index] += 1;
+            root.append(image);
+            const tilt = Math.random() * 10 - 5;
+            image.animate([
+                { opacity: 0, transform: `translate(-50%, -50%) scale(0.55) rotate(${tilt * 2}deg)` },
+                { opacity: 1, transform: `translate(-50%, -50%) scale(1) rotate(${tilt}deg)`, offset: 0.18 },
+                { opacity: 1, transform: `translate(-50%, -50%) scale(1) rotate(${tilt}deg)`, offset: 0.6 },
+                { opacity: 0, transform: `translate(-50%, -48%) scale(0.9) rotate(${tilt}deg)` },
+            ], { duration: 1300, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }).finished.then(() => image.remove());
+        });
+        item.addEventListener("pointerleave", () => { last = null; });
     });
 }
-// Stack: as the next card slides up over one, that one sinks back and dims.
-function mountStack(section) {
-    const cards = [...section.querySelectorAll("[data-stack-card]")];
+// Scatter: things land loosely on the page; grab one and throw it, and it
+// glides, spins a little and knocks off the edges.
+function mountScatter(section) {
+    const root = section.querySelector("[data-scatter]");
+    if (!root)
+        return;
+    const items = [...root.querySelectorAll("[data-scatter-item]")];
+    const wide = [
+        [3, 4, 30, -4], [38, 0, 21, 3], [66, 8, 28, -2], [21, 47, 19, 5],
+        [44, 36, 29, -3], [77, 55, 19, 4], [2, 64, 17, -6], [60, 76, 16, 2],
+    ];
+    const narrow = [
+        [2, 1, 70, -3], [44, 20, 52, 4], [6, 34, 48, 5], [48, 44, 50, -4],
+        [2, 60, 62, -2], [50, 70, 46, 3], [10, 82, 40, 6], [56, 88, 40, -5],
+    ];
+    const slots = window.innerWidth < 761 ? narrow : wide;
+    const state = items.map((item, index) => {
+        const [x, y, w, r] = slots[index % slots.length];
+        item.style.width = `${w}%`;
+        item.style.zIndex = String(index + 1);
+        return { item, x: 0, y: 0, r, vx: 0, vy: 0, vr: 0, px: x, py: y };
+    });
+    const place = () => {
+        const width = root.clientWidth;
+        const height = root.clientHeight;
+        state.forEach((thing) => {
+            thing.x = (thing.px / 100) * width;
+            thing.y = (thing.py / 100) * height;
+            draw(thing);
+        });
+    };
+    const draw = (thing) => {
+        thing.item.style.transform = `translate(${thing.x}px, ${thing.y}px) rotate(${thing.r}deg)`;
+    };
+    place();
+    let top = items.length;
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches)
+        return;
+    root.classList.add("is-live");
+    const moving = new Set();
     let frame = 0;
-    const update = () => {
-        frame = 0;
-        cards.forEach((card, index) => {
-            const next = cards[index + 1];
-            if (!next)
+    const step = () => {
+        const width = root.clientWidth;
+        const height = root.clientHeight;
+        moving.forEach((thing) => {
+            thing.x += thing.vx;
+            thing.y += thing.vy;
+            thing.r += thing.vr;
+            thing.vx *= 0.94;
+            thing.vy *= 0.94;
+            thing.vr *= 0.92;
+            const maxX = width - thing.item.offsetWidth * 0.5;
+            const maxY = height - thing.item.offsetHeight * 0.5;
+            const minX = -thing.item.offsetWidth * 0.5;
+            if (thing.x < minX || thing.x > maxX) {
+                thing.x = Math.min(maxX, Math.max(minX, thing.x));
+                thing.vx *= -0.5;
+            }
+            if (thing.y < -40 || thing.y > maxY) {
+                thing.y = Math.min(maxY, Math.max(-40, thing.y));
+                thing.vy *= -0.5;
+            }
+            draw(thing);
+            if (Math.hypot(thing.vx, thing.vy) < 0.08 && Math.abs(thing.vr) < 0.02)
+                moving.delete(thing);
+        });
+        frame = moving.size ? requestAnimationFrame(step) : 0;
+    };
+    state.forEach((thing) => {
+        const { item } = thing;
+        let held = false;
+        let dragged = false;
+        let start = [0, 0];
+        let lastPoint = [0, 0, 0];
+        item.addEventListener("dragstart", (event) => event.preventDefault());
+        item.addEventListener("pointerdown", (event) => {
+            if (event.button !== 0)
                 return;
-            const top = card.getBoundingClientRect().top;
-            const nextTop = next.getBoundingClientRect().top;
-            const covered = Math.min(1, Math.max(0, 1 - (nextTop - top) / card.offsetHeight));
-            card.style.setProperty("--covered", covered.toFixed(3));
+            held = true;
+            dragged = false;
+            start = [event.clientX, event.clientY];
+            lastPoint = [event.clientX, event.clientY, event.timeStamp];
+            moving.delete(thing);
+            thing.vx = thing.vy = thing.vr = 0;
+            top += 1;
+            item.style.zIndex = String(top);
+            item.classList.add("is-held");
+            item.setPointerCapture(event.pointerId);
         });
-    };
-    const request = () => {
-        if (!frame)
-            frame = requestAnimationFrame(update);
-    };
-    window.addEventListener("scroll", request, { passive: true });
-    window.addEventListener("resize", request);
-    update();
+        item.addEventListener("pointermove", (event) => {
+            if (!held)
+                return;
+            if (!dragged && Math.hypot(event.clientX - start[0], event.clientY - start[1]) > 5)
+                dragged = true;
+            const dx = event.clientX - lastPoint[0];
+            const dy = event.clientY - lastPoint[1];
+            const dt = Math.max(8, event.timeStamp - lastPoint[2]);
+            thing.x += dx;
+            thing.y += dy;
+            const cap = (value) => Math.max(-36, Math.min(36, value));
+            thing.vx = cap((dx / dt) * 16);
+            thing.vy = cap((dy / dt) * 16);
+            thing.vr = thing.vx * 0.05;
+            lastPoint = [event.clientX, event.clientY, event.timeStamp];
+            draw(thing);
+        });
+        const release = () => {
+            if (!held)
+                return;
+            held = false;
+            item.classList.remove("is-held");
+            moving.add(thing);
+            if (!frame)
+                frame = requestAnimationFrame(step);
+        };
+        item.addEventListener("pointerup", release);
+        item.addEventListener("pointercancel", release);
+        item.addEventListener("click", (event) => {
+            if (dragged)
+                event.preventDefault();
+        });
+    });
+    let resizeTimer = 0;
+    window.addEventListener("resize", () => {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(place, 150);
+    });
 }
-// Strips: images load as a strip comes near, and the film only runs while it
-// is on screen.
-function mountStrips(section) {
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-            if (entry.isIntersecting)
-                homeLoad(entry.target);
-            entry.target.classList.toggle("is-running", entry.isIntersecting);
+// Toss: drag or flick the top card off the pile; it slides back in at the
+// bottom and the details change to whichever project is now on top.
+function mountToss(section) {
+    const root = section.querySelector("[data-toss]");
+    if (!root)
+        return;
+    const pile = root.querySelector(".home-toss__pile");
+    const info = root.querySelector(".home-toss__info");
+    const next = root.querySelector(".home-toss__next");
+    if (!pile || !info || !next)
+        return;
+    const order = [...pile.querySelectorAll(".home-toss__card")];
+    const rest = "translate(-50%, -50%) translate(var(--x), var(--y)) rotate(var(--r))";
+    let shown = -1;
+    let busy = false;
+    const describe = () => {
+        order.forEach((card, index) => {
+            card.style.zIndex = String(index + 1);
+            card.tabIndex = index === order.length - 1 ? 0 : -1;
         });
-    }, { rootMargin: "300px 0px" });
-    section.querySelectorAll("[data-strip]").forEach((strip) => observer.observe(strip));
+        const index = Number(order[order.length - 1].dataset.project);
+        if (index === shown)
+            return;
+        shown = index;
+        const project = homeProjects[index];
+        const fields = [
+            [".home-toss__number", `${project.number} <span>/ ${String(homeProjects.length).padStart(2, "0")}</span>`],
+            [".home-toss__title", project.title],
+            [".home-toss__summary", project.summary],
+            [".home-toss__meta", `${project.discipline}<br />${project.services.join(", ")} · ${project.year}`],
+        ];
+        fields.forEach(([selector, html]) => {
+            const field = info.querySelector(selector);
+            if (field)
+                field.innerHTML = html;
+        });
+        info.querySelector(".home-toss__cta")?.setAttribute("href", homeHref(project));
+        info.animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }], { duration: 500, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
+    };
+    // Send the top card off in a direction, then tuck it in at the bottom.
+    const toss = async (card, from, dx, dy) => {
+        busy = true;
+        const length = Math.hypot(dx, dy) || 1;
+        const reach = pile.clientWidth * 0.85;
+        const out = `translate(-50%, -50%) translate(${(dx / length) * reach}px, ${(dy / length) * reach * 0.6}px) rotate(${dx > 0 ? 18 : -18}deg)`;
+        await card.animate([{ transform: from }, { transform: out }], { duration: 320, easing: "cubic-bezier(0.3, 0.7, 0.4, 1)", fill: "forwards" }).finished;
+        order.pop();
+        order.unshift(card);
+        describe();
+        const back = card.animate([{ transform: out }, { transform: rest }], { duration: 560, easing: "cubic-bezier(0.16, 1, 0.3, 1)", fill: "forwards" });
+        await back.finished;
+        card.getAnimations().forEach((animation) => animation.cancel());
+        card.style.transform = "";
+        busy = false;
+    };
+    order.forEach((card) => {
+        let held = false;
+        let dragged = false;
+        let start = [0, 0, 0];
+        let delta = [0, 0];
+        card.addEventListener("dragstart", (event) => event.preventDefault());
+        card.addEventListener("pointerdown", (event) => {
+            if (busy || card !== order[order.length - 1] || event.button !== 0)
+                return;
+            held = true;
+            dragged = false;
+            start = [event.clientX, event.clientY, event.timeStamp];
+            delta = [0, 0];
+            card.setPointerCapture(event.pointerId);
+            card.classList.add("is-held");
+        });
+        card.addEventListener("pointermove", (event) => {
+            if (!held)
+                return;
+            delta = [event.clientX - start[0], event.clientY - start[1]];
+            if (!dragged && Math.hypot(...delta) > 5)
+                dragged = true;
+            card.style.transform = `translate(-50%, -50%) translate(calc(var(--x) + ${delta[0]}px), calc(var(--y) + ${delta[1]}px)) rotate(calc(var(--r) + ${delta[0] * 0.05}deg))`;
+        });
+        const release = (event) => {
+            if (!held)
+                return;
+            held = false;
+            card.classList.remove("is-held");
+            const speed = Math.hypot(...delta) / Math.max(1, event.timeStamp - start[2]);
+            const from = card.style.transform;
+            if (Math.hypot(...delta) > 110 || (dragged && speed > 0.6)) {
+                toss(card, from, delta[0], delta[1]);
+            }
+            else if (dragged) {
+                card.style.transform = "";
+                card.animate([{ transform: from }, { transform: rest }], { duration: 500, easing: "cubic-bezier(0.2, 1.3, 0.4, 1)" });
+            }
+        };
+        card.addEventListener("pointerup", release);
+        card.addEventListener("pointercancel", release);
+        card.addEventListener("click", (event) => {
+            if (dragged || card !== order[order.length - 1])
+                event.preventDefault();
+        });
+    });
+    next.addEventListener("click", () => {
+        if (!busy)
+            toss(order[order.length - 1], rest, 1, -0.25);
+    });
+    describe();
 }
 // Temporary: the picker for comparing homepages, at the foot of the landing.
 if (homeLanding && homeLayout) {
