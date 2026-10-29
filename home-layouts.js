@@ -8,28 +8,15 @@
 //              with its sector, year, summary and services.
 //   feature  — the statement, then each case study as a full-width spread: a
 //              big image beside its details, alternating sides.
-// The rest adapt standout portfolios (see PROJECT_CONTEXT.md for the links):
-//   clusters — each project as a loose cluster of its images either side of a
-//              pinned list of names (after Grégory Lallé).
-//   column   — one centre column of every image, the names either side, the
-//              current one lit as its images pass (after Cathy Dolle).
-//   tiles    — ruled tiles, each project's images beside one plain sentence of
-//              what was made (after Studio Herrström).
-//   desktop  — the work as files on a desktop behind a dock (after bychudy).
-//   row      — a row of frames that opens up the one you're on, over a large
-//              mixed-type title (after Ross Mason).
-//   curve    — the frames on a curved wall you drag around (after Jesper
-//              Landberg).
+//   row      — after Ross Mason (iamrossmason.com) and the original rail: a
+//              row of frames drifting through a lens that opens whichever is
+//              in it, over a large title naming that project. The lens follows
+//              the cursor; the row can be dragged and thrown.
 // "hero" is the original homepage.
 const homeLayouts = [
     { id: "work", label: "Work" },
     { id: "feature", label: "Feature" },
-    { id: "clusters", label: "Clusters" },
-    { id: "column", label: "Column" },
-    { id: "tiles", label: "Tiles" },
-    { id: "desktop", label: "Desktop" },
     { id: "row", label: "Row" },
-    { id: "curve", label: "Curve" },
     { id: "hero", label: "Original" },
 ];
 const homeLayoutKey = "raheem-home-layout";
@@ -52,17 +39,19 @@ const homeDetails = (project) => `
 // The images each project shows on the homepage, cover first. Kept to the
 // lighter files; the heaviest animated ones stay in the case studies.
 const homeGallery = {
-    "01": ["LCover", "L1", "L3", "P7-1", "L4", "P9-1", "L7", "L2", "L5", "P13-2", "L10", "L12"].map((name) => `assets/projects/flip/${name}.webp`),
-    "02": ["l4-cover", "l5", "p7-1", "p9-1", "l6", "p9-2", "p7-2", "l8", "p10-1", "l11"].map((name) => `assets/projects/electronic-botanica/${name}.webp`),
+    "01": ["LCover", "L1", "L3", "P7-1", "L4", "P9-1", "L7"].map((name) => `assets/projects/flip/${name}.webp`),
+    "02": ["l4-cover", "l5", "p7-1", "p9-1", "l6", "p9-2", "p7-2"].map((name) => `assets/projects/electronic-botanica/${name}.webp`),
 };
-const homeFrames = (project, count = 12) => (homeGallery[project.number] ?? [project.image]).slice(0, count);
-// One plain sentence of what was made.
-const homeMade = {
-    "01": "A brand identity and illustration system for Flip, a crypto exchange as simple as flipping a coin.",
-    "02": "Identity and generative visuals for Electronic Botanica, an exhibition where organic forms meet digital systems.",
+const homeFrames = (project) => homeGallery[project.number] ?? [project.image];
+// A title in the site's two voices: the last word set in Marcellus (a single
+// word stays in the grotesk).
+const homeMixed = (text) => {
+    const words = text.split(" ");
+    if (words.length < 2)
+        return text;
+    const last = words.pop();
+    return `${words.join(" ")} <em>${last}</em>`;
 };
-const homeImg = (src, alt = "") => `<img src="${src}" alt="${alt}" draggable="false" loading="lazy" decoding="async" />`;
-const homeCount = String(homeProjects.length).padStart(2, "0");
 const homeBuilders = {
     work: () => `
     <div class="home-work__grid">
@@ -88,101 +77,21 @@ const homeBuilders = {
         <a class="home-spread__cta" href="${homeHref(project)}">View case study <span aria-hidden="true">→</span></a>
       </div>
     </article>`).join(""),
-    clusters: () => `
-    <h2 class="home-big">Work,</h2>
-    <div class="home-clusters" data-clusters>
-      <ol class="home-clusters__names" style="grid-row: 1 / span ${homeProjects.length};">
-        ${homeProjects.map((project, index) => `<li><a href="${homeHref(project)}" data-name="${index}">${project.title}</a></li>`).join("")}
-        <li><a class="home-clusters__more" href="work.html">Archive ↗</a></li>
-      </ol>
-      ${homeProjects.map((project, index) => {
-        const frames = homeFrames(project, 9);
-        const shot = (src, n) => `<a class="home-cluster__shot${n % 4 === 1 ? " home-cluster__shot--bleed" : ""}" href="${homeHref(project)}" tabindex="-1">${homeImg(src)}</a>`;
-        return `
-        <article class="home-cluster" style="grid-row: ${index + 1};" data-cluster="${index}">
-          <div class="home-cluster__left">
-            ${frames.slice(0, 2).map(shot).join("")}
-            <a class="home-cluster__number" href="${homeHref(project)}">${project.number}<span>${project.title} — ${project.discipline}, ${project.year}</span></a>
-          </div>
-          <div class="home-cluster__right">${frames.slice(2).map((src, n) => shot(src, n + 2)).join("")}</div>
-        </article>`;
-    }).join("")}
-    </div>`,
-    column: () => {
-        const half = Math.ceil(homeProjects.length / 2);
-        const names = (list, offset) => list.map((project, index) => `
-      <li><a href="${homeHref(project)}" data-name="${index + offset}"><span>${project.number}/</span><strong>${project.title}</strong><em>${project.discipline}, ${project.year}</em></a></li>`).join("");
-        return `
-    <div class="home-column" data-column>
-      <ol class="home-column__names">${names(homeProjects.slice(0, half), 0)}</ol>
-      <div class="home-column__strip">
-        ${homeProjects.map((project, index) => homeFrames(project, 6).map((src, n) => `
-          <a class="home-column__frame${n % 2 ? " home-column__frame--wide" : ""}" href="${homeHref(project)}" data-project="${index}">${homeImg(src, n ? "" : project.imageAlt ?? project.title)}</a>`).join("")).join("")}
-      </div>
-      <ol class="home-column__names home-column__names--right">${names(homeProjects.slice(half), half)}</ol>
-      <p class="home-column__now" aria-hidden="true"></p>
-    </div>`;
-    },
-    tiles: () => `
-    <div class="home-tiles">
-      ${homeProjects.map((project, index) => {
-        const frames = homeFrames(project);
-        const text = `
-          <a class="home-tile home-tile--text" href="${homeHref(project)}">
-            <span class="home-tile__top"><span>${project.discipline}</span><span class="home-tile__number">${project.number}</span></span>
-            <span class="home-tile__sentence">${homeMade[project.number] ?? project.summary} <span aria-hidden="true">→</span></span>
-          </a>`;
-        const image = (src, extra = "") => `<a class="home-tile home-tile--image${extra}" href="${homeHref(project)}" tabindex="-1">${homeImg(src)}</a>`;
-        return index % 2 === 0
-            ? `<div class="home-tiles__row home-tiles__row--half">${image(frames[0], " home-tile--hover")}${text}</div>`
-            : `<div class="home-tiles__row home-tiles__row--quarters">${image(frames[0], " home-tile--hover")}${text}${image(frames[2])}${image(frames[4])}</div>`;
-    }).join("")}
-    </div>`,
-    desktop: () => `
-    <div class="home-desktop" data-desktop>
-      <span class="home-desktop__backdrop" aria-hidden="true">Ra</span>
-      ${homeProjects.map((project, index) => homeFrames(project, 7).map((src, n) => `
-        <a class="home-desktop__file" href="${homeHref(project)}" data-side="${index % 2}" data-n="${n}">
-          <span class="home-desktop__icon">${homeImg(src, n ? "" : project.title)}</span>
-          <span class="home-desktop__name">${n ? `${project.title.split(" ").pop()?.toLowerCase()}-${String(n).padStart(2, "0")}` : project.title}</span>
-        </a>`).join("")).join("")}
-      <nav class="home-desktop__dock" aria-label="Shortcuts">
-        <a href="work.html"><span>/</span>Work</a>
-        <a href="about.html"><span>/</span>About</a>
-        <a href="archive.html"><span>/</span>Archive</a>
-        <i aria-hidden="true"></i>
-        <a href="#contact"><span>@</span>Contact</a>
-      </nav>
-    </div>`,
     row: () => `
     <div class="home-row" data-row>
       <div class="home-row__strip">
-        ${homeProjects.map((project) => homeFrames(project, 5).map((src, n) => `
-          <a class="home-row__item" href="${homeHref(project)}">
+        ${homeProjects.map((project, index) => homeFrames(project).map((src, n) => `
+          <a class="home-row__item" href="${homeHref(project)}" draggable="false" data-project="${index}">
             <span class="home-row__label">${project.number}.${n + 1}<br />${project.title}<br /><em>[${project.services[n % project.services.length]}]</em></span>
-            <span class="home-row__media">${homeImg(src, n ? "" : project.imageAlt ?? project.title)}</span>
+            <span class="home-row__media">
+              <img src="${src}" alt="${n ? "" : project.imageAlt ?? project.title}" draggable="false" loading="${index ? "lazy" : "eager"}" decoding="async" />
+              ${!n && project.hoverImage ? `<img class="home-row__motion" data-src="${project.hoverImage}" alt="" draggable="false" />` : ""}
+            </span>
           </a>`).join("")).join("")}
       </div>
-      <p class="home-row__title" aria-hidden="true">Selected <em>work</em></p>
+      <p class="home-row__title" aria-hidden="true">${homeMixed("Selected work")}</p>
+      <p class="home-row__meta" aria-live="polite"></p>
     </div>`,
-    curve: () => {
-        const frames = homeProjects.flatMap((project, index) => homeFrames(project, 6).map((src, n) => ({ project, index, src, n })));
-        return `
-    <div class="home-curve" data-curve style="--count: ${frames.length};">
-      <div class="home-curve__floor" aria-hidden="true"></div>
-      <div class="home-curve__ring">
-        ${frames.map(({ project, index, src, n }, i) => `
-          <a class="home-curve__panel" href="${homeHref(project)}" style="--i: ${i};" data-project="${index}" draggable="false">
-            ${homeImg(src, n ? "" : project.imageAlt ?? project.title)}
-            <span>${project.title} — ${project.number}.${n + 1}</span>
-          </a>`).join("")}
-      </div>
-      <div class="home-curve__caption">
-        <p class="home-curve__now"></p>
-        <p class="home-curve__hint"><button type="button" data-curve-step="-1" aria-label="Previous">←</button> Drag to turn <button type="button" data-curve-step="1" aria-label="Next">→</button></p>
-      </div>
-    </div>`;
-    },
 };
 if (homeLanding && homeLayout && homeLayout !== "hero") {
     const section = document.createElement("section");
@@ -196,155 +105,207 @@ if (homeLanding && homeLayout && homeLayout !== "hero") {
     ${homeBuilders[homeLayout]()}
     <a class="home-work__all" href="work.html">See all work <span aria-hidden="true">↗</span></a>`;
     homeLanding.after(section);
-    if (homeLayout === "clusters")
-        mountNames(section, "[data-cluster]", (element) => Number(element.dataset.cluster));
-    if (homeLayout === "column")
-        mountNames(section, ".home-column__frame", (element) => Number(element.dataset.project));
-    if (homeLayout === "desktop")
-        mountDesktop(section);
     if (homeLayout === "row")
         mountRow(section);
-    if (homeLayout === "curve")
-        mountCurve(section);
 }
-// Clusters and Column: the name of whichever project sits at the middle of
-// the screen is lit.
-function mountNames(section, selector, projectOf) {
-    const names = [...section.querySelectorAll("[data-name]")];
-    const now = section.querySelector(".home-column__now");
-    const light = (index) => {
-        names.forEach((name) => name.classList.toggle("is-on", Number(name.dataset.name) === index));
-        if (now)
-            now.textContent = `${homeProjects[index].number}/ ${homeProjects[index].title}`;
-    };
-    light(0);
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-            if (entry.isIntersecting)
-                light(projectOf(entry.target));
-        });
-    }, { rootMargin: "-50% 0px -50% 0px" });
-    section.querySelectorAll(selector).forEach((element) => observer.observe(element));
-}
-// Desktop: the files settle around the middle in two loose groups, one per
-// project, the way a working desktop fills up.
-function mountDesktop(section) {
-    const files = [...section.querySelectorAll(".home-desktop__file")];
-    const spots = [
-        [0.27, 0.1], [0.37, 0.24], [0.22, 0.32], [0.33, 0.46], [0.17, 0.53], [0.39, 0.62], [0.26, 0.68],
-    ];
-    files.forEach((file) => {
-        const [x, y] = spots[Number(file.dataset.n) % spots.length];
-        const left = file.dataset.side === "1" ? 1 - x : x;
-        file.style.left = `${left * 100}%`;
-        file.style.top = `${y * 100}%`;
-    });
-}
-// Row: the frame you're on opens up; the first one starts open.
+// Row: every frame sits in one row that drifts slowly left on a loop. A lens
+// opens whichever frames are near it (taller and wider, falling off smoothly
+// like a dock); it rests at the centre, and follows the cursor while it's over
+// the row, when the drift eases almost to a stop. The row can be dragged and
+// thrown. The large title below names the project in the lens.
 function mountRow(section) {
-    const items = [...section.querySelectorAll(".home-row__item")];
-    const open = (item) => items.forEach((other) => other.classList.toggle("is-open", other === item));
-    items.forEach((item) => {
-        item.addEventListener("pointerenter", () => open(item));
-        item.addEventListener("focus", () => open(item));
-    });
-    if (items[0])
-        open(items[0]);
-}
-// Curve: the frames stand on the inside of a ring. Drag to turn it (it
-// carries on a little and settles on the nearest frame), or use the arrows.
-function mountCurve(section) {
-    const root = section.querySelector("[data-curve]");
-    const ring = root?.querySelector(".home-curve__ring");
-    const now = root?.querySelector(".home-curve__now");
-    if (!root || !ring || !now)
+    const root = section.querySelector("[data-row]");
+    const strip = root?.querySelector(".home-row__strip");
+    const title = root?.querySelector(".home-row__title");
+    const meta = root?.querySelector(".home-row__meta");
+    if (!root || !strip || !title || !meta)
         return;
-    const panels = [...ring.querySelectorAll(".home-curve__panel")];
-    const step = 360 / panels.length;
-    let angle = 0;
-    let target = 0;
-    let frame = 0;
+    // Three copies, so the loop never shows a gap.
+    const originals = [...strip.querySelectorAll(".home-row__item")];
+    const count = originals.length;
+    [1, 2].forEach(() => originals.forEach((item) => {
+        const copy = item.cloneNode(true);
+        copy.setAttribute("aria-hidden", "true");
+        copy.tabIndex = -1;
+        strip.append(copy);
+    }));
+    const items = [...strip.querySelectorAll(".home-row__item")];
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let size = { base: 0, gap: 0, short: 0, tall: 0, open: 0, spread: 0 };
+    const measure = () => {
+        const width = root.clientWidth;
+        const narrow = width < 761;
+        size = {
+            base: narrow ? width * 0.15 : Math.min(150, Math.max(90, width * 0.075)),
+            gap: narrow ? 6 : 8,
+            short: narrow ? width * 0.2 : Math.min(190, Math.max(110, width * 0.1)),
+            tall: narrow ? width * 0.62 : Math.min(560, Math.max(260, width * 0.3)),
+            open: narrow ? 3.6 : 3.6,
+            spread: narrow ? width * 0.14 : Math.min(260, Math.max(140, width * 0.11)),
+        };
+        root.style.setProperty("--row-tall", `${size.tall}px`);
+    };
+    measure();
+    let offset = 0;
+    let velocity = 0;
+    let lensX = root.clientWidth / 2;
+    let lensTarget = lensX;
+    let hovering = false;
+    let held = false;
     let dragged = false;
-    const front = () => ((Math.round(-angle / step) % panels.length) + panels.length) % panels.length;
-    const draw = () => {
-        ring.style.setProperty("--turn", `${angle}deg`);
-        const current = front();
-        // Only the frame in front and its neighbours show; the rest of the ring
-        // would swing past the viewer.
-        panels.forEach((panel, index) => {
-            const away = Math.abs(((index - current + panels.length + panels.length / 2) % panels.length) - panels.length / 2);
-            panel.classList.toggle("is-front", away === 0);
-            panel.classList.toggle("is-away", away > 2);
-        });
-        const project = homeProjects[Number(panels[current].dataset.project)];
-        const text = `<a href="${homeHref(project)}">${project.number}/ ${project.title}</a><span>${project.discipline}, ${project.year}</span>`;
-        if (now.innerHTML !== text)
-            now.innerHTML = text;
-    };
-    const settle = () => {
-        angle += (target - angle) * 0.12;
-        if (Math.abs(target - angle) < 0.02)
-            angle = target;
-        draw();
-        frame = angle === target ? 0 : requestAnimationFrame(settle);
-    };
-    const go = (to) => {
-        target = to;
-        if (!frame)
-            frame = requestAnimationFrame(settle);
-    };
-    const snap = (value) => Math.round(value / step) * step;
-    let startX = 0;
-    let startAngle = 0;
     let lastX = 0;
     let lastTime = 0;
-    let velocity = 0;
-    let held = false;
-    root.addEventListener("dragstart", (event) => event.preventDefault());
-    root.addEventListener("pointerdown", (event) => {
-        if (event.button !== 0 || event.target.closest("button"))
+    let visible = true;
+    let frame = 0;
+    let previous = 0;
+    let shown = -1;
+    const drift = reduced ? 0 : 0.35;
+    const describe = (index) => {
+        if (index === shown)
             return;
-        held = true;
-        dragged = false;
-        startX = lastX = event.clientX;
-        lastTime = event.timeStamp;
-        startAngle = angle;
-        velocity = 0;
-        cancelAnimationFrame(frame);
-        frame = 0;
+        shown = index;
+        const item = originals[index % count];
+        const project = homeProjects[Number(item.dataset.project)];
+        const n = index % count - originals.findIndex((other) => other.dataset.project === item.dataset.project) + 1;
+        title.innerHTML = homeMixed(project.title);
+        meta.innerHTML = `<span>${project.number}.${n}</span><span>${project.discipline}, ${project.year}</span><a href="${homeHref(project)}">View case study <span aria-hidden="true">→</span></a>`;
+        title.animate([{ opacity: 0, transform: "translateY(0.08em)" }, { opacity: 1, transform: "none" }], { duration: 500, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
+        const motion = originals[index % count].querySelector(".home-row__motion[data-src]");
+        if (motion) {
+            motion.src = motion.dataset.src;
+            motion.removeAttribute("data-src");
+        }
+    };
+    const layout = () => {
+        const pitch = size.base + size.gap;
+        const period = count * pitch;
+        offset = ((offset % period) + period) % period;
+        // Where each frame would sit with no lens, and how far it opens.
+        const starts = items.map((_, index) => index * pitch - offset - period + size.gap);
+        const grow = starts.map((start) => {
+            const distance = (start + size.base / 2 - lensX) / size.spread;
+            return Math.exp(-distance * distance);
+        });
+        const widths = grow.map((amount) => size.base * (1 + (size.open - 1) * amount));
+        // Lay the opened frames out in turn, then shift the row so the point under
+        // the lens stays under it.
+        let x = 0;
+        const lefts = widths.map((width) => {
+            const left = x;
+            x += width + size.gap;
+            return left;
+        });
+        const under = Math.max(0, Math.min(items.length - 1, Math.floor((lensX - starts[0]) / pitch)));
+        const fraction = (lensX - starts[under]) / pitch;
+        const shift = lensX - (lefts[under] + fraction * (widths[under] + size.gap));
+        let biggest = 0;
+        items.forEach((item, index) => {
+            item.style.transform = `translate3d(${lefts[index] + shift}px, 0, 0)`;
+            item.style.width = `${widths[index]}px`;
+            item.style.setProperty("--open", grow[index].toFixed(3));
+            item.querySelector(".home-row__media").style.height = `${size.short + (size.tall - size.short) * grow[index]}px`;
+            if (grow[index] > grow[biggest])
+                biggest = index;
+        });
+        items.forEach((item, index) => item.classList.toggle("is-open", index === biggest));
+        describe(biggest);
+    };
+    const tick = (now) => {
+        const delta = previous ? Math.min(48, now - previous) / 16.67 : 1;
+        previous = now;
+        if (!held) {
+            // Glide back toward the drift once let go.
+            const rest = hovering ? drift * 0.08 : drift;
+            velocity += (rest - velocity) * (Math.abs(velocity) > Math.abs(rest) ? 0.05 : 0.08) * delta;
+            offset += velocity * delta;
+        }
+        lensX += (lensTarget - lensX) * 0.14 * delta;
+        layout();
+        frame = visible ? requestAnimationFrame(tick) : 0;
+    };
+    const start = () => {
+        if (!frame && visible) {
+            previous = 0;
+            frame = requestAnimationFrame(tick);
+        }
+    };
+    new IntersectionObserver(([entry]) => {
+        visible = entry.isIntersecting && !document.hidden;
+        start();
+    }).observe(root);
+    document.addEventListener("visibilitychange", () => {
+        visible = !document.hidden;
+        start();
+    });
+    const canHover = window.matchMedia("(hover: hover)").matches;
+    strip.addEventListener("pointerenter", () => {
+        if (canHover)
+            hovering = true;
+    });
+    strip.addEventListener("pointerleave", () => {
+        hovering = false;
+        lensTarget = root.clientWidth / 2;
+    });
+    strip.addEventListener("pointermove", (event) => {
+        if (canHover && !held)
+            lensTarget = event.clientX - root.getBoundingClientRect().left;
     });
     window.addEventListener("pointermove", (event) => {
         if (!held)
             return;
-        const dx = event.clientX - startX;
-        if (Math.abs(dx) > 5)
+        const dx = event.clientX - lastX;
+        if (Math.abs(dx) > 2)
             dragged = true;
-        const perPixel = step / (panels[0].offsetWidth || 300);
-        angle = target = startAngle + dx * perPixel;
-        velocity = ((event.clientX - lastX) / Math.max(8, event.timeStamp - lastTime)) * 16 * perPixel;
+        offset -= dx;
+        velocity = -(dx / Math.max(8, event.timeStamp - lastTime)) * 16;
         lastX = event.clientX;
         lastTime = event.timeStamp;
-        draw();
     });
-    window.addEventListener("pointerup", () => {
-        if (!held)
+    strip.addEventListener("pointerdown", (event) => {
+        if (event.button !== 0)
             return;
-        held = false;
-        go(snap(angle + velocity * 12));
+        held = true;
+        dragged = false;
+        lastX = event.clientX;
+        lastTime = event.timeStamp;
+        velocity = 0;
     });
-    panels.forEach((panel, index) => {
-        panel.addEventListener("click", (event) => {
-            if (dragged || index !== front()) {
+    const release = () => {
+        held = false;
+    };
+    window.addEventListener("pointerup", release);
+    window.addEventListener("pointercancel", release);
+    strip.addEventListener("dragstart", (event) => event.preventDefault());
+    items.forEach((item) => {
+        item.addEventListener("click", (event) => {
+            if (dragged)
                 event.preventDefault();
-                if (!dragged)
-                    go(snap(angle) - (((index - front() + panels.length + panels.length / 2) % panels.length) - panels.length / 2) * step);
-            }
         });
     });
-    root.querySelectorAll("[data-curve-step]").forEach((button) => {
-        button.addEventListener("click", () => go(snap(target) - Number(button.dataset.curveStep) * step));
+    // Trackpads can push the row sideways too.
+    strip.addEventListener("wheel", (event) => {
+        if (Math.abs(event.deltaX) <= Math.abs(event.deltaY))
+            return;
+        event.preventDefault();
+        offset += event.deltaX;
+    }, { passive: false });
+    // Tabbing to a frame brings it into the lens.
+    originals.forEach((item, index) => {
+        item.addEventListener("focus", () => {
+            const pitch = size.base + size.gap;
+            offset = index * pitch + size.gap + size.base / 2 - lensTarget + count * pitch;
+        });
     });
-    draw();
+    let resizeTimer = 0;
+    window.addEventListener("resize", () => {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(() => {
+            measure();
+            if (!hovering)
+                lensTarget = root.clientWidth / 2;
+        }, 120);
+    });
+    start();
 }
 // Temporary: the picker for comparing homepages, at the foot of the landing.
 if (homeLanding && homeLayout) {
