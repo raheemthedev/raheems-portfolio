@@ -109,7 +109,7 @@ if (homeLanding && homeLayout && homeLayout !== "hero") {
 
 // Row: every frame sits in one row that drifts slowly left on a loop. A lens
 // opens whichever frames are near it (taller and wider, falling off smoothly
-// like a dock, growing about the row's centre line) and each image shifts a
+// like a dock, all hanging from the top) and each image shifts a
 // little inside its frame as it passes. The lens rests at the centre and
 // follows the cursor while it's over the row, when the drift eases almost to a
 // stop. The row can be dragged and thrown (on touch it settles with a frame in
@@ -209,7 +209,7 @@ function mountRow(section: HTMLElement) {
     items.forEach((item, index) => {
       const height = size.short + (size.tall - size.short) * grow[index];
       const left = lefts[index] + shift;
-      item.style.transform = `translate3d(${left}px, ${(size.tall - height) / 2}px, 0)`;
+      item.style.transform = `translate3d(${left}px, 0, 0)`;
       item.style.width = `${widths[index]}px`;
       item.style.setProperty("--open", grow[index].toFixed(3));
       media[index].style.height = `${height}px`;
@@ -261,6 +261,7 @@ function mountRow(section: HTMLElement) {
     cursorAt.y += (pointer.y - cursorAt.y) * 0.3 * delta;
     cursor.style.transform = `translate3d(${cursorAt.x}px, ${cursorAt.y}px, 0) translate(-50%, -50%)`;
     layout();
+    if (hovering) label();
     frame = visible ? requestAnimationFrame(tick) : 0;
   };
   const start = () => {
@@ -281,9 +282,10 @@ function mountRow(section: HTMLElement) {
 
   // The pill that stands in for the cursor: "Drag" over the row, "View" over
   // the open frame.
-  const label = (event: PointerEvent) => {
-    const item = (event.target as Element).closest(".home-row__item");
-    const text = held && dragged ? "Drag" : item && item === items[open] ? "View" : "Drag";
+  let client = { x: 0, y: 0 };
+  const label = () => {
+    const over = document.elementFromPoint(client.x, client.y)?.closest(".home-row__item");
+    const text = !(held && dragged) && over && over === items[open] ? "View" : "Drag";
     if (cursor.textContent !== text) cursor.textContent = text;
   };
   strip.addEventListener("pointerenter", (event) => {
@@ -303,7 +305,7 @@ function mountRow(section: HTMLElement) {
     const box = root.getBoundingClientRect();
     pointer = { x: event.clientX - box.left, y: event.clientY - box.top };
     if (!held) lensTarget = pointer.x;
-    label(event);
+    client = { x: event.clientX, y: event.clientY };
   });
   window.addEventListener("pointermove", (event) => {
     if (!held) return;
