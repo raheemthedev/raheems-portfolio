@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="editorial-work.css?v=20260920-1" />
     <link rel="stylesheet" href="about-reveal.css?v=20260920-21" />
     <link rel="stylesheet" href="index-list.css?v=20261024-3" />
+    <link rel="stylesheet" href="home-layouts.css?v=20261030-3" />
     <link rel="stylesheet" href="hero-modes.css?v=20261025-1" />
     <noscript>
       <style>
@@ -43,6 +44,16 @@
       </style>
     </noscript>
     <link rel="stylesheet" href="site-details.css?v=20261025-11" />
+    <script>
+      // Which homepage layout (home-layouts.ts), settled before anything draws.
+      (function () {
+        var layouts = ["hero", "work", "feature", "row"];
+        var requested = new URLSearchParams(window.location.search).get("home");
+        var stored = null;
+        try { stored = window.localStorage.getItem("raheem-home-layout"); } catch (error) {}
+        document.documentElement.dataset.home = layouts.indexOf(requested) >= 0 ? requested : layouts.indexOf(stored) >= 0 ? stored : "hero";
+      })();
+    </script>
   </head>
   <body class="home-page is-loader-active">
     <div class="site-loader" aria-hidden="true">
@@ -311,13 +322,14 @@
       </section>
     </main>
 
-    <script src="script.js?v=20261025-perf"></script>
+    <script src="script.js?v=20261029-home"></script>
     <script src="shape.js?v=20261025-7"></script>
     <script src="index-list.js?v=20261024-3"></script>
-    <script src="hero-modes.js?v=20261025-3"></script>
+    <script src="hero-modes.js?v=20261029-home"></script>
     <script src="navigation.js?v=20261025-3"></script>
     <script src="footer-wordmark.js?v=20261025-6"></script>
     <script src="projects-data.js?v=20261025-perf"></script>
+    <script src="home-layouts.js?v=20261030-3"></script>
     <script src="corner-marks.js?v=20261025-perf"></script>
   </body>
 </html>
