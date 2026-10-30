@@ -206,19 +206,24 @@ function mountRow(section: HTMLElement) {
       return Math.exp(-distance * distance);
     });
     const widths = grow.map((amount) => size.base * (1 + (size.open - 1) * amount));
-    // Lay the opened frames out in turn, then shift the row so the point under
-    // the lens stays under it.
+    // Lay the opened frames out in turn, then shift the row so the frames
+    // around the lens stay centred where they'd sit closed, weighted by how
+    // open each is. The weights change smoothly, so the row never surges or
+    // jumps as the lens moves, and a frame resting in the lens stays centred.
     let x = 0;
     const lefts = widths.map((width) => {
       const left = x;
       x += width + size.gap;
       return left;
     });
-    const under = Math.max(0, Math.min(items.length - 1, Math.floor((lensX - starts[0]) / step)));
-    // The frame itself stretches to its new width; the gap after it doesn't.
-    const into = lensX - starts[under];
-    const mapped = into < size.base ? (into / size.base) * widths[under] : widths[under] + into - size.base;
-    const shift = lensX - (lefts[under] + mapped);
+    let pull = 0;
+    let weight = 0;
+    grow.forEach((amount, index) => {
+      const share = amount * amount;
+      pull += share * (starts[index] + size.base / 2 - lefts[index] - widths[index] / 2);
+      weight += share;
+    });
+    const shift = pull / Math.max(weight, 1e-6);
     let biggest = 0;
     items.forEach((item, index) => {
       const height = size.short + (size.tall - size.short) * grow[index];
@@ -373,8 +378,11 @@ function mountRow(section: HTMLElement) {
   strip.addEventListener("wheel", (event) => {
     if (Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
     event.preventDefault();
-    glide = null;
-    offset += event.deltaX;
+    // Sideways scroll moves the row as far as it would scroll the page, and
+    // carries on easing after the fingers stop.
+    if (glide === null) chase = offset;
+    glide = (glide ?? offset) + event.deltaX;
+    velocity = 0;
   }, { passive: false });
   let scrolled = window.scrollY;
   window.addEventListener("scroll", () => {
