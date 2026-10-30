@@ -107,16 +107,18 @@ if (homeLanding && homeLayout && homeLayout !== "hero") {
   if (homeLayout === "row") mountRow(section);
 }
 
-// Row (after Ross Mason): every frame sits in one looping row, and one frame
-// at a time is open (taller and wider, hanging from the top), easing open
-// slowly while the one before it eases shut. At rest the open frame sits in
-// the centre, and every few seconds the row glides calmly on to the next.
-// Hovering a frame opens it where it is, with the row holding still. Each
-// image shifts a little inside its frame as it passes. The open frame is sized
-// so the statement and the row fit in one screen. The row can be dragged (it
-// settles with a frame in the centre), stepped with the arrow keys, and is
-// nudged along by page scroll. Clicking a side frame glides it to the centre;
-// clicking the open one opens its case study with the site's page transition.
+// Row: every frame sits in one looping row that glides left a frame at a time,
+// each one coming to rest centred in a lens. Every move eases in and out, and
+// the lens trails the cursor rather than snapping to it, for a calm pace
+// between the original rail and Ross Mason's. The lens opens whichever frames
+// are near it (taller and wider, falling off smoothly like a dock, all hanging
+// from the top) and each image shifts a little inside its frame as it passes.
+// The open frame is sized so the statement and the row fit in one screen. The
+// lens follows the cursor while it's over the row, which then holds still. The
+// row can be dragged and thrown (it settles with a frame in the lens), stepped
+// with the arrow keys, and is nudged along by page scroll.
+// Clicking a side frame glides it into the lens; clicking the open one opens
+// its case study with the site's page transition.
 function mountRow(section: HTMLElement) {
   const root = section.querySelector<HTMLElement>("[data-row]");
   const strip = root?.querySelector<HTMLElement>(".home-row__strip");
@@ -139,7 +141,7 @@ function mountRow(section: HTMLElement) {
   const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
   const firstLabel = strip.querySelector<HTMLElement>(".home-row__label") as HTMLElement;
-  let size = { base: 0, gap: 0, short: 0, tall: 0, open: 0 };
+  let size = { base: 0, gap: 0, short: 0, tall: 0, open: 0, spread: 0 };
   const measure = () => {
     const width = root.clientWidth;
     const narrow = width < 761;
@@ -153,87 +155,82 @@ function mountRow(section: HTMLElement) {
       short: tall * 0.34,
       tall,
       open: 3.6,
+      spread: narrow ? width * 0.12 : Math.min(230, Math.max(120, width * 0.095)),
     };
     root.style.setProperty("--row-tall", `${size.tall}px`);
   };
   measure();
   const pitch = () => size.base + size.gap;
   const period = () => count * pitch();
-  const centre = () => root.clientWidth / 2;
 
-  // Frames are counted along the endless row (k), not by element; frame k is
-  // drawn by element k minus a whole number of copies.
-  const offsetFor = (k: number) => k * pitch() - period() + size.gap + size.base / 2 - centre();
-  const frameAt = (value: number) => Math.round((centre() + value + period() - size.gap - size.base / 2) / pitch());
-
-  // The row eases toward `aim` through a second, smoothed aim, so every move
-  // starts gently and lands gently.
-  const ease = 0.055;
-  const pause = 3400;
-  let offset = offsetFor(count);
-  let aim = offset;
-  let smooth = offset;
-  let restUntil = performance.now() + pause;
-  // How open each frame is, by k.
-  const opens = new Map<number, number>([[count, 1]]);
-  let hovered: number | null = null;
-  let hoverTimer = 0;
+  let offset = 0;
+  let velocity = 0;
+  let glide: number | null = null;
+  // Glides chase a smoothed target, so they start softly as well as land softly.
+  let chase = 0;
+  let restUntil = 0;
+  let lensX = root.clientWidth / 2;
+  let lensTarget = lensX;
+  let lensChase = lensX;
   let hovering = false;
   let held = false;
   let dragged = false;
   let pressX = 0;
   let lastX = 0;
   let lastTime = 0;
-  let velocity = 0;
   let visible = true;
   let frame = 0;
   let previous = 0;
   let open = -1;
   let pointer = { x: 0, y: 0 };
   let cursorAt = { x: 0, y: 0 };
-  let client = { x: 0, y: 0 };
+  const pause = 2800;
 
+  // The offset that puts frame k (counting across all three copies) in the lens.
+  const offsetFor = (k: number) => k * pitch() - period() + size.gap + size.base / 2 - lensTarget;
+  const frameAt = (value: number) => Math.round((lensTarget + value + period() - size.gap - size.base / 2) / pitch());
   const glideTo = (k: number) => {
-    aim = offsetFor(k);
-    restUntil = 0;
+    const target = offsetFor(k);
+    if (glide === null) chase = offset;
+    glide = target + period() * Math.round((offset - target) / period());
   };
 
   const layout = () => {
     const step = pitch();
     const loop = period();
-    const cycle = Math.floor(offset / loop);
-    const wrapped = offset - cycle * loop;
+    const wrapped = ((offset % loop) + loop) % loop;
+    // Where each frame would sit with no lens, and how far it opens.
     const starts = items.map((_, index) => index * step - wrapped - loop + size.gap);
-    const amounts = items.map((_, index) => opens.get(index + cycle * count) ?? 0);
-    const widths = amounts.map((amount) => size.base * (1 + (size.open - 1) * amount));
+    const grow = starts.map((start) => {
+      const distance = (start + size.base / 2 - lensX) / size.spread;
+      return Math.exp(-distance * distance);
+    });
+    const widths = grow.map((amount) => size.base * (1 + (size.open - 1) * amount));
+    // Lay the opened frames out in turn, then shift the row so the point under
+    // the lens stays under it.
     let x = 0;
     const lefts = widths.map((width) => {
       const left = x;
       x += width + size.gap;
       return left;
     });
-    // Keep the open frames centred on where they'd sit closed, weighted by how
-    // open each is, so one frame handing over to the next never jumps.
-    let pull = 1e-3 * starts[0];
-    let weight = 1e-3;
-    amounts.forEach((amount, index) => {
-      if (amount < 1e-3) return;
-      pull += amount * (starts[index] + size.base / 2 - lefts[index] - widths[index] / 2);
-      weight += amount;
-    });
-    const shift = pull / weight;
+    const under = Math.max(0, Math.min(items.length - 1, Math.floor((lensX - starts[0]) / step)));
+    // The frame itself stretches to its new width; the gap after it doesn't.
+    const into = lensX - starts[under];
+    const mapped = into < size.base ? (into / size.base) * widths[under] : widths[under] + into - size.base;
+    const shift = lensX - (lefts[under] + mapped);
     let biggest = 0;
     items.forEach((item, index) => {
-      const amount = amounts[index];
+      const height = size.short + (size.tall - size.short) * grow[index];
       const left = lefts[index] + shift;
-      item.style.transform = `translate3d(${left.toFixed(2)}px, 0, 0)`;
-      item.style.width = `${widths[index].toFixed(2)}px`;
-      item.style.setProperty("--open", amount.toFixed(3));
-      media[index].style.height = `${(size.short + (size.tall - size.short) * amount).toFixed(2)}px`;
+      item.style.transform = `translate3d(${left}px, 0, 0)`;
+      item.style.width = `${widths[index]}px`;
+      item.style.setProperty("--open", grow[index].toFixed(3));
+      media[index].style.height = `${height}px`;
       // A little depth: the image slides inside its frame as it crosses.
-      const across = Math.max(-1, Math.min(1, (left + widths[index] / 2 - centre()) / centre()));
+      const across = Math.max(-1, Math.min(1, (left + widths[index] / 2 - lensX) / (root.clientWidth / 2)));
       stills[index].style.transform = `translate3d(${(-across * 5).toFixed(2)}%, 0, 0) scale(1.12)`;
-      if (amount > amounts[biggest]) biggest = index;
+      if (grow[index] > grow[biggest]) biggest = index;
     });
     if (biggest !== open) {
       items[open]?.classList.remove("is-open");
@@ -258,35 +255,26 @@ function mountRow(section: HTMLElement) {
   const tick = (now: number) => {
     const delta = previous ? Math.min(48, now - previous) / 16.67 : 1;
     previous = now;
-    const amount = Math.min(1, ease * delta);
-    if (held) {
-      aim = smooth = offset;
-    } else {
-      smooth += (aim - smooth) * amount;
-      offset += (smooth - offset) * amount;
-      // At rest, wait a while, then glide on to the next frame (or back to
-      // the nearest one, if the row was left between frames).
-      const settled = Math.abs(aim - offset) < 0.5 && Math.abs(smooth - offset) < 0.5;
-      if (settled && !hovering && !reduced) {
-        if (!restUntil) restUntil = now + pause;
-        else if (now > restUntil) {
-          const k = frameAt(offset);
-          aim = Math.abs(offsetFor(k) - offset) > 1 ? offsetFor(k) : offsetFor(k + 1);
-          restUntil = 0;
-        }
+    if (glide !== null && !held) {
+      const amount = Math.min(1, 0.075 * delta);
+      chase += (glide - chase) * amount;
+      offset += (chase - offset) * amount;
+      velocity = 0;
+      if (Math.abs(glide - offset) < 0.4 && Math.abs(glide - chase) < 0.4) {
+        offset = glide;
+        glide = null;
+        restUntil = now + pause;
       }
+    } else if (!held) {
+      // Coast after a throw, then step on to the next frame after a pause.
+      velocity *= Math.pow(0.93, delta);
+      offset += velocity * delta;
+      if (!hovering && !reduced && now > restUntil && Math.abs(velocity) < 0.5) glideTo(frameAt(offset) + 1);
     }
-    // One frame opens: the one under the cursor, or the one heading for the
-    // centre. The rest ease shut.
-    const target = hovering && hovered !== null ? hovered : frameAt(aim);
-    if (!opens.has(target)) opens.set(target, 0);
-    opens.forEach((value, k) => {
-      const next = value + ((k === target ? 1 : 0) - value) * Math.min(1, 0.06 * delta);
-      if (k !== target && next < 1e-3) opens.delete(k);
-      else opens.set(k, next);
-    });
-    cursorAt.x += (pointer.x - cursorAt.x) * 0.16 * delta;
-    cursorAt.y += (pointer.y - cursorAt.y) * 0.16 * delta;
+    lensChase += (lensTarget - lensChase) * Math.min(1, 0.07 * delta);
+    lensX += (lensChase - lensX) * Math.min(1, 0.07 * delta);
+    cursorAt.x += (pointer.x - cursorAt.x) * 0.2 * delta;
+    cursorAt.y += (pointer.y - cursorAt.y) * 0.2 * delta;
     cursor.style.transform = `translate3d(${cursorAt.x}px, ${cursorAt.y}px, 0) translate(-50%, -50%)`;
     layout();
     if (hovering) label();
@@ -308,11 +296,9 @@ function mountRow(section: HTMLElement) {
     start();
   });
 
-  // The frame k an element is drawing right now.
-  const frameOf = (index: number) => index + Math.floor(offset / period()) * count;
-
   // The pill that stands in for the cursor: "Drag" over the row, "View" over
   // the open frame.
+  let client = { x: 0, y: 0 };
   const label = () => {
     const over = document.elementFromPoint(client.x, client.y)?.closest(".home-row__item");
     const text = !(held && dragged) && over && over === items[open] ? "View" : "Drag";
@@ -327,24 +313,16 @@ function mountRow(section: HTMLElement) {
   });
   strip.addEventListener("pointerleave", () => {
     hovering = false;
-    hovered = null;
-    window.clearTimeout(hoverTimer);
     restUntil = performance.now() + pause / 2;
+    lensTarget = root.clientWidth / 2;
     root.classList.remove("is-hovering");
   });
   strip.addEventListener("pointermove", (event) => {
     if (!canHover) return;
     const box = root.getBoundingClientRect();
     pointer = { x: event.clientX - box.left, y: event.clientY - box.top };
+    if (!held) lensTarget = pointer.x;
     client = { x: event.clientX, y: event.clientY };
-    // Only a real move picks a frame, not the row shifting under a still cursor.
-    if (held || (!event.movementX && !event.movementY)) return;
-    // Open the frame under the cursor once the cursor settles on it.
-    const over = (event.target as Element).closest<HTMLAnchorElement>(".home-row__item");
-    if (!over) return;
-    const k = frameOf(items.indexOf(over));
-    window.clearTimeout(hoverTimer);
-    if (k !== hovered) hoverTimer = window.setTimeout(() => { hovered = k; }, 90);
   });
   window.addEventListener("pointermove", (event) => {
     if (!held) return;
@@ -359,6 +337,7 @@ function mountRow(section: HTMLElement) {
     if (event.button !== 0) return;
     held = true;
     dragged = false;
+    glide = null;
     pressX = lastX = event.clientX;
     lastTime = event.timeStamp;
     velocity = 0;
@@ -368,11 +347,8 @@ function mountRow(section: HTMLElement) {
     if (!held) return;
     held = false;
     root.classList.remove("is-held");
-    // Let go, the row carries on a little and settles with a frame centred.
-    if (dragged) {
-      hovered = null;
-      glideTo(frameAt(offset + velocity * 12));
-    }
+    // A throw comes to rest with a frame in the lens.
+    if (dragged) glideTo(frameAt(offset + velocity * 14));
   };
   window.addEventListener("pointerup", release);
   window.addEventListener("pointercancel", release);
@@ -383,9 +359,9 @@ function mountRow(section: HTMLElement) {
       event.preventDefault();
       if (dragged) return;
       if (index !== open) {
-        // A side frame glides to the centre first.
-        hovered = frameOf(index);
-        glideTo(frameOf(index));
+        // A side frame glides into the lens first.
+        if (canHover) lensTarget = root.clientWidth / 2;
+        glideTo(index);
         return;
       }
       const image = stills[index];
@@ -397,25 +373,21 @@ function mountRow(section: HTMLElement) {
   strip.addEventListener("wheel", (event) => {
     if (Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
     event.preventDefault();
-    aim += event.deltaX;
-    restUntil = 0;
+    glide = null;
+    offset += event.deltaX;
   }, { passive: false });
   let scrolled = window.scrollY;
   window.addEventListener("scroll", () => {
     const change = window.scrollY - scrolled;
     scrolled = window.scrollY;
-    if (visible && !held && !reduced) {
-      aim += change * 0.35;
-      restUntil = 0;
-    }
+    if (visible && !held && glide === null && !reduced) offset += change * 0.35;
   }, { passive: true });
 
-  // Arrow keys step a frame at a time; Enter opens the frame in the centre.
+  // Arrow keys step a frame at a time; Enter opens the frame in the lens.
   strip.addEventListener("keydown", (event) => {
     if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
       event.preventDefault();
-      hovered = null;
-      glideTo(frameAt(aim) + (event.key === "ArrowRight" ? 1 : -1));
+      glideTo(frameAt(glide ?? offset) + (event.key === "ArrowRight" ? 1 : -1));
     } else if (event.key === "Enter" && open >= 0) {
       event.preventDefault();
       items[open].click();
@@ -426,15 +398,13 @@ function mountRow(section: HTMLElement) {
   window.addEventListener("resize", () => {
     window.clearTimeout(resizeTimer);
     resizeTimer = window.setTimeout(() => {
-      const k = frameAt(aim);
       measure();
-      offset = aim = smooth = offsetFor(k);
+      if (!hovering) lensTarget = root.clientWidth / 2;
     }, 120);
   });
-  document.fonts?.ready.then(() => {
-    const k = frameAt(aim);
-    measure();
-    offset = aim = smooth = offsetFor(k);
-  });
+  document.fonts?.ready.then(measure);
+  // Start with the first frame in the lens.
+  offset = offsetFor(count);
+  restUntil = performance.now() + pause;
   start();
 }
