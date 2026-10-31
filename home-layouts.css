@@ -16,6 +16,21 @@ html[data-home]:not([data-home="hero"]) .featured-work {
   display: none;
 }
 
+/* Row keeps the hero switch, so the three choices sit side by side. */
+html[data-home][data-home="row"] .hero-controls {
+  display: flex;
+}
+
+@media (max-width: 760px) {
+  html[data-home][data-home="row"] .hero-controls {
+    position: static;
+    align-self: flex-start;
+    justify-content: flex-start;
+    max-width: none;
+    transform: none;
+  }
+}
+
 html[data-home]:not([data-home="hero"]) .landing {
   display: flex;
   flex-direction: column;

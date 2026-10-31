@@ -1,6 +1,7 @@
 "use strict";
 // Homepage hero variants, rendered into .hero-alt. Horizon is the default and
-// Field the alternative; Index, Orbit and the original project wheel in
+// Field the alternative; the switch also offers Row, the work-first homepage
+// in home-layouts.ts; Index, Orbit and the original project wheel in
 // script.ts ("classic") are parked but intact. Pick one with
 // ?hero=horizon|field|index|orbit|classic — the last offered choice is
 // remembered. Shares `projects`, `clamp`, `modulo` and `reducedMotion` with
@@ -94,7 +95,7 @@ heroSwitch.setAttribute("role", "group");
 heroSwitch.setAttribute("aria-label", "Homepage hero variant");
 heroSwitch.innerHTML = heroVariants
     .map((variant) => `<button type="button" data-hero-variant="${variant.id}" aria-pressed="false">${variant.label}</button>`)
-    .join("");
+    .join("") + `<button type="button" data-home-layout="row" aria-pressed="false">Row</button>`;
 heroControls.append(heroSwitch);
 heroLanding.append(heroCaption, heroControls);
 // Pointer position normalised to -1…1 across the landing.
@@ -1358,12 +1359,43 @@ const setHeroVariant = (variant) => {
     window.history.replaceState(window.history.state, "", url);
     document.dispatchEvent(new CustomEvent("hero:change", { detail: variant }));
 };
+// Row is a homepage layout of its own (home-layouts.ts), so moving between it
+// and a hero reloads the page with the choice remembered.
+const goToHomeLayout = (layout, variant) => {
+    try {
+        window.localStorage.setItem("raheem-home-layout", layout);
+        if (variant)
+            window.localStorage.setItem(heroStorageKey, variant);
+    }
+    catch {
+        // The URL carries the choice anyway.
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.set("home", layout);
+    if (variant)
+        url.searchParams.set("hero", variant);
+    else
+        url.searchParams.delete("hero");
+    window.location.href = url.toString();
+};
 heroSwitch.addEventListener("click", (event) => {
     const button = event.target instanceof Element
-        ? event.target.closest("button[data-hero-variant]")
+        ? event.target.closest("button[data-hero-variant], button[data-home-layout]")
         : null;
-    const variant = button?.dataset.heroVariant ?? null;
-    if (isHeroVariant(variant) && variant !== document.body.dataset.hero)
+    if (!button)
+        return;
+    const onHero = (document.documentElement.dataset.home ?? "hero") === "hero";
+    if (button.dataset.homeLayout) {
+        if (onHero)
+            goToHomeLayout("row");
+        return;
+    }
+    const variant = button.dataset.heroVariant ?? null;
+    if (!isHeroVariant(variant))
+        return;
+    if (!onHero)
+        goToHomeLayout("hero", variant);
+    else if (variant !== document.body.dataset.hero)
         setHeroVariant(variant);
 });
 document.addEventListener("hero:reveal", () => {
@@ -1419,4 +1451,5 @@ if ((document.documentElement.dataset.home ?? "hero") === "hero") {
 }
 else {
     document.body.dataset.hero = "off";
+    heroSwitch.querySelector("[data-home-layout]")?.setAttribute("aria-pressed", String(document.documentElement.dataset.home === "row"));
 }
