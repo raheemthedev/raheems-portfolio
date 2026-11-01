@@ -240,7 +240,8 @@ if (heroContactCta && heroCtaIdleLabel && heroCtaEmailLabel) {
 }
 // hero-modes.ts can swap this original ("classic") wheel for another hero;
 // the wheel then pauses.
-const isWheelHidden = () => (document.body.dataset.hero ?? "classic") !== "classic";
+// The wheel shows only in the original homepage, and only as the "classic" hero.
+const isWheelHidden = () => (document.documentElement.dataset.home ?? "hero") !== "hero" || (document.body.dataset.hero ?? "classic") !== "classic";
 const revealHero = () => document.dispatchEvent(new CustomEvent("hero:reveal"));
 const finishSiteLoader = async (fadeDuration = 140) => {
     document.body.classList.remove("is-loader-active");
