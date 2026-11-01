@@ -1,20 +1,20 @@
 "use strict";
-// Other ways to show "What I shape", compared with ?shape=index|words|split
-// (the reel and sentence in shape.ts stay the default). Each is built from the
-// section's own chapter markup, which stays in place for the reel.
-//   index — after Collins' programme list and Dennis Snellenberg's "I can help
-//           you with": three ruled rows, each a big name, a line on what it
-//           covers and its disciplines. Hovering a row brings out a card that
-//           trails the cursor and flicks through that chapter's frames. On
-//           touch each row carries its frames in a small strip instead.
-//   words — after Locomotive and Rejouice's oversized type: the three names
-//           set huge, one under another. The section pins and, as you scroll,
-//           each name in turn splits open around a window onto its frames,
-//           with what it covers beneath.
-//   split — after Koto and Collins' case pages: a sticky column on the left
-//           names the chapter in view while its frames scroll past on the
-//           right, wiping in as they arrive.
-const shapeOptions = ["index", "words", "split"];
+// Other ways to show "What I shape", compared with
+// ?shape=index|accordion|contents|ticker (the reel in shape.ts stays the
+// default). Each is built from the section's own chapter markup, which stays
+// in place for the reel. All four start from a ruled index of the chapters.
+//   index     — after Collins' programme list and Dennis Snellenberg's "I can
+//               help you with": three ruled rows; hovering one brings out a
+//               card that trails the cursor through that chapter's frames.
+//   accordion — after Rejouice and Koto's services: the rows open one at a
+//               time into a panel with the chapter's sentence, link and frames.
+//   contents  — like a book's contents: each chapter lists its frames as
+//               entries, and pointing at one shows it large in a sticky view
+//               beside the list.
+//   ticker    — each row is a slow band of the chapter's name and frames,
+//               alternate rows running opposite ways; hovering slows one and
+//               page scroll hurries them along.
+const shapeOptions = ["index", "accordion", "contents", "ticker"];
 const shapeOptionRoot = document.querySelector("[data-shape]");
 const shapeOptionAsked = new URLSearchParams(window.location.search).get("shape");
 const shapeOption = shapeOptions.find((option) => option === shapeOptionAsked) ?? null;
@@ -122,151 +122,161 @@ const mountShapeIndex = (root, chapters) => {
         card.classList.remove("is-shown");
     });
 };
-/* Words ------------------------------------------------------------------- */
-const mountShapeWords = (root, chapters) => {
-    const words = document.createElement("div");
-    words.className = "shape-option shape-words";
-    // Each name splits after its first half, where its window opens.
-    const halves = (word) => {
-        const cut = Math.ceil(word.length / 2);
-        return [word.slice(0, cut), word.slice(cut)];
-    };
-    const names = chapters.map((chapter) => {
-        const name = chapter.kind.split(/\s*&\s*/).pop() ?? chapter.kind;
-        return name.charAt(0).toUpperCase() + name.slice(1);
+/* Accordion --------------------------------------------------------------- */
+const mountShapeAccordion = (root, chapters) => {
+    const list = document.createElement("div");
+    list.className = "shape-option shape-accordion";
+    list.innerHTML = chapters.map((chapter, index) => `
+    <div class="shape-accordion__item${index ? "" : " is-open"}">
+      <button class="shape-accordion__head" type="button" aria-expanded="${!index}">
+        <span class="shape-accordion__number">${chapter.number}</span>
+        <span class="shape-accordion__kind">${chapter.kind}</span>
+        <span class="shape-accordion__tags">${chapter.tags.join(" · ")}</span>
+        <span class="shape-accordion__toggle" aria-hidden="true"></span>
+      </button>
+      <div class="shape-accordion__panel">
+        <div class="shape-accordion__inner">
+          <div class="shape-accordion__text">
+            <p class="shape-accordion__line">${chapter.line}</p>
+            <p class="shape-accordion__about">${chapter.about}</p>
+            <a class="shape-accordion__link" href="${chapter.link.href}">${chapter.link.label} <span aria-hidden="true">↗</span></a>
+          </div>
+          <div class="shape-accordion__frames">
+            ${chapter.frames.map((frame) => `
+              <figure class="shape-accordion__frame">
+                <span class="shape-accordion__media"><img src="${frame.src}" alt="${frame.alt}" loading="lazy" decoding="async" /></span>
+                <figcaption><span>${frame.number}</span> ${frame.caption}</figcaption>
+              </figure>`).join("")}
+          </div>
+        </div>
+      </div>
+    </div>`).join("");
+    root.append(list);
+    // One chapter open at a time; opening another closes the last.
+    const items = [...list.querySelectorAll(".shape-accordion__item")];
+    items.forEach((item) => {
+        item.querySelector(".shape-accordion__head")?.addEventListener("click", () => {
+            const opening = !item.classList.contains("is-open");
+            items.forEach((other) => {
+                const open = other === item && opening;
+                other.classList.toggle("is-open", open);
+                other.querySelector(".shape-accordion__head")?.setAttribute("aria-expanded", String(open));
+            });
+        });
     });
-    words.innerHTML = `
-    <div class="shape-words__pin">
-      <div class="shape-words__lines">
-        ${chapters.map((chapter, index) => {
-        const [start, end] = halves(names[index]);
-        return `
-            <div class="shape-words__line" data-index="${index}">
-              <span class="shape-words__number">${chapter.number}</span>
-              <span class="shape-words__half">${start}</span>
-              <span class="shape-words__window">${chapter.frames.map((frame) => `<img src="${frame.src}" alt="" loading="lazy" decoding="async" />`).join("")}</span>
-              <span class="shape-words__half">${end}</span>
-            </div>`;
-    }).join("")}
-      </div>
-      <div class="shape-words__details">
-        ${chapters.map((chapter, index) => `
-          <div class="shape-words__detail" data-index="${index}">
-            <p class="shape-words__line-text">${chapter.line}</p>
-            <p class="shape-words__about">${chapter.about}</p>
-            <p class="shape-words__tags">${chapter.tags.join(" · ")}</p>
-            <a class="shape-words__link" href="${chapter.link.href}">${chapter.link.label} <span aria-hidden="true">↗</span></a>
-          </div>`).join("")}
-      </div>
-    </div>`;
-    root.append(words);
-    const lines = [...words.querySelectorAll(".shape-words__line")];
-    const details = [...words.querySelectorAll(".shape-words__detail")];
-    const windows = lines.map((line) => [...line.querySelectorAll(".shape-words__window img")]);
-    let frame = 0;
-    // Eased per line so the windows open and close softly whichever way you scroll.
-    const open = chapters.map(() => 0);
-    let current = -1;
-    const render = () => {
-        frame = 0;
-        const box = words.getBoundingClientRect();
-        const travel = Math.max(1, words.offsetHeight - window.innerHeight);
-        const progress = Math.max(0, Math.min(0.9999, -box.top / travel));
-        const position = progress * chapters.length;
-        const index = Math.floor(position);
-        const within = position - index;
-        let moving = false;
-        lines.forEach((line, n) => {
-            const goal = n === index ? 1 : 0;
-            open[n] += (goal - open[n]) * (shapeOptionStill ? 1 : 0.12);
-            if (Math.abs(goal - open[n]) > 0.002)
-                moving = true;
-            line.style.setProperty("--open", open[n].toFixed(3));
-            line.classList.toggle("is-active", n === index);
-        });
-        // The open window steps through its frames as you scroll through it.
-        const frames = windows[index];
-        const shown = Math.min(frames.length - 1, Math.floor(within * frames.length));
-        frames.forEach((image, n) => image.classList.toggle("is-shown", n === shown));
-        if (index !== current) {
-            current = index;
-            details.forEach((detail, n) => detail.classList.toggle("is-active", n === index));
-        }
-        if (moving)
-            frame = requestAnimationFrame(render);
-    };
-    const request = () => {
-        if (!frame)
-            frame = requestAnimationFrame(render);
-    };
-    window.addEventListener("scroll", request, { passive: true });
-    window.addEventListener("resize", request);
-    render();
 };
-/* Split ------------------------------------------------------------------- */
-const mountShapeSplit = (root, chapters) => {
-    const split = document.createElement("div");
-    split.className = "shape-option shape-split";
-    split.innerHTML = `
-    <div class="shape-split__aside">
-      <div class="shape-split__sticky">
-        <ol class="shape-split__rail">${chapters.map((chapter) => `<li><span>${chapter.number}</span> ${chapter.kind}</li>`).join("")}</ol>
-        ${chapters.map((chapter, index) => `
-          <div class="shape-split__chapter" data-index="${index}">
-            <p class="shape-split__number">${chapter.number}</p>
-            <h3 class="shape-split__kind">${chapter.kind}</h3>
-            <p class="shape-split__line">${chapter.line}</p>
-            <p class="shape-split__about">${chapter.about}</p>
-            <ul class="shape-split__tags">${chapter.tags.map((tag) => `<li>${tag}</li>`).join("")}</ul>
-            <a class="shape-split__link" href="${chapter.link.href}">${chapter.link.label} <span aria-hidden="true">↗</span></a>
-          </div>`).join("")}
-      </div>
+/* Contents ---------------------------------------------------------------- */
+const mountShapeContents = (root, chapters) => {
+    const frames = chapters.flatMap((chapter) => chapter.frames);
+    const contents = document.createElement("div");
+    contents.className = "shape-option shape-contents";
+    let count = 0;
+    contents.innerHTML = `
+    <div class="shape-contents__list">
+      ${chapters.map((chapter) => `
+        <section class="shape-contents__chapter">
+          <h3 class="shape-contents__kind"><span>${chapter.number}</span>${chapter.kind}</h3>
+          <p class="shape-contents__about">${chapter.about}</p>
+          <ol class="shape-contents__entries">
+            ${chapter.frames.map((frame) => `
+              <li>
+                <a class="shape-contents__entry" href="${chapter.link.href}" data-frame="${count++}">
+                  <span class="shape-contents__thumb"><img src="${frame.src}" alt="" loading="lazy" decoding="async" /></span>
+                  <span class="shape-contents__entry-number">${frame.number}</span>
+                  <span class="shape-contents__entry-title">${frame.caption}</span>
+                  <span class="shape-contents__entry-arrow" aria-hidden="true">→</span>
+                </a>
+              </li>`).join("")}
+          </ol>
+          <p class="shape-contents__tags">${chapter.tags.join(" · ")}</p>
+        </section>`).join("")}
     </div>
-    <div class="shape-split__frames">
-      ${chapters.map((chapter, index) => `
-        <div class="shape-split__group" data-index="${index}">
-          <p class="shape-split__group-label">${chapter.number} ${chapter.kind}<span>${chapter.line}</span></p>
-          ${chapter.frames.map((frame) => `
-            <figure class="shape-split__frame">
-              <span class="shape-split__media"><img src="${frame.src}" alt="${frame.alt}" loading="lazy" decoding="async" /></span>
-              <figcaption><span>${frame.number}</span> ${frame.caption}</figcaption>
-            </figure>`).join("")}
-        </div>`).join("")}
+    <div class="shape-contents__view" aria-hidden="true">
+      <div class="shape-contents__sticky">
+        <div class="shape-contents__window">${frames.map((frame) => `<img src="${frame.src}" alt="" loading="lazy" decoding="async" />`).join("")}</div>
+        <p class="shape-contents__caption"></p>
+      </div>
     </div>`;
-    root.append(split);
-    const asides = [...split.querySelectorAll(".shape-split__chapter")];
-    const rail = [...split.querySelectorAll(".shape-split__rail li")];
-    const groups = [...split.querySelectorAll(".shape-split__group")];
-    const pick = (index) => {
-        asides.forEach((aside, n) => aside.classList.toggle("is-active", n === index));
-        rail.forEach((item, n) => item.classList.toggle("is-active", n === index));
+    root.append(contents);
+    const images = [...contents.querySelectorAll(".shape-contents__window img")];
+    const entries = [...contents.querySelectorAll(".shape-contents__entry")];
+    const caption = contents.querySelector(".shape-contents__caption");
+    const show = (index) => {
+        images.forEach((image, n) => image.classList.toggle("is-shown", n === index));
+        entries.forEach((entry, n) => entry.classList.toggle("is-active", n === index));
+        caption.innerHTML = `<span>${frames[index].number}</span> ${frames[index].caption}`;
     };
-    pick(0);
-    // The chapter whose frames cross the middle of the screen is the one named.
-    const middle = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-            if (entry.isIntersecting)
-                pick(groups.indexOf(entry.target));
+    show(0);
+    entries.forEach((entry, index) => {
+        entry.addEventListener("pointerenter", () => show(index));
+        entry.addEventListener("focus", () => show(index));
+    });
+};
+/* Ticker ------------------------------------------------------------------ */
+const mountShapeTicker = (root, chapters) => {
+    const ticker = document.createElement("div");
+    ticker.className = "shape-option shape-ticker";
+    const run = (chapter) => chapter.frames.map((frame) => `
+    <span class="shape-ticker__word">${chapter.kind}</span>
+    <span class="shape-ticker__frame"><img src="${frame.src}" alt="" loading="lazy" decoding="async" /></span>`).join("");
+    ticker.innerHTML = chapters.map((chapter) => `
+    <a class="shape-ticker__row" href="${chapter.link.href}" aria-label="${chapter.kind}: ${chapter.about}">
+      <span class="shape-ticker__band" aria-hidden="true"><span class="shape-ticker__track">${run(chapter)}${run(chapter)}</span></span>
+      <span class="shape-ticker__meta">
+        <span class="shape-ticker__number">${chapter.number}</span>
+        <span class="shape-ticker__about">${chapter.about}</span>
+        <span class="shape-ticker__tags">${chapter.tags.join(" · ")}</span>
+        <span class="shape-ticker__link">${chapter.link.label} <span aria-hidden="true">↗</span></span>
+      </span>
+    </a>`).join("");
+    root.append(ticker);
+    const rows = [...ticker.querySelectorAll(".shape-ticker__row")];
+    const tracks = rows.map((row) => row.querySelector(".shape-ticker__track"));
+    // Alternate rows run opposite ways; hovering one slows it almost to a stop,
+    // and page scroll hurries them all along.
+    const offsets = rows.map(() => 0);
+    const speeds = rows.map(() => 1);
+    let hovered = -1;
+    let push = 0;
+    let scrolled = window.scrollY;
+    let visible = false;
+    let frame = 0;
+    let previous = 0;
+    rows.forEach((row, index) => {
+        row.addEventListener("pointerenter", () => { hovered = index; });
+        row.addEventListener("pointerleave", () => { hovered = -1; });
+    });
+    window.addEventListener("scroll", () => {
+        push += Math.abs(window.scrollY - scrolled) * 0.06;
+        scrolled = window.scrollY;
+    }, { passive: true });
+    const tick = (now) => {
+        const delta = previous ? Math.min(48, now - previous) / 16.67 : 1;
+        previous = now;
+        push *= Math.pow(0.9, delta);
+        tracks.forEach((track, index) => {
+            speeds[index] += ((index === hovered ? 0.08 : 1) - speeds[index]) * 0.06 * delta;
+            const half = track.scrollWidth / 2 || 1;
+            offsets[index] = (offsets[index] + (0.45 + push) * speeds[index] * delta) % half;
+            const x = index % 2 ? offsets[index] - half : -offsets[index];
+            track.style.transform = `translate3d(${x.toFixed(2)}px, 0, 0)`;
         });
-    }, { rootMargin: "-50% 0px -50% 0px" });
-    groups.forEach((group) => middle.observe(group));
-    // Frames wipe in as they arrive.
-    const arrive = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-            if (!entry.isIntersecting)
-                return;
-            entry.target.classList.add("is-in");
-            arrive.unobserve(entry.target);
-        });
-    }, { rootMargin: "0px 0px -12% 0px" });
-    split.querySelectorAll(".shape-split__frame").forEach((figure) => arrive.observe(figure));
+        frame = visible && !shapeOptionStill ? requestAnimationFrame(tick) : 0;
+    };
+    new IntersectionObserver(([entry]) => {
+        visible = entry.isIntersecting;
+        if (visible && !frame) {
+            previous = 0;
+            frame = requestAnimationFrame(tick);
+        }
+    }).observe(ticker);
 };
 /* Choosing ---------------------------------------------------------------- */
 if (shapeOptionRoot) {
     if (shapeOption) {
         const chapters = shapeOptionChapters(shapeOptionRoot);
         shapeOptionRoot.dataset.option = shapeOption;
-        ({ index: mountShapeIndex, words: mountShapeWords, split: mountShapeSplit })[shapeOption](shapeOptionRoot, chapters);
+        ({ index: mountShapeIndex, accordion: mountShapeAccordion, contents: mountShapeContents, ticker: mountShapeTicker })[shapeOption](shapeOptionRoot, chapters);
     }
     // Temporary picker for comparing them, shown while the section is in view.
     const picker = document.createElement("div");
