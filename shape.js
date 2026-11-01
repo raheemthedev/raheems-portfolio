@@ -42,7 +42,9 @@ const shapeSplitWords = (line) => {
     line.querySelectorAll(".shape-pill").forEach((pill) => pill.classList.add("shape-word"));
     return [...line.querySelectorAll(".shape-word")];
 };
-if (shapeRoot) {
+// The options in shape-options.ts take the section over when asked for.
+const shapeTakenOver = ["index", "words", "split"].includes(new URLSearchParams(window.location.search).get("shape") ?? "");
+if (shapeRoot && !shapeTakenOver) {
     const stage = shapeRoot.querySelector(".shape__stage");
     const track = shapeRoot.querySelector(".shape__track");
     // The reel's window onto the track, and its chapter strip.

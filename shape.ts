@@ -46,7 +46,10 @@ const shapeSplitWords = (line: HTMLElement) => {
   return [...line.querySelectorAll<HTMLElement>(".shape-word")];
 };
 
-if (shapeRoot) {
+// The options in shape-options.ts take the section over when asked for.
+const shapeTakenOver = ["index", "words", "split"].includes(new URLSearchParams(window.location.search).get("shape") ?? "");
+
+if (shapeRoot && !shapeTakenOver) {
   const stage = shapeRoot.querySelector<HTMLElement>(".shape__stage");
   const track = shapeRoot.querySelector<HTMLElement>(".shape__track");
 
