@@ -1,5 +1,5 @@
 // Other ways to show "What I shape", compared with
-// ?shape=index|accordion|contents|ticker (the reel in shape.ts stays the
+// ?shape=index|accordion|contents|ticker|panels|invert|fill|counter (the reel in shape.ts stays the
 // default). Each is built from the section's own chapter markup, which stays
 // in place for the reel. All four start from a ruled index of the chapters.
 //   index     — after Collins' programme list and Dennis Snellenberg's "I can
@@ -13,8 +13,17 @@
 //   ticker    — each row is a slow band of the chapter's name and frames,
 //               alternate rows running opposite ways; hovering slows one and
 //               page scroll hurries them along.
+//   panels    — three tall panels side by side, each a chapter's frame; the
+//               one under the cursor widens to tell its story and moves
+//               through its frames.
+//   invert    — the index rows, with ink washing in from whichever edge the
+//               cursor crosses and the chapter's frames sliding in.
+//   fill      — the names set huge, with the chapter's frames showing through
+//               the letters of whichever is hovered or nearest the middle.
+//   counter   — the section pins; a huge numeral rolls 01 → 03 like an
+//               odometer as each chapter takes its turn beside it.
 
-type ShapeOption = "index" | "accordion" | "contents" | "ticker";
+type ShapeOption = "index" | "accordion" | "contents" | "ticker" | "panels" | "invert" | "fill" | "counter";
 
 interface ShapeOptionChapter {
   number: string;
@@ -26,7 +35,7 @@ interface ShapeOptionChapter {
   frames: { src: string; alt: string; caption: string; number: string }[];
 }
 
-const shapeOptions: ShapeOption[] = ["index", "accordion", "contents", "ticker"];
+const shapeOptions: ShapeOption[] = ["index", "accordion", "contents", "ticker", "panels", "invert", "fill", "counter"];
 const shapeOptionRoot = document.querySelector<HTMLElement>("[data-shape]");
 const shapeOptionAsked = new URLSearchParams(window.location.search).get("shape");
 const shapeOption = shapeOptions.find((option) => option === shapeOptionAsked) ?? null;
@@ -298,13 +307,237 @@ const mountShapeTicker = (root: HTMLElement, chapters: ShapeOptionChapter[]) => 
   }).observe(ticker);
 };
 
+/* Panels ------------------------------------------------------------------ */
+
+const mountShapePanels = (root: HTMLElement, chapters: ShapeOptionChapter[]) => {
+  const panels = document.createElement("div");
+  panels.className = "shape-option shape-panels";
+  panels.innerHTML = chapters.map((chapter, index) => `
+    <a class="shape-panels__panel${index ? "" : " is-open"}" href="${chapter.link.href}">
+      <span class="shape-panels__media" aria-hidden="true">${chapter.frames.map((frame, n) => `<img src="${frame.src}" alt=""${n ? "" : ' class="is-shown"'} loading="lazy" decoding="async" />`).join("")}</span>
+      <span class="shape-panels__top"><span class="shape-panels__number">${chapter.number}</span><span class="shape-panels__kind">${chapter.kind}</span></span>
+      <span class="shape-panels__body">
+        <span class="shape-panels__line">${chapter.line}</span>
+        <span class="shape-panels__tags">${chapter.tags.join(" · ")}</span>
+        <span class="shape-panels__link">${chapter.link.label} <span aria-hidden="true">↗</span></span>
+      </span>
+    </a>`).join("");
+  root.append(panels);
+
+  const all = [...panels.querySelectorAll<HTMLAnchorElement>(".shape-panels__panel")];
+  let open = 0;
+  let shown = 0;
+  let timer = 0;
+  const cycle = () => {
+    window.clearInterval(timer);
+    if (shapeOptionStill) return;
+    // The open panel moves through its frames while it stays open.
+    timer = window.setInterval(() => {
+      const images = [...all[open].querySelectorAll("img")];
+      shown = (shown + 1) % images.length;
+      images.forEach((image, n) => image.classList.toggle("is-shown", n === shown));
+    }, 1800);
+  };
+  const openPanel = (index: number) => {
+    if (index === open) return;
+    open = index;
+    shown = 0;
+    all.forEach((panel, n) => {
+      panel.classList.toggle("is-open", n === index);
+      panel.querySelectorAll("img").forEach((image, m) => image.classList.toggle("is-shown", m === 0));
+    });
+    cycle();
+  };
+  all.forEach((panel, index) => {
+    if (shapeOptionHover) panel.addEventListener("pointerenter", () => openPanel(index));
+    // On touch the first tap opens a panel; the next follows its link.
+    panel.addEventListener("click", (event) => {
+      if (index === open) return;
+      event.preventDefault();
+      openPanel(index);
+    });
+  });
+  cycle();
+};
+
+/* Invert ------------------------------------------------------------------ */
+
+const mountShapeInvert = (root: HTMLElement, chapters: ShapeOptionChapter[]) => {
+  const list = document.createElement("div");
+  list.className = "shape-option shape-invert";
+  list.innerHTML = chapters.map((chapter) => `
+    <a class="shape-invert__row" href="${chapter.link.href}">
+      <span class="shape-invert__fill" aria-hidden="true"></span>
+      <span class="shape-invert__number">${chapter.number}</span>
+      <span class="shape-invert__kind">${chapter.kind}</span>
+      <span class="shape-invert__about">${chapter.about}<span class="shape-invert__tags">${chapter.tags.join(" · ")}</span></span>
+      <span class="shape-invert__frames" aria-hidden="true">${chapter.frames.map((frame) => `<span class="shape-invert__frame"><img src="${frame.src}" alt="" loading="lazy" decoding="async" /></span>`).join("")}</span>
+      <span class="shape-invert__arrow" aria-hidden="true">↗</span>
+    </a>`).join("");
+  root.append(list);
+
+  // The ink comes in from whichever edge the cursor crossed, and leaves the
+  // same way it goes.
+  list.querySelectorAll<HTMLElement>(".shape-invert__row").forEach((row) => {
+    const fill = row.querySelector<HTMLElement>(".shape-invert__fill") as HTMLElement;
+    const edge = (event: PointerEvent) => {
+      const box = row.getBoundingClientRect();
+      return event.clientY < box.top + box.height / 2 ? "-101%" : "101%";
+    };
+    row.addEventListener("pointerenter", (event) => {
+      fill.style.transition = "none";
+      fill.style.transform = `translateY(${edge(event)})`;
+      void fill.offsetHeight;
+      fill.style.transition = "";
+      fill.style.transform = "translateY(0)";
+      row.classList.add("is-inked");
+    });
+    row.addEventListener("pointerleave", (event) => {
+      fill.style.transform = `translateY(${edge(event)})`;
+      row.classList.remove("is-inked");
+    });
+  });
+};
+
+/* Fill -------------------------------------------------------------------- */
+
+const mountShapeFill = (root: HTMLElement, chapters: ShapeOptionChapter[]) => {
+  const fill = document.createElement("div");
+  fill.className = "shape-option shape-fill";
+  fill.innerHTML = chapters.map((chapter) => `
+    <a class="shape-fill__row" href="${chapter.link.href}">
+      <span class="shape-fill__number">${chapter.number}</span>
+      <span class="shape-fill__word" style="--image: url('${chapter.frames[0].src}')">${chapter.kind}</span>
+      <span class="shape-fill__side">
+        <span class="shape-fill__about">${chapter.about}</span>
+        <span class="shape-fill__tags">${chapter.tags.join(" · ")}</span>
+        <span class="shape-fill__link">${chapter.link.label} <span aria-hidden="true">↗</span></span>
+      </span>
+    </a>`).join("");
+  root.append(fill);
+
+  const rows = [...fill.querySelectorAll<HTMLElement>(".shape-fill__row")];
+  const words = rows.map((row) => row.querySelector<HTMLElement>(".shape-fill__word") as HTMLElement);
+  // Preload every frame so the letters never flash empty.
+  chapters.forEach((chapter) => chapter.frames.forEach((frame) => { new Image().src = frame.src; }));
+  let active = -1;
+  let hovered = -1;
+  let shown = 0;
+  let timer = 0;
+  const activate = (index: number) => {
+    if (index === active) return;
+    active = index;
+    shown = 0;
+    rows.forEach((row, n) => row.classList.toggle("is-filled", n === index));
+    words[index].style.setProperty("--image", `url('${chapters[index].frames[0].src}')`);
+    window.clearInterval(timer);
+    if (shapeOptionStill) return;
+    // The letters move through the chapter's frames while they're filled.
+    timer = window.setInterval(() => {
+      shown = (shown + 1) % chapters[index].frames.length;
+      words[index].style.setProperty("--image", `url('${chapters[index].frames[shown].src}')`);
+    }, 1500);
+  };
+  // The row nearest the middle of the screen fills, unless one is hovered.
+  const nearest = () => {
+    if (hovered >= 0) return;
+    let best = 0;
+    let distance = Infinity;
+    rows.forEach((row, n) => {
+      const box = row.getBoundingClientRect();
+      const gap = Math.abs(box.top + box.height / 2 - window.innerHeight / 2);
+      if (gap < distance) {
+        distance = gap;
+        best = n;
+      }
+    });
+    activate(best);
+  };
+  rows.forEach((row, index) => {
+    row.addEventListener("pointerenter", () => {
+      hovered = index;
+      activate(index);
+    });
+    row.addEventListener("pointerleave", () => {
+      hovered = -1;
+      nearest();
+    });
+    // Letters drift with the cursor, as if the image sits behind them.
+    row.addEventListener("pointermove", (event) => {
+      const box = words[index].getBoundingClientRect();
+      words[index].style.setProperty("--x", `${(((event.clientX - box.left) / box.width) * 100).toFixed(1)}%`);
+    });
+  });
+  window.addEventListener("scroll", nearest, { passive: true });
+  nearest();
+};
+
+/* Counter ----------------------------------------------------------------- */
+
+const mountShapeCounter = (root: HTMLElement, chapters: ShapeOptionChapter[]) => {
+  const counter = document.createElement("div");
+  counter.className = "shape-option shape-counter";
+  counter.style.height = `${chapters.length * 110}vh`;
+  counter.innerHTML = `
+    <div class="shape-counter__pin">
+      <div class="shape-counter__dial" aria-hidden="true">
+        <span class="shape-counter__window"><span class="shape-counter__digits">${chapters.map((chapter) => `<span>${chapter.number}</span>`).join("")}</span></span>
+        <span class="shape-counter__progress"><span></span></span>
+        <span class="shape-counter__of">/ ${String(chapters.length).padStart(2, "0")}</span>
+      </div>
+      <div class="shape-counter__chapters">
+        ${chapters.map((chapter, index) => `
+          <div class="shape-counter__chapter${index ? "" : " is-active"}">
+            <h3 class="shape-counter__kind">${chapter.kind}</h3>
+            <p class="shape-counter__line">${chapter.line}</p>
+            <p class="shape-counter__about">${chapter.about}</p>
+            <div class="shape-counter__frames">${chapter.frames.map((frame) => `<figure><span><img src="${frame.src}" alt="${frame.alt}" loading="lazy" decoding="async" /></span><figcaption>${frame.number}</figcaption></figure>`).join("")}</div>
+            <p class="shape-counter__tags">${chapter.tags.join(" · ")}</p>
+            <a class="shape-counter__link" href="${chapter.link.href}">${chapter.link.label} <span aria-hidden="true">↗</span></a>
+          </div>`).join("")}
+      </div>
+    </div>`;
+  root.append(counter);
+
+  const digits = counter.querySelector<HTMLElement>(".shape-counter__digits") as HTMLElement;
+  const bar = counter.querySelector<HTMLElement>(".shape-counter__progress span") as HTMLElement;
+  const blocks = [...counter.querySelectorAll<HTMLElement>(".shape-counter__chapter")];
+  let current = 0;
+  let frame = 0;
+  const render = () => {
+    frame = 0;
+    const box = counter.getBoundingClientRect();
+    const progress = Math.max(0, Math.min(0.9999, -box.top / Math.max(1, counter.offsetHeight - window.innerHeight)));
+    bar.style.transform = `scaleX(${progress.toFixed(4)})`;
+    const index = Math.floor(progress * chapters.length);
+    if (index === current) return;
+    current = index;
+    // The numeral rolls to the next chapter like an odometer.
+    digits.style.transform = `translateY(${(-index * 100) / chapters.length}%)`;
+    blocks.forEach((block, n) => block.classList.toggle("is-active", n === index));
+  };
+  window.addEventListener("scroll", () => {
+    if (!frame) frame = requestAnimationFrame(render);
+  }, { passive: true });
+  render();
+};
+
 /* Choosing ---------------------------------------------------------------- */
 
 if (shapeOptionRoot) {
   if (shapeOption) {
     const chapters = shapeOptionChapters(shapeOptionRoot);
     shapeOptionRoot.dataset.option = shapeOption;
-    ({ index: mountShapeIndex, accordion: mountShapeAccordion, contents: mountShapeContents, ticker: mountShapeTicker })[shapeOption](shapeOptionRoot, chapters);
+    ({
+      index: mountShapeIndex,
+      accordion: mountShapeAccordion,
+      contents: mountShapeContents,
+      ticker: mountShapeTicker,
+      panels: mountShapePanels,
+      invert: mountShapeInvert,
+      fill: mountShapeFill,
+      counter: mountShapeCounter,
+    })[shapeOption](shapeOptionRoot, chapters);
   }
 
   // Temporary picker for comparing them, shown while the section is in view.
