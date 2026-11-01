@@ -407,40 +407,6 @@ html[data-home][data-home="row"] .landing {
   }
 }
 
-/* Temporary picker for comparing homepages. */
-.home-picker {
-  position: fixed;
-  bottom: clamp(56px, 8vh, 80px);
-  left: 50%;
-  z-index: 50;
-  display: flex;
-  max-width: calc(100vw - 24px);
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 4px;
-  border-radius: 999px;
-  background: var(--ink);
-  transform: translateX(-50%);
-}
-
-.home-picker button {
-  flex: none;
-  padding: 0.7em 1em;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.6);
-  font: inherit;
-  font-size: 12px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.home-picker button[aria-pressed="true"] {
-  background: var(--paper);
-  color: var(--ink);
-}
-
 @media (max-width: 760px) {
   .home-work__grid,
   .home-spread {

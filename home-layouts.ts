@@ -8,20 +8,15 @@
 //   feature  — the statement, then each case study as a full-width spread: a
 //              big image beside its details, alternating sides.
 //   row      — after Ross Mason (iamrossmason.com) and the original rail: a
-//              row of frames drifting through a lens that opens whichever is
-//              in it. The lens follows the cursor; the row can be dragged,
-//              thrown, stepped with the arrow keys and nudged by page scroll.
-// "hero" is the original homepage.
+//              row of frames gliding through a lens that opens whichever is
+//              in it. The lens trails the cursor; the row can be dragged,
+//              scrolled sideways, stepped with the arrow keys and nudged by
+//              page scroll.
+// Row is the default homepage; "hero" is the original (Horizon or Field), and
+// work and feature are reachable only by ?home=.
 
 type HomeLayout = "hero" | "work" | "feature" | "row";
 
-const homeLayouts: { id: HomeLayout; label: string }[] = [
-  { id: "work", label: "Work" },
-  { id: "feature", label: "Feature" },
-  { id: "row", label: "Row" },
-  { id: "hero", label: "Original" },
-];
-const homeLayoutKey = "raheem-home-layout";
 const homeLayout = document.documentElement.dataset.home as HomeLayout | undefined;
 const homeLanding = document.querySelector<HTMLElement>(".landing");
 
