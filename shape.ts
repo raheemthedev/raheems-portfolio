@@ -48,7 +48,7 @@ const shapeSplitWords = (line: HTMLElement) => {
 
 // The options in shape-options.ts take the section over when asked for.
 const shapeTakenOver = [
-  "index", "accordion", "contents", "ticker", "panels", "invert", "fill", "counter",
+  "index", "accordion", "contents", "ticker",
 ].includes(new URLSearchParams(window.location.search).get("shape") ?? "");
 
 if (shapeRoot && !shapeTakenOver) {
