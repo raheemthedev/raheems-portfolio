@@ -1026,6 +1026,727 @@
   text-transform: uppercase;
 }
 
+/* Shapes ------------------------------------------------------------------ */
+
+.shape-shapes {
+  position: relative;
+}
+
+.shape-shapes__pin {
+  position: sticky;
+  top: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+  align-items: center;
+  gap: clamp(24px, 5vw, 100px);
+  height: 100vh;
+  height: 100svh;
+}
+
+.shape-shapes__stage {
+  position: relative;
+  justify-self: center;
+  width: min(72vh, 44vw);
+  aspect-ratio: 1;
+}
+
+.shape-shapes__mask,
+.shape-shapes__outline {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(0% 0% 0% 0% round 50%);
+  transition: clip-path 1300ms var(--soft);
+}
+
+.shape-shapes__mask {
+  overflow: hidden;
+  background: #e6e5e0;
+}
+
+.shape-shapes__mask img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  scale: 1.08;
+  transition:
+    opacity 600ms ease,
+    scale 1400ms var(--soft);
+}
+
+.shape-shapes__mask img.is-shown {
+  opacity: 1;
+  scale: 1;
+}
+
+/* A hairline just outside the shape, like a drawn guide. */
+.shape-shapes__outline {
+  inset: -14px;
+  border: 1px solid var(--rule);
+  background: none;
+  pointer-events: none;
+  clip-path: none;
+  border-radius: 50%;
+  opacity: 0.8;
+  transition:
+    border-radius 1300ms var(--soft),
+    inset 1300ms var(--soft);
+}
+
+.shape-shapes__outline[data-form="1"] {
+  inset: calc(19% - 14px) -14px;
+  border-radius: 14px;
+}
+
+.shape-shapes__outline[data-form="2"] {
+  inset: -14px calc(17% - 14px);
+  border-radius: 6px;
+}
+
+.shape-shapes__text {
+  display: grid;
+  align-content: center;
+}
+
+.shape-shapes__legend {
+  display: flex;
+  gap: 22px;
+  margin: 0 0 clamp(28px, 6vh, 64px);
+  padding: 0;
+  list-style: none;
+  font-size: clamp(11px, 0.76vw, 13px);
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.shape-shapes__legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.35;
+  transition: opacity 400ms ease;
+}
+
+.shape-shapes__legend li.is-active {
+  opacity: 1;
+}
+
+.shape-shapes__icon {
+  display: inline-block;
+  border: 1px solid currentColor;
+}
+
+.shape-shapes__icon--0 { width: 12px; height: 12px; border-radius: 50%; }
+.shape-shapes__icon--1 { width: 16px; height: 10px; border-radius: 1px; }
+.shape-shapes__icon--2 { width: 10px; height: 14px; }
+
+.shape-shapes__chapter {
+  grid-area: 2 / 1;
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+  transition:
+    opacity 450ms ease,
+    transform 900ms var(--soft);
+}
+
+.shape-shapes__chapter.is-active {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  transition-delay: 200ms;
+}
+
+.shape-shapes__form,
+.shape-venn__eyebrow,
+.shape-mosaic__eyebrow {
+  margin: 0 0 12px;
+  font-size: clamp(11px, 0.78vw, 14px);
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.shape-shapes__kind {
+  margin: 0;
+  font-size: clamp(44px, 5vw, 100px);
+  font-weight: 450;
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+}
+
+.shape-shapes__line,
+.shape-venn__line,
+.shape-mosaic__line {
+  margin: clamp(14px, 2.2vh, 24px) 0 0;
+  font-size: clamp(20px, 1.7vw, 32px);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.shape-shapes__about,
+.shape-venn__about,
+.shape-mosaic__about {
+  max-width: 38ch;
+  margin: 12px 0 0;
+  font-size: clamp(14px, 0.95vw, 17px);
+  line-height: 1.4;
+  opacity: 0.7;
+}
+
+.shape-shapes__tags,
+.shape-venn__tags,
+.shape-mosaic__tags {
+  margin: 16px 0;
+  font-size: clamp(11px, 0.76vw, 13px);
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.shape-shapes__link,
+.shape-venn__link,
+.shape-mosaic__link,
+.shape-blueprint__link {
+  display: inline-flex;
+  gap: 0.5em;
+  padding-bottom: 2px;
+  border-bottom: 1px solid currentColor;
+  font-size: clamp(11px, 0.76vw, 13px);
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+/* Venn -------------------------------------------------------------------- */
+
+.shape-venn {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 80px);
+  margin-top: clamp(20px, 4vh, 48px);
+}
+
+.shape-venn__board {
+  position: relative;
+  justify-self: center;
+  width: min(80vh, 54vw);
+  aspect-ratio: 1;
+}
+
+.shape-venn__circle {
+  position: absolute;
+  top: calc(var(--y) * 100%);
+  left: calc(var(--x) * 100%);
+  width: 58%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid rgba(8, 8, 8, 0.28);
+  border-radius: 50%;
+  background: rgba(8, 8, 8, 0);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition:
+    background-color 600ms ease,
+    border-color 600ms ease;
+}
+
+.shape-venn__circle.is-lit {
+  border-color: var(--ink);
+  background: rgba(8, 8, 8, 0.045);
+}
+
+.shape-venn__name {
+  position: absolute;
+  font-size: clamp(14px, 1.2vw, 22px);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.shape-venn__name span {
+  font-family: "Marcellus", Georgia, serif;
+  font-size: 0.75em;
+  opacity: 0.55;
+}
+
+.shape-venn__circle[data-index="0"] .shape-venn__name { top: 12%; left: 14%; }
+.shape-venn__circle[data-index="1"] .shape-venn__name { top: 12%; right: 10%; }
+.shape-venn__circle[data-index="2"] .shape-venn__name { bottom: 6%; left: 50%; transform: translateX(-50%); }
+
+.shape-venn__overlap {
+  position: absolute;
+  top: calc(var(--y) * 100%);
+  left: calc(var(--x) * 100%);
+  z-index: 2;
+  padding: 0.45em 0.8em;
+  border-radius: 999px;
+  background: var(--paper);
+  font-size: clamp(10px, 0.72vw, 12px);
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition:
+    background-color 400ms ease,
+    color 400ms ease;
+}
+
+.shape-venn__overlap--ask {
+  border: 1px dashed rgba(8, 8, 8, 0.4);
+  pointer-events: auto;
+}
+
+.shape-venn__overlap.is-lit {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.shape-venn__thumb {
+  position: absolute;
+  top: calc(var(--y) * 100%);
+  left: calc(var(--x) * 100%);
+  z-index: 1;
+  width: 11%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #e6e5e0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) rotate(var(--turn));
+  transition:
+    transform 900ms var(--soft),
+    opacity 500ms ease;
+}
+
+.shape-venn__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.shape-venn__board[data-active]:not([data-active=""]) .shape-venn__thumb:not(.is-lit) {
+  opacity: 0.25;
+}
+
+.shape-venn__thumb.is-lit {
+  z-index: 3;
+  transform: translate(-50%, -50%) rotate(0deg) scale(1.5);
+}
+
+.shape-venn__panel {
+  display: grid;
+}
+
+.shape-venn__detail {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: translateY(14px);
+  pointer-events: none;
+  transition:
+    opacity 400ms ease,
+    transform 800ms var(--soft);
+}
+
+.shape-venn__detail.is-active {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* Torch ------------------------------------------------------------------- */
+
+.shape-torch {
+  position: relative;
+  margin: clamp(16px, 3vh, 36px) calc(-1 * var(--gutter)) 0;
+  overflow: hidden;
+  background: var(--ink);
+  color: var(--paper);
+  cursor: crosshair;
+}
+
+.shape-torch__dark {
+  --x: 50%;
+  --y: 50%;
+  --r: 160px;
+  position: absolute;
+  inset: 0;
+  -webkit-mask-image: radial-gradient(circle var(--r) at var(--x) var(--y), #000 55%, transparent 100%);
+  mask-image: radial-gradient(circle var(--r) at var(--x) var(--y), #000 55%, transparent 100%);
+}
+
+.shape-torch__wall {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  height: 100%;
+}
+
+.shape-torch__wall span {
+  overflow: hidden;
+  transition: opacity 500ms ease;
+}
+
+.shape-torch__wall img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.shape-torch[data-active] .shape-torch__wall span {
+  opacity: 0.15;
+}
+
+.shape-torch[data-active="0"] .shape-torch__wall span[data-chapter="0"],
+.shape-torch[data-active="1"] .shape-torch__wall span[data-chapter="1"],
+.shape-torch[data-active="2"] .shape-torch__wall span[data-chapter="2"] {
+  opacity: 1;
+}
+
+.shape-torch__list {
+  position: relative;
+  z-index: 1;
+  padding: clamp(40px, 8vh, 100px) var(--gutter);
+  pointer-events: none;
+}
+
+.shape-torch__hint {
+  margin: 0 0 clamp(20px, 4vh, 40px);
+  font-size: clamp(11px, 0.78vw, 14px);
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.shape-torch__row {
+  display: grid;
+  grid-template-columns: minmax(48px, 6vw) minmax(0, 1.2fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(16px, 2.4vw, 48px);
+  padding: clamp(18px, 3vh, 34px) 0;
+  border-bottom: 1px solid rgba(244, 244, 241, 0.2);
+  mix-blend-mode: difference;
+  pointer-events: auto;
+}
+
+.shape-torch__number {
+  font-family: "Marcellus", Georgia, serif;
+  font-size: clamp(14px, 1.05vw, 19px);
+  opacity: 0.6;
+}
+
+.shape-torch__kind {
+  font-size: clamp(44px, 6.2vw, 120px);
+  font-weight: 450;
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+}
+
+.shape-torch__about {
+  max-width: 34ch;
+  font-size: clamp(14px, 1vw, 18px);
+  line-height: 1.4;
+}
+
+.shape-torch__about span {
+  display: block;
+  margin-top: 0.8em;
+  font-size: clamp(11px, 0.76vw, 13px);
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+/* Mosaic ------------------------------------------------------------------ */
+
+.shape-mosaic {
+  position: relative;
+}
+
+.shape-mosaic__pin {
+  position: sticky;
+  top: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 80px);
+  height: 100vh;
+  height: 100svh;
+  padding: clamp(80px, 12vh, 120px) 0 clamp(40px, 8vh, 80px);
+}
+
+.shape-mosaic__camera {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 100%;
+  overflow: hidden;
+}
+
+.shape-mosaic__grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  width: min(100%, 120vh);
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+.shape-mosaic__block {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  transition: opacity 700ms ease;
+}
+
+.shape-mosaic.is-zoomed .shape-mosaic__block:not(.is-focus) {
+  opacity: 0.2;
+}
+
+.shape-mosaic__block span {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #e6e5e0;
+}
+
+.shape-mosaic__block img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.shape-mosaic__label {
+  grid-column: 1 / -1;
+  margin: 4px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  transition: opacity 400ms ease;
+}
+
+.shape-mosaic.is-zoomed .shape-mosaic__label {
+  opacity: 0;
+}
+
+.shape-mosaic__text {
+  display: grid;
+}
+
+.shape-mosaic__chapter {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: translateY(16px);
+  pointer-events: none;
+  transition:
+    opacity 450ms ease,
+    transform 900ms var(--soft);
+}
+
+.shape-mosaic__chapter.is-active {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  transition-delay: 250ms;
+}
+
+/* Blueprint --------------------------------------------------------------- */
+
+.shape-blueprint {
+  margin-top: clamp(40px, 7vh, 80px);
+}
+
+.shape-blueprint__sheet {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  align-items: center;
+  gap: clamp(40px, 7vw, 140px);
+  padding: clamp(40px, 7vh, 90px) clamp(20px, 4vw, 80px);
+}
+
+.shape-blueprint__sheet + .shape-blueprint__sheet {
+  border-top: 1px solid var(--rule);
+}
+
+.shape-blueprint__sheet--flip .shape-blueprint__plate {
+  order: 2;
+}
+
+.shape-blueprint__plate {
+  position: relative;
+  width: min(100%, 52vh);
+  margin: 40px auto;
+}
+
+.shape-blueprint__media {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #e6e5e0;
+}
+
+.shape-blueprint__media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 500ms ease;
+}
+
+.shape-blueprint__media img.is-shown {
+  opacity: 1;
+}
+
+/* Construction lines, drawn in when the sheet arrives. */
+.shape-blueprint__guides {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.shape-blueprint__guides line,
+.shape-blueprint__guides circle {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 3000;
+  stroke-dashoffset: 3000;
+  transition: stroke-dashoffset 1800ms var(--soft);
+}
+
+.shape-blueprint__guides .is-grid {
+  stroke: #fff;
+  opacity: 0.55;
+  transition-delay: 500ms;
+}
+
+.shape-blueprint__sheet.is-drawn .shape-blueprint__guides line,
+.shape-blueprint__sheet.is-drawn .shape-blueprint__guides circle {
+  stroke-dashoffset: 0;
+}
+
+.shape-blueprint__dim {
+  position: absolute;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  opacity: 0;
+  transition: opacity 600ms ease 900ms;
+}
+
+.shape-blueprint__sheet.is-drawn .shape-blueprint__dim {
+  opacity: 0.6;
+}
+
+.shape-blueprint__dim--width {
+  top: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.shape-blueprint__dim--height {
+  top: 50%;
+  right: -16px;
+  transform: translate(100%, -50%) rotate(90deg);
+  transform-origin: left center;
+}
+
+.shape-blueprint__note {
+  position: absolute;
+  top: calc(100% + 18px);
+  left: 0;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.shape-blueprint__note span {
+  opacity: 0.5;
+}
+
+.shape-blueprint__number {
+  margin: 0;
+  font-family: "Marcellus", Georgia, serif;
+  font-size: clamp(36px, 3.4vw, 64px);
+  line-height: 1;
+  opacity: 0.55;
+}
+
+.shape-blueprint__kind {
+  margin: 0.15em 0 0;
+  font-size: clamp(44px, 5vw, 100px);
+  font-weight: 450;
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+}
+
+.shape-blueprint__line {
+  max-width: 24ch;
+  margin: clamp(14px, 2.2vh, 24px) 0;
+  font-size: clamp(20px, 1.7vw, 32px);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.shape-blueprint__table {
+  margin: 0 0 24px;
+  border-top: 1px solid var(--rule);
+}
+
+.shape-blueprint__table div {
+  display: grid;
+  grid-template-columns: 8em minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.shape-blueprint__table dt {
+  font-size: clamp(11px, 0.76vw, 13px);
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.shape-blueprint__table dd {
+  margin: 0;
+  font-size: clamp(14px, 0.95vw, 17px);
+  line-height: 1.4;
+}
+
+.shape-blueprint__plates {
+  display: flex;
+  gap: 6px;
+}
+
+.shape-blueprint__plates button {
+  padding: 0.3em 0.6em;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    background-color 300ms ease,
+    color 300ms ease;
+}
+
+.shape-blueprint__plates button[aria-pressed="true"] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
 /* Picker (temporary) ------------------------------------------------------ */
 
 .shape-picker {
@@ -1230,5 +1951,74 @@
 
   .shape-counter__frames {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .shape-shapes__pin,
+  .shape-mosaic__pin {
+    grid-template-columns: 1fr;
+    align-content: center;
+    gap: 20px;
+  }
+
+  .shape-shapes__stage {
+    width: 64vw;
+  }
+
+  .shape-shapes__legend {
+    display: none;
+  }
+
+  .shape-shapes__kind {
+    font-size: 40px;
+  }
+
+  .shape-venn {
+    grid-template-columns: 1fr;
+  }
+
+  .shape-venn__board {
+    width: 100%;
+  }
+
+  .shape-venn__name {
+    font-size: 12px;
+  }
+
+  .shape-venn__overlap {
+    font-size: 9px;
+  }
+
+  .shape-torch__wall {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .shape-torch__row {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 6px 12px;
+  }
+
+  .shape-torch__about {
+    grid-column: 2;
+  }
+
+  .shape-mosaic__pin {
+    padding: 70px 0 30px;
+  }
+
+  .shape-mosaic__camera {
+    height: 46vh;
+  }
+
+  .shape-blueprint__sheet {
+    grid-template-columns: 1fr;
+    gap: 50px;
+    padding: 40px 0;
+  }
+
+  .shape-blueprint__sheet--flip .shape-blueprint__plate {
+    order: 0;
+  }
+
+  .shape-blueprint__plate {
+    width: 70%;
   }
 }
