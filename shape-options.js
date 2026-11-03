@@ -1,28 +1,24 @@
 "use strict";
-// Other ways to show "What I shape", compared with
-// ?shape=<option> (see shapeOptions; the reel in shape.ts stays the
-// default). Each is built from the section's own chapter markup, which stays
-// in place for the reel. All four start from a ruled index of the chapters.
+// "What I shape", being chosen from the options below with ?shape=<option>
+// (Index is the default; the reel in shape.ts is no longer loaded). Each is
+// built from the section's own chapter markup, and all start from a ruled
+// index of the chapters.
 //   index     — after Collins' programme list and Dennis Snellenberg's "I can
 //               help you with": three ruled rows; hovering one brings out a
 //               card that trails the cursor through that chapter's frames.
 //   accordion — after Rejouice and Koto's services: the rows open one at a
 //               time into a panel with the chapter's sentence, link and frames.
-//   contents  — like a book's contents: each chapter lists its frames as
-//               entries, and pointing at one shows it large in a sticky view
-//               beside the list.
 //   ticker    — each row is a slow band of the chapter's name and frames,
 //               alternate rows running opposite ways; hovering slows one and
 //               page scroll hurries them along.
 const shapeOptions = [
     "index",
     "accordion",
-    "contents",
     "ticker",
 ];
 const shapeOptionRoot = document.querySelector("[data-shape]");
 const shapeOptionAsked = new URLSearchParams(window.location.search).get("shape");
-const shapeOption = shapeOptions.find((option) => option === shapeOptionAsked) ?? null;
+const shapeOption = shapeOptions.find((option) => option === shapeOptionAsked) ?? "index";
 const shapeOptionChapters = (root) => [...root.querySelectorAll(".shape-chapter")].map((chapter) => {
     const text = (selector) => chapter.querySelector(selector)?.textContent?.trim() ?? "";
     const link = chapter.querySelector(".shape-chapter__link");
@@ -170,53 +166,6 @@ const mountShapeAccordion = (root, chapters) => {
         });
     });
 };
-/* Contents ---------------------------------------------------------------- */
-const mountShapeContents = (root, chapters) => {
-    const frames = chapters.flatMap((chapter) => chapter.frames);
-    const contents = document.createElement("div");
-    contents.className = "shape-option shape-contents";
-    let count = 0;
-    contents.innerHTML = `
-    <div class="shape-contents__list">
-      ${chapters.map((chapter) => `
-        <section class="shape-contents__chapter">
-          <h3 class="shape-contents__kind"><span>${chapter.number}</span>${chapter.kind}</h3>
-          <p class="shape-contents__about">${chapter.about}</p>
-          <ol class="shape-contents__entries">
-            ${chapter.frames.map((frame) => `
-              <li>
-                <a class="shape-contents__entry" href="${chapter.link.href}" data-frame="${count++}">
-                  <span class="shape-contents__thumb"><img src="${frame.src}" alt="" loading="lazy" decoding="async" /></span>
-                  <span class="shape-contents__entry-number">${frame.number}</span>
-                  <span class="shape-contents__entry-title">${frame.caption}</span>
-                  <span class="shape-contents__entry-arrow" aria-hidden="true">→</span>
-                </a>
-              </li>`).join("")}
-          </ol>
-          <p class="shape-contents__tags">${chapter.tags.join(" · ")}</p>
-        </section>`).join("")}
-    </div>
-    <div class="shape-contents__view" aria-hidden="true">
-      <div class="shape-contents__sticky">
-        <div class="shape-contents__window">${frames.map((frame) => `<img src="${frame.src}" alt="" loading="lazy" decoding="async" />`).join("")}</div>
-        <p class="shape-contents__caption"></p>
-      </div>
-    </div>`;
-    root.append(contents);
-    const images = [...contents.querySelectorAll(".shape-contents__window img")];
-    const entries = [...contents.querySelectorAll(".shape-contents__entry")];
-    const caption = contents.querySelector(".shape-contents__caption");
-    const show = (index) => {
-        images.forEach((image, n) => image.classList.toggle("is-shown", n === index));
-        entries.forEach((entry, n) => entry.classList.toggle("is-active", n === index));
-        caption.innerHTML = `<span>${frames[index].number}</span> ${frames[index].caption}`;
-    };
-    show(0);
-    entries.forEach((entry, index) => {
-        entry.addEventListener("pointerenter", () => show(index));
-        entry.addEventListener("focus", () => show(index));
-    });
-};
 /* Ticker ------------------------------------------------------------------ */
 const mountShapeTicker = (root, chapters) => {
     const ticker = document.createElement("div");
@@ -278,23 +227,19 @@ const mountShapeTicker = (root, chapters) => {
 };
 /* Choosing ---------------------------------------------------------------- */
 if (shapeOptionRoot) {
-    if (shapeOption) {
-        const chapters = shapeOptionChapters(shapeOptionRoot);
-        shapeOptionRoot.dataset.option = shapeOption;
-        ({
-            index: mountShapeIndex,
-            accordion: mountShapeAccordion,
-            contents: mountShapeContents,
-            ticker: mountShapeTicker,
-        })[shapeOption](shapeOptionRoot, chapters);
-    }
+    shapeOptionRoot.dataset.option = shapeOption;
+    ({
+        index: mountShapeIndex,
+        accordion: mountShapeAccordion,
+        ticker: mountShapeTicker,
+    })[shapeOption](shapeOptionRoot, shapeOptionChapters(shapeOptionRoot));
     // Temporary picker for comparing them, shown while the section is in view.
     const picker = document.createElement("div");
     picker.className = "shape-picker";
     picker.setAttribute("role", "group");
     picker.setAttribute("aria-label", "What I shape layout");
-    picker.innerHTML = ["reel", ...shapeOptions]
-        .map((option) => `<button type="button" data-option="${option}" aria-pressed="${(shapeOption ?? "reel") === option}">${option.charAt(0).toUpperCase() + option.slice(1)}</button>`)
+    picker.innerHTML = shapeOptions
+        .map((option) => `<button type="button" data-option="${option}" aria-pressed="${shapeOption === option}">${option.charAt(0).toUpperCase() + option.slice(1)}</button>`)
         .join("");
     document.body.append(picker);
     picker.addEventListener("click", (event) => {
@@ -302,10 +247,7 @@ if (shapeOptionRoot) {
         if (!option)
             return;
         const url = new URL(window.location.href);
-        if (option === "reel")
-            url.searchParams.delete("shape");
-        else
-            url.searchParams.set("shape", option);
+        url.searchParams.set("shape", option);
         url.hash = "what-i-shape";
         window.location.href = url.toString();
     });
