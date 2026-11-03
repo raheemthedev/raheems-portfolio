@@ -44,7 +44,7 @@ const shapeSplitWords = (line) => {
 };
 // The options in shape-options.ts take the section over when asked for.
 const shapeTakenOver = [
-    "index", "accordion", "contents", "ticker", "panels", "invert", "fill", "counter", "shapes", "venn", "torch", "mosaic", "blueprint",
+    "index", "accordion", "contents", "ticker", "panels", "invert", "fill", "counter",
 ].includes(new URLSearchParams(window.location.search).get("shape") ?? "");
 if (shapeRoot && !shapeTakenOver) {
     const stage = shapeRoot.querySelector(".shape__stage");
