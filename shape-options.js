@@ -6,17 +6,30 @@
 //   index     — after Collins' programme list and Dennis Snellenberg's "I can
 //               help you with": three ruled rows; hovering one brings out a
 //               card that trails the cursor through that chapter's frames.
-//   accordion — after Rejouice and Koto's services: the rows open one at a
-//               time into a panel with the chapter's sentence, link and frames.
 //   capabilities — after Rejouice's services page: a plain statement, then
 //               "(01) Identity" beside a stacked list of what it makes, with
 //               one frame and the link at the side.
+//   stack     — each chapter a full card that pins as you scroll and the
+//               next slides over it, the one beneath settling back; frames
+//               change slowly inside each card.
+//   focus     — one pinned frame on the left; the chapters scroll past on the
+//               right, and the frame follows whichever is in the middle,
+//               stepping through its images as you read down it.
+//   tabs      — the three chapters as tabs with a thin bar that fills and
+//               moves on to the next; each shows its sentence, what it makes
+//               and three frames. Hover pauses it; it only runs in view.
+//   margins   — an editorial page: each chapter one sentence set large and
+//               light, with footnote numbers that point to small captioned
+//               frames in the margin.
 // One more asks what happens without the section:
 //   none      — the section removed: Row, then About, then the footer.
 const shapeOptions = [
     "index",
-    "accordion",
     "capabilities",
+    "stack",
+    "focus",
+    "tabs",
+    "margins",
     "none",
 ];
 const shapeOptionRoot = document.querySelector("[data-shape]");
@@ -126,51 +139,8 @@ const mountShapeIndex = (root, chapters) => {
         card.classList.remove("is-shown");
     });
 };
-/* Accordion --------------------------------------------------------------- */
-const mountShapeAccordion = (root, chapters) => {
-    const list = document.createElement("div");
-    list.className = "shape-option shape-accordion";
-    list.innerHTML = chapters.map((chapter, index) => `
-    <div class="shape-accordion__item${index ? "" : " is-open"}">
-      <button class="shape-accordion__head" type="button" aria-expanded="${!index}">
-        <span class="shape-accordion__number">${chapter.number}</span>
-        <span class="shape-accordion__kind">${chapter.kind}</span>
-        <span class="shape-accordion__tags">${chapter.tags.join(" · ")}</span>
-        <span class="shape-accordion__toggle" aria-hidden="true"></span>
-      </button>
-      <div class="shape-accordion__panel">
-        <div class="shape-accordion__inner">
-          <div class="shape-accordion__text">
-            <p class="shape-accordion__line">${chapter.line}</p>
-            <p class="shape-accordion__about">${chapter.about}</p>
-            <a class="shape-accordion__link" href="${chapter.link.href}">${chapter.link.label} <span aria-hidden="true">↗</span></a>
-          </div>
-          <div class="shape-accordion__frames">
-            ${chapter.frames.map((frame) => `
-              <figure class="shape-accordion__frame">
-                <span class="shape-accordion__media"><img src="${frame.src}" alt="${frame.alt}" loading="lazy" decoding="async" /></span>
-                <figcaption><span>${frame.number}</span> ${frame.caption}</figcaption>
-              </figure>`).join("")}
-          </div>
-        </div>
-      </div>
-    </div>`).join("");
-    root.append(list);
-    // One chapter open at a time; opening another closes the last.
-    const items = [...list.querySelectorAll(".shape-accordion__item")];
-    items.forEach((item) => {
-        item.querySelector(".shape-accordion__head")?.addEventListener("click", () => {
-            const opening = !item.classList.contains("is-open");
-            items.forEach((other) => {
-                const open = other === item && opening;
-                other.classList.toggle("is-open", open);
-                other.querySelector(".shape-accordion__head")?.setAttribute("aria-expanded", String(open));
-            });
-        });
-    });
-};
 /* What each chapter makes ------------------------------------------------- */
-// Draft deliverables for Capabilities, taken from each chapter's
+// Draft deliverables for the list-led options, taken from each chapter's
 // own description and frame captions. Edit freely.
 const shapeDeliverables = {
     "01": ["Brand identity", "Naming", "Logos & marks", "Typography", "Colour", "Visual systems", "Art direction"],
@@ -204,14 +174,224 @@ const mountShapeCapabilities = (root, chapters) => {
         });
     });
 };
+/* Stack ------------------------------------------------------------------- */
+const mountShapeStack = (root, chapters) => {
+    const stack = document.createElement("div");
+    stack.className = "shape-option shape-stack";
+    stack.innerHTML = chapters.map((chapter, index) => `
+    <article class="shape-stack__card" style="--i: ${index}">
+      <div class="shape-stack__text">
+        <p class="shape-stack__number">${chapter.number} <span>/ 0${chapters.length}</span></p>
+        <div>
+          <h3 class="shape-stack__kind">${chapter.kind}</h3>
+          <p class="shape-stack__about">${chapter.about}</p>
+        </div>
+        <div>
+          <ul class="shape-stack__makes">${shapeMakes(chapter).map((item) => `<li>${item}</li>`).join("")}</ul>
+          <a class="shape-stack__link" href="${chapter.link.href}">${chapter.link.label} <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+      <a class="shape-stack__media" href="${chapter.link.href}" aria-label="${chapter.link.label}">
+        ${chapter.frames.map((frame, n) => `<img src="${frame.src}" alt=""${n ? "" : ' class="is-shown"'} loading="lazy" decoding="async" />`).join("")}
+        <span class="shape-stack__caption"><span>${chapter.frames[0].number}</span> ${chapter.frames[0].caption}</span>
+      </a>
+    </article>`).join("");
+    root.append(stack);
+    const cards = [...stack.querySelectorAll(".shape-stack__card")];
+    // Frames change slowly while a card is on screen.
+    cards.forEach((card, index) => {
+        const images = [...card.querySelectorAll(".shape-stack__media img")];
+        const caption = card.querySelector(".shape-stack__caption");
+        let shown = 0;
+        let timer = 0;
+        new IntersectionObserver(([entry]) => {
+            window.clearInterval(timer);
+            if (!entry.isIntersecting || shapeOptionStill)
+                return;
+            timer = window.setInterval(() => {
+                shown = (shown + 1) % images.length;
+                images.forEach((image, n) => image.classList.toggle("is-shown", n === shown));
+                const frame = chapters[index].frames[shown];
+                caption.innerHTML = `<span>${frame.number}</span> ${frame.caption}`;
+            }, 2600);
+        }, { threshold: 0.4 }).observe(card);
+    });
+    // The card beneath settles back as the next one slides over it.
+    let frame = 0;
+    const render = () => {
+        frame = 0;
+        cards.forEach((card, index) => {
+            const next = cards[index + 1];
+            if (!next)
+                return;
+            const top = card.getBoundingClientRect().top;
+            const under = Math.min(1, Math.max(0, 1 - (next.getBoundingClientRect().top - top) / card.offsetHeight));
+            card.style.setProperty("--under", under.toFixed(3));
+        });
+    };
+    if (!shapeOptionStill) {
+        window.addEventListener("scroll", () => {
+            if (!frame)
+                frame = requestAnimationFrame(render);
+        }, { passive: true });
+        render();
+    }
+};
+/* Focus ------------------------------------------------------------------- */
+const mountShapeFocus = (root, chapters) => {
+    const view = document.createElement("div");
+    view.className = "shape-option shape-focus";
+    view.innerHTML = `
+    <div class="shape-focus__media" aria-hidden="true">
+      <div class="shape-focus__window">${chapters.map((chapter, index) => chapter.frames.map((frame, n) => `<img src="${frame.src}" alt="" data-chapter="${index}" data-frame="${n}"${index || n ? "" : ' class="is-shown"'} loading="lazy" decoding="async" />`).join("")).join("")}</div>
+      <p class="shape-focus__caption"><span>${chapters[0].frames[0].number}</span> ${chapters[0].frames[0].caption}</p>
+    </div>
+    <div class="shape-focus__chapters">
+      ${chapters.map((chapter, index) => `
+        <section class="shape-focus__chapter${index ? "" : " is-active"}">
+          <p class="shape-focus__number">${chapter.number}</p>
+          <h3 class="shape-focus__kind">${chapter.kind}</h3>
+          <p class="shape-focus__about">${chapter.about}</p>
+          <p class="shape-focus__makes">${shapeMakes(chapter).join(" · ")}</p>
+          <a class="shape-focus__link" href="${chapter.link.href}">${chapter.link.label} <span aria-hidden="true">↗</span></a>
+          <span class="shape-focus__strip" aria-hidden="true">${chapter.frames.map((frame) => `<img src="${frame.src}" alt="" loading="lazy" decoding="async" />`).join("")}</span>
+        </section>`).join("")}
+    </div>`;
+    root.append(view);
+    const sections = [...view.querySelectorAll(".shape-focus__chapter")];
+    const images = [...view.querySelectorAll(".shape-focus__window img")];
+    const caption = view.querySelector(".shape-focus__caption");
+    let current = "0-0";
+    let frame = 0;
+    // Whichever chapter holds the middle of the screen leads, and the frame
+    // steps through its images as you read down it.
+    const render = () => {
+        frame = 0;
+        const middle = window.innerHeight / 2;
+        let chapter = 0;
+        sections.forEach((section, index) => {
+            if (section.getBoundingClientRect().top < middle)
+                chapter = index;
+        });
+        const box = sections[chapter].getBoundingClientRect();
+        const count = chapters[chapter].frames.length;
+        const n = Math.min(count - 1, Math.max(0, Math.floor(((middle - box.top) / box.height) * count)));
+        if (`${chapter}-${n}` === current)
+            return;
+        current = `${chapter}-${n}`;
+        sections.forEach((section, index) => section.classList.toggle("is-active", index === chapter));
+        images.forEach((image) => {
+            image.classList.toggle("is-shown", Number(image.dataset.chapter) === chapter && Number(image.dataset.frame) === n);
+        });
+        const shown = chapters[chapter].frames[n];
+        caption.innerHTML = `<span>${shown.number}</span> ${shown.caption}`;
+    };
+    window.addEventListener("scroll", () => {
+        if (!frame)
+            frame = requestAnimationFrame(render);
+    }, { passive: true });
+    render();
+};
+/* Tabs -------------------------------------------------------------------- */
+const mountShapeTabs = (root, chapters) => {
+    const view = document.createElement("div");
+    view.className = "shape-option shape-tabs";
+    view.innerHTML = `
+    <div class="shape-tabs__tabs" role="tablist" aria-label="What I shape">
+      ${chapters.map((chapter, index) => `
+        <button class="shape-tabs__tab" type="button" role="tab" aria-selected="${!index}">
+          <span class="shape-tabs__number">${chapter.number}</span>
+          <span class="shape-tabs__kind">${chapter.kind}</span>
+          <span class="shape-tabs__bar" aria-hidden="true"><span></span></span>
+        </button>`).join("")}
+    </div>
+    <div class="shape-tabs__panels">
+      ${chapters.map((chapter, index) => `
+        <div class="shape-tabs__panel${index ? "" : " is-shown"}" role="tabpanel">
+          <div class="shape-tabs__text">
+            <p class="shape-tabs__line">${chapter.line}</p>
+            <p class="shape-tabs__about">${chapter.about}</p>
+            <ul class="shape-tabs__makes">${shapeMakes(chapter).map((item) => `<li>${item}</li>`).join("")}</ul>
+            <a class="shape-tabs__link" href="${chapter.link.href}">${chapter.link.label} <span aria-hidden="true">↗</span></a>
+          </div>
+          <div class="shape-tabs__frames">
+            ${chapter.frames.slice(0, 3).map((frame) => `
+              <figure class="shape-tabs__frame">
+                <span class="shape-tabs__media"><img src="${frame.src}" alt="${frame.alt}" loading="lazy" decoding="async" /></span>
+                <figcaption><span>${frame.number}</span> ${frame.caption}</figcaption>
+              </figure>`).join("")}
+          </div>
+        </div>`).join("")}
+    </div>`;
+    root.append(view);
+    const tabs = [...view.querySelectorAll(".shape-tabs__tab")];
+    const panels = [...view.querySelectorAll(".shape-tabs__panel")];
+    const select = (chosen) => {
+        tabs.forEach((tab, index) => tab.setAttribute("aria-selected", String(index === chosen)));
+        panels.forEach((panel, index) => panel.classList.toggle("is-shown", index === chosen));
+    };
+    tabs.forEach((tab, index) => {
+        tab.addEventListener("click", () => select(index));
+        // The bar filling is the clock: when it ends, the next chapter comes up.
+        tab.querySelector(".shape-tabs__bar span")?.addEventListener("animationend", () => select((index + 1) % tabs.length));
+    });
+    new IntersectionObserver(([entry]) => {
+        view.classList.toggle("is-away", !entry.isIntersecting);
+    }, { threshold: 0.3 }).observe(view);
+};
+/* Margins ----------------------------------------------------------------- */
+const mountShapeMargins = (root, chapters) => {
+    const view = document.createElement("div");
+    view.className = "shape-option shape-margins";
+    const note = (chapter, n) => `<a class="shape-margins__mark" href="${chapter.link.href}" data-note="${chapter.frames[n].number}">${chapter.frames[n].number}</a>`;
+    view.innerHTML = chapters.map((chapter) => `
+    <section class="shape-margins__chapter">
+      <p class="shape-margins__label">(${chapter.number})<br />${chapter.kind}</p>
+      <p class="shape-margins__text">${chapter.line.replace(/\.$/, "")}${note(chapter, 0)} — ${chapter.about.charAt(0).toLowerCase() + chapter.about.slice(1).replace(/\.$/, "")}${note(chapter, 1)}. <span class="shape-margins__makes">${shapeMakes(chapter).slice(0, 4).join(", ").toLowerCase()}.</span></p>
+      <aside class="shape-margins__notes">
+        ${chapter.frames.slice(0, 2).map((frame) => `
+          <a class="shape-margins__note" href="${chapter.link.href}" data-note="${frame.number}">
+            <span class="shape-margins__media"><img src="${frame.src}" alt="${frame.alt}" loading="lazy" decoding="async" /></span>
+            <span class="shape-margins__caption"><span>${frame.number}</span> ${frame.caption}</span>
+          </a>`).join("")}
+        <a class="shape-margins__link" href="${chapter.link.href}">${chapter.link.label} <span aria-hidden="true">↗</span></a>
+      </aside>
+    </section>`).join("");
+    root.append(view);
+    // A footnote number and its frame light up together.
+    view.querySelectorAll("[data-note]").forEach((item) => {
+        const pair = view.querySelectorAll(`[data-note="${item.dataset.note}"]`);
+        item.addEventListener("pointerenter", () => {
+            view.classList.add("is-noting");
+            pair.forEach((other) => other.classList.add("is-lit"));
+        });
+        item.addEventListener("pointerleave", () => {
+            view.classList.remove("is-noting");
+            pair.forEach((other) => other.classList.remove("is-lit"));
+        });
+    });
+    // Each chapter rises in as it arrives.
+    const arrive = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (!entry.isIntersecting)
+                return;
+            entry.target.classList.add("is-in");
+            arrive.unobserve(entry.target);
+        });
+    }, { rootMargin: "0px 0px -12% 0px" });
+    view.querySelectorAll(".shape-margins__chapter").forEach((chapter) => arrive.observe(chapter));
+};
 /* Choosing ---------------------------------------------------------------- */
 if (shapeOptionRoot) {
     shapeOptionRoot.dataset.option = shapeOption;
     if (shapeOption !== "none")
         ({
             index: mountShapeIndex,
-            accordion: mountShapeAccordion,
             capabilities: mountShapeCapabilities,
+            stack: mountShapeStack,
+            focus: mountShapeFocus,
+            tabs: mountShapeTabs,
+            margins: mountShapeMargins,
         })[shapeOption](shapeOptionRoot, shapeOptionChapters(shapeOptionRoot));
     // Temporary picker for comparing them, shown while the section is in view.
     const picker = document.createElement("div");
