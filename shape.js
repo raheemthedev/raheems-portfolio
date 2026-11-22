@@ -1,491 +1,418 @@
 "use strict";
-// "What I shape". The reel is the design; the sentence is parked behind
-// ?shape=sentence and is what narrow screens get.
-//   reel      — a film: the section pins and scrolling (or dragging) travels
-//               sideways from a title card through the three chapters to a
-//               closing card. Frames wipe in as they arrive, drift at
-//               different depths with their images panning inside, lean and
-//               shrink a little with the speed, and the chapter's word slides
-//               huge behind them; the colour changes with each chapter. Click
-//               a frame to see it full screen. A strip at the foot counts the
-//               frames and jumps between chapters.
-//   sentence  — a manifesto: each chapter is one sentence set huge, its words
-//               inking in as you read down, with image pills set in the type
-//               that flick through the chapter's frames. Hover a pill for a
-//               large preview that follows the cursor; click it to open it.
-const shapeLayouts = ["reel", "sentence"];
+// "What I shape", being chosen from the options below with ?shape=<option>
+// (List is the default). The list in the page is the data for all of them:
+// each item is something I make, its chapter, its link and its frame.
+//   list      — after a studio's "What we do": a short statement beside one
+//               long list set large and grey. The item nearest the middle of
+//               the screen turns ink as the page scrolls, pointing at one
+//               takes over, and its frame shows at the foot of the left column.
+//   paragraph — everything in one block of running type, chapter numbers set
+//               in among the words; pointing at a word brings its frame along
+//               with the cursor and quiets the rest.
+//   backdrop  — three columns, one per chapter; pointing at an item fills the
+//               whole section with its frame behind the type, which turns
+//               light over it.
+//   brief     — "What are you making?": the items as choices a visitor can
+//               pick; the picks build a sentence and a brief to email.
+//   wheel     — the list on a turning drum: scrolling rolls it, the item at
+//               the front is ink, with its chapter on the left and its frame,
+//               large, on the right.
+//   column    — after a portfolio's experience list: the three chapters set
+//               small in grey at the left, a narrow column of their frames
+//               at the right. The page's scroll runs the column up; the
+//               chapter whose frame is in the middle turns ink with its
+//               project beside it, and choosing a chapter glides to it.
+const shapeOptions = ["list", "paragraph", "backdrop", "brief", "wheel", "column"];
+const shapeOptionAsked = new URLSearchParams(window.location.search).get("shape");
+const shapeOption = shapeOptions.find((option) => option === shapeOptionAsked) ?? "list";
+const shapeChapterNames = { "01": "Identity", "02": "Digital & motion", "03": "Campaigns" };
+const shapeStill = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const shapeHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+const shapeEmail = "animashaunraheem05@gmail.com";
 const shapeRoot = document.querySelector("[data-shape]");
-const shapeDesktop = window.matchMedia("(min-width: 761px)");
-const shapeStill = window.matchMedia("(prefers-reduced-motion: reduce)");
-const shapeClamp = (value, min, max) => Math.min(Math.max(value, min), max);
-const isShapeLayout = (value) => shapeLayouts.some((layout) => layout === value);
-// Wrap each word of a line in its own span so it can ink in on its own;
-// the pills count as words.
-const shapeSplitWords = (line) => {
-    [...line.childNodes].forEach((node) => {
-        if (node.nodeType !== Node.TEXT_NODE)
-            return;
-        const fragment = document.createDocumentFragment();
-        (node.textContent ?? "").split(/(\s+)/).forEach((part) => {
-            if (part === "")
-                return;
-            if (/^\s+$/.test(part)) {
-                fragment.append(document.createTextNode(part));
-                return;
-            }
-            const word = document.createElement("span");
-            word.className = "shape-word";
-            word.textContent = part;
-            fragment.append(word);
-        });
-        node.replaceWith(fragment);
-    });
-    line.querySelectorAll(".shape-pill").forEach((pill) => pill.classList.add("shape-word"));
-    return [...line.querySelectorAll(".shape-word")];
-};
-if (shapeRoot) {
-    const stage = shapeRoot.querySelector(".shape__stage");
-    const track = shapeRoot.querySelector(".shape__track");
-    // The reel's window onto the track, and its chapter strip.
-    const viewport = document.createElement("div");
-    viewport.className = "shape__viewport";
-    if (stage && track) {
-        stage.append(viewport);
-        viewport.append(track);
-    }
-    const hud = document.createElement("nav");
-    hud.className = "shape-hud";
-    hud.setAttribute("aria-label", "What I shape chapters");
-    viewport.append(hud);
-    // The reel's opening and closing cards.
-    const opening = document.createElement("div");
-    opening.className = "shape-reel-card shape-reel-card--opening";
-    opening.innerHTML =
-        `<p class="shape-reel-card__label">/ What I shape</p>` +
-            `<p class="shape-reel-card__title">Three ways<br />an idea takes<br />shape.</p>` +
-            `<p class="shape-reel-card__hint">Scroll or drag <span aria-hidden="true">→</span></p>`;
-    const closing = document.createElement("div");
-    closing.className = "shape-reel-card shape-reel-card--closing";
-    closing.innerHTML =
-        `<p class="shape-reel-card__label">That's the shape of it</p>` +
-            `<a class="shape-reel-card__link" href="work.html">See all work <span aria-hidden="true">↗</span></a>`;
-    track?.prepend(opening);
-    track?.append(closing);
-    const chapters = [...shapeRoot.querySelectorAll(".shape-chapter")].map((article) => {
-        const frames = [...article.querySelectorAll(".shape-frame")];
-        const sources = frames.map((frame) => {
-            const image = frame.querySelector("img");
-            return {
-                src: image?.getAttribute("src") ?? "",
-                caption: frame.querySelector("figcaption")?.innerHTML ?? "",
-            };
-        });
-        const pills = [...article.querySelectorAll(".shape-pill")].map((pill) => {
-            const indices = (pill.dataset.frames ?? "").split(" ").map(Number).filter((index) => sources[index]);
-            pill.innerHTML = indices.map((index) => `<img src="${sources[index].src}" alt="" draggable="false" />`).join("");
-            const images = [...pill.querySelectorAll("img")];
-            images[0]?.classList.add("is-current");
-            return { pill, indices, images, current: 0, last: 0 };
-        });
-        const line = article.querySelector(".shape-chapter__line");
-        const number = article.querySelector(".shape-chapter__number")?.textContent ?? "";
-        const kind = article.querySelector(".shape-chapter__kind")?.firstChild?.textContent ?? "";
-        // The chapter's word, huge and outlined, sliding behind its frames.
-        const ghost = document.createElement("span");
-        ghost.className = "shape-chapter__ghost";
-        ghost.setAttribute("aria-hidden", "true");
-        ghost.textContent = kind;
-        article.prepend(ghost);
-        frames.forEach((figure) => {
-            // A window for each image, so it can wipe in and pan inside it.
-            const image = figure.querySelector("img");
-            if (image) {
-                const frameWindow = document.createElement("span");
-                frameWindow.className = "shape-frame__window";
-                image.before(frameWindow);
-                frameWindow.append(image);
-            }
-            // Frames open full screen from the keyboard too.
-            figure.tabIndex = 0;
-            figure.setAttribute("role", "button");
-        });
+const shapeList = document.querySelector(".shape-list");
+const shapeItems = (list) => {
+    const images = [...list.querySelectorAll(".shape-list__window img")];
+    return [...list.querySelectorAll(".shape-list__items li")].map((item, n) => {
+        const link = item.querySelector("a");
         return {
-            article,
-            tone: article.dataset.tone ?? "dark",
-            frames,
-            sources,
-            pills,
-            words: line ? shapeSplitWords(line) : [],
-            // How far each frame drifts against the travel, for depth.
-            depths: frames.map((_, index) => [0.04, -0.06, 0.08, -0.03, 0.1, -0.05][index % 6]),
-            number,
-            kind,
-            ghost,
+            name: link?.textContent?.trim() ?? "",
+            href: link?.getAttribute("href") ?? "work.html",
+            chapter: item.dataset.chapter ?? "01",
+            src: images[n]?.getAttribute("src") ?? "",
+            number: images[n]?.dataset.number ?? "",
+            caption: images[n]?.dataset.caption ?? "",
         };
     });
-    const allFrames = chapters.flatMap((chapter) => chapter.frames);
-    hud.innerHTML =
-        `<span class="shape-hud__bar" aria-hidden="true"><i></i></span>` +
-            `<span class="shape-hud__count" aria-hidden="true"><b>00</b> / ${String(allFrames.length).padStart(2, "0")}</span>` +
-            chapters.map((chapter) => `<button type="button"><span>${chapter.number}</span> ${chapter.kind}</button>`).join("");
-    const hudBar = hud.querySelector(".shape-hud__bar i");
-    const hudCount = hud.querySelector(".shape-hud__count b");
-    const hudButtons = [...hud.querySelectorAll("button")];
-    let layout = "reel";
-    let frame = null;
-    let travel = 0;
-    let lastShift = 0;
-    let lean = 0;
-    const reelLive = () => layout === "reel" && shapeDesktop.matches;
-    // The reel is as tall as its track is wide, so scrolling down travels across.
-    const measure = () => {
-        if (!stage || !track)
-            return;
-        if (!reelLive()) {
-            stage.style.removeProperty("height");
-            track.style.removeProperty("transform");
-            travel = 0;
-            return;
-        }
-        travel = Math.max(track.scrollWidth - window.innerWidth, 0);
-        stage.style.height = `${travel + window.innerHeight}px`;
-    };
-    const reelProgress = () => {
-        if (!stage)
-            return 0;
-        const range = stage.offsetHeight - window.innerHeight;
-        return range > 0 ? shapeClamp(-stage.getBoundingClientRect().top / range, 0, 1) : 0;
-    };
-    const render = () => {
-        frame = null;
-        const height = window.innerHeight || 1;
-        // Words ink in from the foot of the screen as they rise.
-        chapters.forEach(({ words }) => {
-            words.forEach((word) => {
-                const top = word.getBoundingClientRect().top;
-                const ink = shapeStill.matches || reelLive() ? 1 : shapeClamp((height * 0.86 - top) / (height * 0.32), 0, 1);
-                word.style.setProperty("--ink", ink.toFixed(3));
+};
+const shapeChapters = (items) => Object.keys(shapeChapterNames).map((chapter) => ({
+    number: chapter,
+    name: shapeChapterNames[chapter],
+    items: items.filter((item) => item.chapter === chapter),
+}));
+const shapeCaption = (item) => `<span>${item.number}</span> ${item.caption}`;
+// Runs fn on the next frame after each scroll, once per frame.
+const onShapeScroll = (fn) => {
+    let frame = 0;
+    window.addEventListener("scroll", () => {
+        if (!frame)
+            frame = requestAnimationFrame(() => {
+                frame = 0;
+                fn();
             });
-        });
-        if (!reelLive() || !track) {
-            chapters.forEach(({ frames, ghost }) => {
-                frames.forEach((figure) => ["--drift", "--lean", "--reveal", "--pan", "--squash"].forEach((name) => figure.style.removeProperty(name)));
-                ghost.style.removeProperty("transform");
-            });
-            shapeRoot.dataset.toneNow = chapters[0]?.tone ?? "dark";
+    }, { passive: true });
+    fn();
+};
+/* List -------------------------------------------------------------------- */
+const mountShapeList = (list) => {
+    const items = [...list.querySelectorAll(".shape-list__items li")];
+    const images = [...list.querySelectorAll(".shape-list__window img")];
+    const caption = list.querySelector(".shape-list__caption");
+    let active = 0;
+    let pointing = false;
+    const focus = (n) => {
+        if (n === active)
             return;
-        }
-        const progress = reelProgress();
-        const shift = -progress * travel;
-        track.style.transform = `translate3d(${shift.toFixed(1)}px, 0, 0)`;
-        // Frames lean into the travel and shrink a touch when it's quick, and
-        // settle when it stops.
-        lean += (shapeClamp((shift - lastShift) * 0.12, -7, 7) - lean) * 0.18;
-        lastShift = shift;
-        const squash = 1 - Math.min(Math.abs(lean) * 0.008, 0.05);
-        const width = window.innerWidth;
-        const centre = width / 2;
-        let current = 0;
-        let passed = 0;
-        chapters.forEach((chapter, index) => {
-            const chapterLeft = chapter.article.offsetLeft + shift;
-            if (chapterLeft < centre)
-                current = index;
-            // The chapter's word crosses the screen behind it, slower, over the
-            // time the chapter takes to pass.
-            const strip = chapter.frames[0]?.parentElement;
-            const stripLeft = chapterLeft + (strip?.offsetLeft ?? 0);
-            const passing = shapeClamp((width - stripLeft) / (width + (strip?.offsetWidth ?? chapter.article.offsetWidth)), 0, 1);
-            const ghostX = width * 0.6 + (-chapter.ghost.offsetWidth - width * 0.6) * passing;
-            chapter.ghost.style.transform = `translate3d(${(ghostX - chapterLeft).toFixed(1)}px, 0, 0)`;
-            chapter.ghost.style.opacity = (Math.sin(passing * Math.PI) * 0.3).toFixed(3);
-            chapter.frames.forEach((figure, figureIndex) => {
-                const left = figure.offsetLeft + chapterLeft;
-                const onScreen = left + figure.offsetWidth / 2;
-                if (onScreen < centre)
-                    passed += 1;
-                const drift = (onScreen - centre) * chapter.depths[figureIndex];
-                // Wiped in from the left as it comes on from the right.
-                const reveal = shapeStill.matches ? 1 : shapeClamp((width * 0.96 - left) / (figure.offsetWidth * 0.85), 0, 1);
-                figure.style.setProperty("--drift", `${drift.toFixed(1)}px`);
-                figure.style.setProperty("--pan", `${((onScreen - centre) * -0.06).toFixed(1)}px`);
-                figure.style.setProperty("--reveal", reveal.toFixed(3));
-                figure.style.setProperty("--lean", `${lean.toFixed(2)}deg`);
-                figure.style.setProperty("--squash", squash.toFixed(4));
-            });
-        });
-        shapeRoot.dataset.toneNow = chapters[current]?.tone ?? "dark";
-        if (hudBar)
-            hudBar.style.transform = `scaleX(${progress.toFixed(4)})`;
-        if (hudCount)
-            hudCount.textContent = String(passed).padStart(2, "0");
-        hudButtons.forEach((button, index) => button.setAttribute("aria-current", String(index === current)));
-        if (Math.abs(lean) > 0.02)
-            request();
+        active = n;
+        items.forEach((item, m) => item.classList.toggle("is-active", m === n));
+        images.forEach((image, m) => image.classList.toggle("is-shown", m === n));
+        const image = images[n];
+        if (caption && image)
+            caption.innerHTML = `<span>${image.dataset.number ?? ""}</span> ${image.dataset.caption ?? ""}`;
     };
-    const request = () => {
-        if (frame === null)
-            frame = requestAnimationFrame(render);
-    };
-    // A HUD button travels to its chapter.
-    hudButtons.forEach((button, index) => {
-        button.addEventListener("click", () => {
-            const chapter = chapters[index];
-            if (!stage || !chapter || travel <= 0)
-                return;
-            const progress = shapeClamp(chapter.article.offsetLeft / travel, 0, 1);
-            const top = stage.getBoundingClientRect().top + window.scrollY + progress * (stage.offsetHeight - window.innerHeight);
-            window.scrollTo({ top, behavior: shapeStill.matches ? "auto" : "smooth" });
+    // Pointing at an item takes the focus.
+    items.forEach((item, n) => {
+        item.addEventListener("pointerenter", () => {
+            pointing = true;
+            focus(n);
         });
     });
-    /* Full screen ------------------------------------------------------------------ */
-    const lightbox = document.createElement("div");
-    lightbox.className = "shape-lightbox";
-    lightbox.setAttribute("role", "dialog");
-    lightbox.setAttribute("aria-modal", "true");
-    lightbox.setAttribute("aria-label", "Frame");
-    lightbox.hidden = true;
-    lightbox.innerHTML =
-        `<figure class="shape-lightbox__frame"><img alt="" /><figcaption></figcaption></figure>` +
-            `<p class="shape-lightbox__count"></p>` +
-            `<button type="button" class="shape-lightbox__close" aria-label="Close">Close</button>` +
-            `<button type="button" class="shape-lightbox__step" data-step="-1" aria-label="Previous frame">←</button>` +
-            `<button type="button" class="shape-lightbox__step" data-step="1" aria-label="Next frame">→</button>`;
-    document.body.append(lightbox);
-    const lightboxImage = lightbox.querySelector("img");
-    const lightboxCaption = lightbox.querySelector("figcaption");
-    const lightboxCount = lightbox.querySelector(".shape-lightbox__count");
-    let shownFrame = -1;
-    let returnFocus = null;
-    const showFrame = (index) => {
-        shownFrame = (index + allFrames.length) % allFrames.length;
-        const figure = allFrames[shownFrame];
-        const image = figure.querySelector("img");
-        if (lightboxImage && image) {
-            lightboxImage.src = image.currentSrc || image.src;
-            lightboxImage.alt = image.alt;
-        }
-        if (lightboxCaption)
-            lightboxCaption.innerHTML = figure.querySelector("figcaption")?.innerHTML ?? "";
-        if (lightboxCount)
-            lightboxCount.textContent = `${String(shownFrame + 1).padStart(2, "0")} / ${String(allFrames.length).padStart(2, "0")}`;
-    };
-    const openFrame = (index) => {
-        returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-        showFrame(index);
-        lightbox.hidden = false;
-        requestAnimationFrame(() => lightbox.classList.add("is-open"));
-        lightbox.querySelector(".shape-lightbox__close")?.focus();
-    };
-    const closeFrame = () => {
-        lightbox.classList.remove("is-open");
-        window.setTimeout(() => {
-            lightbox.hidden = true;
-        }, 320);
-        returnFocus?.focus();
-    };
-    lightbox.addEventListener("click", (event) => {
-        const target = event.target instanceof Element ? event.target : null;
-        const step = target?.closest("[data-step]")?.dataset.step;
-        if (step) {
-            showFrame(shownFrame + Number(step));
-            return;
-        }
-        if (!target?.closest(".shape-lightbox__frame img"))
-            closeFrame();
+    list.querySelector(".shape-list__items")?.addEventListener("pointerleave", () => {
+        pointing = false;
     });
-    document.addEventListener("keydown", (event) => {
-        if (lightbox.hidden)
+    // Otherwise the focus walks down the list with the page: whichever item is
+    // nearest the middle of the screen.
+    onShapeScroll(() => {
+        if (pointing)
             return;
-        if (event.key === "Escape")
-            closeFrame();
-        if (event.key === "ArrowRight")
-            showFrame(shownFrame + 1);
-        if (event.key === "ArrowLeft")
-            showFrame(shownFrame - 1);
-    });
-    allFrames.forEach((figure, index) => {
-        figure.addEventListener("keydown", (event) => {
-            if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                openFrame(index);
+        const middle = window.innerHeight * 0.5;
+        let nearest = 0;
+        let distance = Infinity;
+        items.forEach((item, n) => {
+            const box = item.getBoundingClientRect();
+            const gap = Math.abs(box.top + box.height / 2 - middle);
+            if (gap < distance) {
+                distance = gap;
+                nearest = n;
             }
         });
+        focus(nearest);
     });
-    /* Dragging the reel -------------------------------------------------------------- */
-    // Dragging sideways scrolls the page (the reel is as tall as it is wide, so
-    // a pixel across is a pixel down), and a flick carries on and slows. A
-    // press that doesn't move opens the frame under it. Steps are instant: the
-    // page's smooth scrolling would otherwise restart on every one.
-    let dragging = null;
-    let coast = null;
-    viewport.addEventListener("pointerdown", (event) => {
-        if (!reelLive() || event.button !== 0)
-            return;
-        const target = event.target instanceof Element ? event.target : null;
-        if (target?.closest("a, button, .shape-pill"))
-            return;
-        if (coast !== null)
-            cancelAnimationFrame(coast);
-        coast = null;
-        dragging = { x: event.clientX, lastX: event.clientX, lastTime: performance.now(), velocity: 0, moved: false, frame: target?.closest(".shape-frame") ?? null };
-        viewport.setPointerCapture(event.pointerId);
-    });
-    viewport.addEventListener("pointermove", (event) => {
-        if (!dragging)
-            return;
-        const now = performance.now();
-        const step = event.clientX - dragging.lastX;
-        if (Math.abs(event.clientX - dragging.x) > 6) {
-            dragging.moved = true;
-            viewport.classList.add("is-dragging");
-        }
-        if (!dragging.moved)
-            return;
-        window.scrollBy({ top: -step, behavior: "instant" });
-        dragging.velocity = step / (Math.max(now - dragging.lastTime, 1) / 16.7);
-        dragging.lastX = event.clientX;
-        dragging.lastTime = now;
-    });
-    const endDrag = () => {
-        if (!dragging)
-            return;
-        const { moved, frame: pressed } = dragging;
-        let velocity = dragging.velocity;
-        dragging = null;
-        viewport.classList.remove("is-dragging");
-        if (!moved) {
-            if (pressed)
-                openFrame(allFrames.indexOf(pressed));
-            return;
-        }
-        const carry = () => {
-            velocity *= 0.92;
-            window.scrollBy({ top: -velocity, behavior: "instant" });
-            coast = Math.abs(velocity) > 0.4 ? requestAnimationFrame(carry) : null;
-        };
-        if (!shapeStill.matches)
-            coast = requestAnimationFrame(carry);
+};
+/* Paragraph --------------------------------------------------------------- */
+const mountShapeParagraph = (root, items) => {
+    const view = document.createElement("div");
+    view.className = "shape-option shape-paragraph";
+    view.innerHTML = `
+    <p class="shape-option__label">/ What I shape</p>
+    <p class="shape-paragraph__text">${shapeChapters(items).map((chapter) => `
+      <span class="shape-paragraph__chapter">(${chapter.number})</span> ${chapter.items.map((item) => `<a class="shape-paragraph__item" href="${item.href}" data-n="${items.indexOf(item)}">${item.name}</a>`).join('<span class="shape-paragraph__slash"> / </span>')}`).join(" ")}
+    </p>
+    <div class="shape-paragraph__card" aria-hidden="true">
+      <span class="shape-paragraph__window">${items.map((item) => `<img src="${item.src}" alt="" loading="lazy" decoding="async" />`).join("")}</span>
+      <p class="shape-paragraph__caption"></p>
+    </div>`;
+    root.append(view);
+    if (!shapeHover)
+        return;
+    const card = view.querySelector(".shape-paragraph__card");
+    const caption = view.querySelector(".shape-paragraph__caption");
+    const images = [...view.querySelectorAll(".shape-paragraph__window img")];
+    const target = { x: 0, y: 0 };
+    const at = { x: 0, y: 0 };
+    let over = false;
+    let frame = 0;
+    // The card follows the cursor a little behind it.
+    const follow = () => {
+        at.x += (target.x - at.x) * 0.14;
+        at.y += (target.y - at.y) * 0.14;
+        card.style.transform = `translate3d(${at.x}px, ${at.y}px, 0) translate(-50%, -110%)`;
+        frame = over || Math.abs(target.x - at.x) > 0.5 ? requestAnimationFrame(follow) : 0;
     };
-    viewport.addEventListener("pointerup", endDrag);
-    viewport.addEventListener("pointercancel", endDrag);
-    window.addEventListener("wheel", () => {
-        if (coast !== null)
-            cancelAnimationFrame(coast);
-        coast = null;
-    }, { passive: true });
-    /* Pills and the preview ---------------------------------------------------- */
-    const preview = document.createElement("div");
-    preview.className = "shape-preview";
-    preview.setAttribute("aria-hidden", "true");
-    preview.innerHTML = `<img alt="" /><p></p>`;
-    document.body.append(preview);
-    const previewImage = preview.querySelector("img");
-    const previewCaption = preview.querySelector("p");
-    const pointer = { x: 0, y: 0, shownX: 0, shownY: 0 };
-    let hovered = null;
-    let hoveredChapter = null;
-    let previewFrame = null;
-    const showInPreview = () => {
-        if (!hovered || !hoveredChapter || !previewImage || !previewCaption)
-            return;
-        const source = hoveredChapter.sources[hovered.indices[hovered.current]];
-        if (!source)
-            return;
-        if (previewImage.getAttribute("src") !== source.src)
-            previewImage.src = source.src;
-        previewCaption.innerHTML = source.caption;
-    };
-    // The preview trails the cursor a little, as if on a string.
-    const followPointer = () => {
-        previewFrame = null;
-        pointer.shownX += (pointer.x - pointer.shownX) * 0.18;
-        pointer.shownY += (pointer.y - pointer.shownY) * 0.18;
-        preview.style.transform = `translate3d(${pointer.shownX.toFixed(1)}px, ${pointer.shownY.toFixed(1)}px, 0)`;
-        if (hovered || Math.hypot(pointer.x - pointer.shownX, pointer.y - pointer.shownY) > 0.5) {
-            previewFrame = requestAnimationFrame(followPointer);
-        }
-    };
-    // Each pill flicks to its next frame now and then — quicker under the cursor.
-    const advancePills = (now) => {
-        chapters.forEach((chapter) => {
-            chapter.pills.forEach((entry) => {
-                const pace = entry === hovered ? 700 : 1700;
-                if (now - entry.last < pace || entry.images.length < 2)
-                    return;
-                const bounds = entry.pill.getBoundingClientRect();
-                if (bounds.bottom < 0 || bounds.top > window.innerHeight)
-                    return;
-                entry.last = now;
-                entry.images[entry.current]?.classList.remove("is-current");
-                entry.current = (entry.current + 1) % entry.images.length;
-                entry.images[entry.current]?.classList.add("is-current");
-                if (entry === hovered)
-                    showInPreview();
-            });
+    view.querySelectorAll(".shape-paragraph__item").forEach((word) => {
+        const n = Number(word.dataset.n);
+        word.addEventListener("pointerenter", (event) => {
+            const box = view.getBoundingClientRect();
+            target.x = event.clientX - box.left;
+            target.y = event.clientY - box.top;
+            if (!over) {
+                at.x = target.x;
+                at.y = target.y;
+            }
+            over = true;
+            view.classList.add("is-pointing");
+            word.classList.add("is-active");
+            images.forEach((image, m) => image.classList.toggle("is-shown", m === n));
+            caption.innerHTML = shapeCaption(items[n]);
+            card.classList.add("is-shown");
+            if (!frame)
+                frame = requestAnimationFrame(follow);
         });
-        if (!shapeStill.matches)
-            requestAnimationFrame(advancePills);
-    };
-    // Stagger them so they don't all flick together.
-    chapters.forEach((chapter, chapterIndex) => chapter.pills.forEach((entry, pillIndex) => {
-        entry.last = performance.now() + (chapterIndex * 2 + pillIndex) * 330;
-    }));
-    if (!shapeStill.matches)
-        requestAnimationFrame(advancePills);
-    chapters.forEach((chapter) => {
-        chapter.pills.forEach((entry) => {
-            entry.pill.addEventListener("pointerenter", (event) => {
-                if (event.pointerType === "touch")
-                    return;
-                hovered = entry;
-                hoveredChapter = chapter;
-                entry.pill.classList.add("is-open");
-                pointer.x = pointer.shownX = event.clientX;
-                pointer.y = pointer.shownY = event.clientY;
-                showInPreview();
-                preview.classList.add("is-shown");
-                if (previewFrame === null)
-                    previewFrame = requestAnimationFrame(followPointer);
-            });
-            entry.pill.addEventListener("pointermove", (event) => {
-                pointer.x = event.clientX;
-                pointer.y = event.clientY;
-            });
-            entry.pill.addEventListener("click", () => {
-                const figure = chapter.frames[entry.indices[entry.current]];
-                if (figure)
-                    openFrame(allFrames.indexOf(figure));
-            });
-            entry.pill.addEventListener("pointerleave", () => {
-                entry.pill.classList.remove("is-open");
-                if (hovered === entry)
-                    hovered = null;
-                preview.classList.remove("is-shown");
-            });
+        word.addEventListener("pointerleave", () => {
+            over = false;
+            word.classList.remove("is-active");
+            view.classList.remove("is-pointing");
+            card.classList.remove("is-shown");
         });
     });
-    /* Choosing a layout --------------------------------------------------------- */
-    const setShapeLayout = (next) => {
-        layout = next;
-        shapeRoot.dataset.layout = next;
-        measure();
-        request();
+    view.addEventListener("pointermove", (event) => {
+        const box = view.getBoundingClientRect();
+        target.x = event.clientX - box.left;
+        target.y = event.clientY - box.top;
+    });
+};
+/* Backdrop ---------------------------------------------------------------- */
+const mountShapeBackdrop = (root, items) => {
+    const view = document.createElement("div");
+    view.className = "shape-option shape-backdrop";
+    view.innerHTML = `
+    <div class="shape-backdrop__images" aria-hidden="true">${items.map((item) => `<img src="${item.src}" alt="" loading="lazy" decoding="async" />`).join("")}</div>
+    <p class="shape-option__label">/ What I shape</p>
+    <div class="shape-backdrop__columns">
+      ${shapeChapters(items).map((chapter) => `
+        <div class="shape-backdrop__column">
+          <p class="shape-backdrop__chapter"><span>${chapter.number}</span> ${chapter.name}</p>
+          <ul>${chapter.items.map((item) => `<li><a href="${item.href}" data-n="${items.indexOf(item)}">${item.name}</a></li>`).join("")}</ul>
+        </div>`).join("")}
+    </div>
+    <p class="shape-backdrop__caption" aria-hidden="true"></p>`;
+    root.append(view);
+    const images = [...view.querySelectorAll(".shape-backdrop__images img")];
+    const caption = view.querySelector(".shape-backdrop__caption");
+    view.querySelectorAll(".shape-backdrop__column a").forEach((link) => {
+        const n = Number(link.dataset.n);
+        link.addEventListener("pointerenter", () => {
+            view.classList.add("is-lit");
+            link.classList.add("is-active");
+            images.forEach((image, m) => image.classList.toggle("is-shown", m === n));
+            caption.innerHTML = shapeCaption(items[n]);
+        });
+        link.addEventListener("pointerleave", () => {
+            view.classList.remove("is-lit");
+            link.classList.remove("is-active");
+        });
+    });
+};
+/* Brief ------------------------------------------------------------------- */
+const mountShapeBrief = (root, items) => {
+    const view = document.createElement("div");
+    view.className = "shape-option shape-brief";
+    view.innerHTML = `
+    <div class="shape-brief__intro">
+      <p class="shape-option__label">/ What I shape</p>
+      <h3 class="shape-brief__title">What are you making?</h3>
+      <p class="shape-brief__lede">Pick what you need, as much or as little as you like. I’ll take it from there.</p>
+    </div>
+    <div class="shape-brief__groups">
+      ${shapeChapters(items).map((chapter) => `
+        <div class="shape-brief__group">
+          <p class="shape-brief__chapter"><span>${chapter.number}</span> ${chapter.name}</p>
+          <div class="shape-brief__choices">${chapter.items.map((item) => `<button type="button" aria-pressed="false" data-n="${items.indexOf(item)}">${item.name}</button>`).join("")}</div>
+        </div>`).join("")}
+    </div>
+    <div class="shape-brief__summary" aria-live="polite">
+      <div class="shape-brief__frames" aria-hidden="true"></div>
+      <p class="shape-brief__sentence">Nothing picked yet.</p>
+      <a class="shape-brief__send" href="mailto:${shapeEmail}">Send this brief <span aria-hidden="true">↗</span></a>
+    </div>`;
+    root.append(view);
+    const buttons = [...view.querySelectorAll(".shape-brief__choices button")];
+    const sentence = view.querySelector(".shape-brief__sentence");
+    const frames = view.querySelector(".shape-brief__frames");
+    const send = view.querySelector(".shape-brief__send");
+    const joined = (names) => names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+    const update = () => {
+        const picked = buttons.filter((button) => button.getAttribute("aria-pressed") === "true").map((button) => items[Number(button.dataset.n)]);
+        const names = picked.map((item) => item.name.toLowerCase());
+        sentence.textContent = picked.length ? `I’d like help with ${joined(names)}.` : "Nothing picked yet.";
+        view.classList.toggle("has-picks", picked.length > 0);
+        // The picks' frames gather in a small fanned stack.
+        frames.innerHTML = picked.slice(-5).map((item, n, shown) => `<img src="${item.src}" alt="" style="--n: ${n - (shown.length - 1) / 2}" />`).join("");
+        const body = picked.length ? `Hi Raheem,\n\nI’d like help with ${joined(names)}.\n\nA little about the project:\n` : "Hi Raheem,\n\n";
+        send.href = `mailto:${shapeEmail}?subject=${encodeURIComponent("A new project")}&body=${encodeURIComponent(body)}`;
     };
-    window.addEventListener("scroll", request, { passive: true });
-    window.addEventListener("resize", () => {
-        measure();
-        request();
+    buttons.forEach((button) => {
+        button.addEventListener("click", () => {
+            button.setAttribute("aria-pressed", String(button.getAttribute("aria-pressed") !== "true"));
+            update();
+        });
     });
-    shapeDesktop.addEventListener("change", () => {
-        measure();
-        request();
+    update();
+};
+/* Wheel ------------------------------------------------------------------- */
+const mountShapeWheel = (root, items) => {
+    const view = document.createElement("div");
+    view.className = "shape-option shape-wheel";
+    view.style.setProperty("--count", String(items.length));
+    view.innerHTML = `
+    <div class="shape-wheel__stage">
+      <div class="shape-wheel__side">
+        <p class="shape-option__label">/ What I shape</p>
+        <p class="shape-wheel__chapter"><span>${items[0].chapter}</span> <span class="shape-wheel__name">${shapeChapterNames[items[0].chapter]}</span></p>
+      </div>
+      <ul class="shape-wheel__drum">
+        ${items.map((item, n) => `<li><a href="${item.href}" data-n="${n}">${item.name}</a></li>`).join("")}
+      </ul>
+      <figure class="shape-wheel__figure" aria-hidden="true">
+        <span class="shape-wheel__window">${items.map((item, n) => `<img src="${item.src}" alt=""${n ? "" : ' class="is-shown"'} loading="lazy" decoding="async" />`).join("")}</span>
+      </figure>
+    </div>`;
+    root.append(view);
+    const rows = [...view.querySelectorAll(".shape-wheel__drum li")];
+    const images = [...view.querySelectorAll(".shape-wheel__window img")];
+    const chapterNumber = view.querySelector(".shape-wheel__chapter span");
+    const chapterName = view.querySelector(".shape-wheel__name");
+    const step = 17; // degrees between items on the drum
+    let target = 0;
+    let turn = 0;
+    let front = -1;
+    let frame = 0;
+    const draw = () => {
+        turn += (target - turn) * (shapeStill ? 1 : 0.09);
+        rows.forEach((row, n) => {
+            const angle = (n - turn) * step;
+            const hidden = Math.abs(angle) > 85;
+            row.style.visibility = hidden ? "hidden" : "visible";
+            if (hidden)
+                return;
+            row.style.transform = `rotateX(${(-angle).toFixed(2)}deg) translateZ(var(--radius))`;
+            row.style.opacity = Math.max(0.08, 1 - Math.abs(angle) / 80).toFixed(3);
+        });
+        const nearest = Math.round(turn);
+        if (nearest !== front) {
+            front = nearest;
+            rows.forEach((row, n) => row.classList.toggle("is-front", n === nearest));
+            images.forEach((image, n) => image.classList.toggle("is-shown", n === nearest));
+            chapterNumber.textContent = items[nearest].chapter;
+            chapterName.textContent = shapeChapterNames[items[nearest].chapter];
+        }
+        frame = Math.abs(target - turn) > 0.001 ? requestAnimationFrame(draw) : 0;
+    };
+    // The page's scroll through the section turns the drum.
+    onShapeScroll(() => {
+        const box = view.getBoundingClientRect();
+        const travel = Math.max(1, box.height - window.innerHeight);
+        target = Math.min(1, Math.max(0, -box.top / travel)) * (items.length - 1);
+        if (!frame)
+            frame = requestAnimationFrame(draw);
     });
-    // Images arriving change the track's width.
-    window.addEventListener("load", () => {
-        measure();
-        request();
+};
+/* Column ------------------------------------------------------------------ */
+const mountShapeColumn = (root, items) => {
+    // Each frame once, in chapter order.
+    const frames = items.filter((item, n) => items.findIndex((other) => other.src === item.src && other.chapter === item.chapter) === n);
+    const chapters = shapeChapters(items);
+    const project = (chapter) => frames.find((frame) => frame.chapter === chapter)?.caption.split(" — ")[0] ?? "";
+    const view = document.createElement("div");
+    view.className = "shape-option shape-column";
+    view.style.setProperty("--count", String(frames.length));
+    view.innerHTML = `
+    <div class="shape-column__stage">
+      <p class="shape-option__label">/ What I shape</p>
+      <ul class="shape-column__chapters">
+        ${chapters.map((chapter, n) => `
+          <li${n ? "" : ' class="is-active"'}>
+            <a href="${chapter.items[0].href}" data-chapter="${chapter.number}">${chapter.name}</a>
+            <span class="shape-column__tag">${project(chapter.number)}</span>
+          </li>`).join("")}
+      </ul>
+      <div class="shape-column__rail" aria-hidden="true">
+        <div class="shape-column__track">
+          ${frames.map((frame) => `<span class="shape-column__frame" data-chapter="${frame.chapter}"><img src="${frame.src}" alt="" loading="lazy" decoding="async" /></span>`).join("")}
+        </div>
+      </div>
+    </div>`;
+    root.append(view);
+    const rail = view.querySelector(".shape-column__rail");
+    const track = view.querySelector(".shape-column__track");
+    const tiles = [...view.querySelectorAll(".shape-column__frame")];
+    const rows = [...view.querySelectorAll(".shape-column__chapters li")];
+    let target = 0;
+    let at = 0;
+    let frame = 0;
+    let current = "";
+    const travel = () => Math.max(0, track.offsetHeight - rail.offsetHeight);
+    const draw = () => {
+        at += (target - at) * (shapeStill ? 1 : 0.1);
+        track.style.transform = `translate3d(0, ${(-at * travel()).toFixed(1)}px, 0)`;
+        // The chapter whose frame sits across the middle of the rail leads.
+        const middle = rail.getBoundingClientRect().top + rail.offsetHeight / 2;
+        let chapter = tiles[0].dataset.chapter ?? "01";
+        tiles.forEach((tile) => {
+            if (tile.getBoundingClientRect().top < middle)
+                chapter = tile.dataset.chapter ?? chapter;
+        });
+        if (chapter !== current) {
+            current = chapter;
+            rows.forEach((row) => row.classList.toggle("is-active", row.querySelector("a")?.dataset.chapter === chapter));
+        }
+        frame = Math.abs(target - at) > 0.0005 ? requestAnimationFrame(draw) : 0;
+    };
+    // The page's scroll through the section runs the column.
+    const progress = () => {
+        const box = view.getBoundingClientRect();
+        return Math.min(1, Math.max(0, -box.top / Math.max(1, box.height - window.innerHeight)));
+    };
+    onShapeScroll(() => {
+        target = progress();
+        if (!frame)
+            frame = requestAnimationFrame(draw);
     });
-    const requested = new URLSearchParams(window.location.search).get("shape");
-    setShapeLayout(isShapeLayout(requested) ? requested : "reel");
+    // Pointing at a chapter glides the page to its first frame.
+    rows.forEach((row) => {
+        const link = row.querySelector("a");
+        link?.addEventListener("pointerenter", () => {
+            if (!shapeHover)
+                return;
+            const first = tiles.findIndex((tile) => tile.dataset.chapter === link.dataset.chapter);
+            const share = Math.min(1, (tiles[first].offsetTop) / Math.max(1, travel()));
+            const box = view.getBoundingClientRect();
+            window.scrollTo({ top: window.scrollY + box.top + share * (box.height - window.innerHeight) + 2, behavior: "smooth" });
+        });
+    });
+};
+/* Choosing ---------------------------------------------------------------- */
+if (shapeRoot && shapeList) {
+    shapeRoot.dataset.option = shapeOption;
+    if (shapeOption === "list")
+        mountShapeList(shapeList);
+    else
+        ({
+            paragraph: mountShapeParagraph,
+            backdrop: mountShapeBackdrop,
+            brief: mountShapeBrief,
+            wheel: mountShapeWheel,
+            column: mountShapeColumn,
+        })[shapeOption](shapeRoot, shapeItems(shapeList));
+    // Temporary picker for comparing them, shown while the section is in view.
+    const picker = document.createElement("div");
+    picker.className = "shape-picker";
+    picker.setAttribute("role", "group");
+    picker.setAttribute("aria-label", "What I shape layout");
+    picker.innerHTML = shapeOptions
+        .map((option) => `<button type="button" data-option="${option}" aria-pressed="${shapeOption === option}">${option.charAt(0).toUpperCase() + option.slice(1)}</button>`)
+        .join("");
+    document.body.append(picker);
+    picker.addEventListener("click", (event) => {
+        const option = event.target.closest("button")?.dataset.option;
+        if (!option)
+            return;
+        const url = new URL(window.location.href);
+        url.searchParams.set("shape", option);
+        url.hash = "what-i-shape";
+        window.location.href = url.toString();
+    });
+    new IntersectionObserver(([entry]) => {
+        picker.classList.toggle("is-shown", entry.isIntersecting);
+    }).observe(shapeRoot);
 }
