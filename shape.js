@@ -15,9 +15,14 @@
 //   brief     — "What are you making?": the items as choices a visitor can
 //               pick; the picks build a sentence and a brief to email.
 //   wheel     — the list on a turning drum: scrolling rolls it, the item at
-//               the front is ink, with its chapter on the left and its frame
-//               on the right.
-const shapeOptions = ["list", "paragraph", "backdrop", "brief", "wheel"];
+//               the front is ink, with its chapter on the left and its frame,
+//               large, on the right.
+//   column    — after a portfolio's experience list: the three chapters set
+//               small in grey at the left, a narrow column of their frames
+//               at the right. The page's scroll runs the column up; the
+//               chapter whose frame is in the middle turns ink with its
+//               project beside it, and choosing a chapter glides to it.
+const shapeOptions = ["list", "paragraph", "backdrop", "brief", "wheel", "column"];
 const shapeOptionAsked = new URLSearchParams(window.location.search).get("shape");
 const shapeOption = shapeOptions.find((option) => option === shapeOptionAsked) ?? "list";
 const shapeChapterNames = { "01": "Identity", "02": "Digital & motion", "03": "Campaigns" };
@@ -254,23 +259,19 @@ const mountShapeWheel = (root, items) => {
       <div class="shape-wheel__side">
         <p class="shape-option__label">/ What I shape</p>
         <p class="shape-wheel__chapter"><span>${items[0].chapter}</span> <span class="shape-wheel__name">${shapeChapterNames[items[0].chapter]}</span></p>
-        <p class="shape-wheel__count"><span class="shape-wheel__at">01</span> / ${String(items.length).padStart(2, "0")}</p>
       </div>
       <ul class="shape-wheel__drum">
         ${items.map((item, n) => `<li><a href="${item.href}" data-n="${n}">${item.name}</a></li>`).join("")}
       </ul>
       <figure class="shape-wheel__figure" aria-hidden="true">
         <span class="shape-wheel__window">${items.map((item, n) => `<img src="${item.src}" alt=""${n ? "" : ' class="is-shown"'} loading="lazy" decoding="async" />`).join("")}</span>
-        <figcaption class="shape-wheel__caption">${shapeCaption(items[0])}</figcaption>
       </figure>
     </div>`;
     root.append(view);
     const rows = [...view.querySelectorAll(".shape-wheel__drum li")];
     const images = [...view.querySelectorAll(".shape-wheel__window img")];
-    const caption = view.querySelector(".shape-wheel__caption");
     const chapterNumber = view.querySelector(".shape-wheel__chapter span");
     const chapterName = view.querySelector(".shape-wheel__name");
-    const at = view.querySelector(".shape-wheel__at");
     const step = 17; // degrees between items on the drum
     let target = 0;
     let turn = 0;
@@ -292,10 +293,8 @@ const mountShapeWheel = (root, items) => {
             front = nearest;
             rows.forEach((row, n) => row.classList.toggle("is-front", n === nearest));
             images.forEach((image, n) => image.classList.toggle("is-shown", n === nearest));
-            caption.innerHTML = shapeCaption(items[nearest]);
             chapterNumber.textContent = items[nearest].chapter;
             chapterName.textContent = shapeChapterNames[items[nearest].chapter];
-            at.textContent = String(nearest + 1).padStart(2, "0");
         }
         frame = Math.abs(target - turn) > 0.001 ? requestAnimationFrame(draw) : 0;
     };
@@ -306,6 +305,80 @@ const mountShapeWheel = (root, items) => {
         target = Math.min(1, Math.max(0, -box.top / travel)) * (items.length - 1);
         if (!frame)
             frame = requestAnimationFrame(draw);
+    });
+};
+/* Column ------------------------------------------------------------------ */
+const mountShapeColumn = (root, items) => {
+    // Each frame once, in chapter order.
+    const frames = items.filter((item, n) => items.findIndex((other) => other.src === item.src && other.chapter === item.chapter) === n);
+    const chapters = shapeChapters(items);
+    const project = (chapter) => frames.find((frame) => frame.chapter === chapter)?.caption.split(" — ")[0] ?? "";
+    const view = document.createElement("div");
+    view.className = "shape-option shape-column";
+    view.style.setProperty("--count", String(frames.length));
+    view.innerHTML = `
+    <div class="shape-column__stage">
+      <p class="shape-option__label">/ What I shape</p>
+      <ul class="shape-column__chapters">
+        ${chapters.map((chapter, n) => `
+          <li${n ? "" : ' class="is-active"'}>
+            <a href="${chapter.items[0].href}" data-chapter="${chapter.number}">${chapter.name}</a>
+            <span class="shape-column__tag">${project(chapter.number)}</span>
+          </li>`).join("")}
+      </ul>
+      <div class="shape-column__rail" aria-hidden="true">
+        <div class="shape-column__track">
+          ${frames.map((frame) => `<span class="shape-column__frame" data-chapter="${frame.chapter}"><img src="${frame.src}" alt="" loading="lazy" decoding="async" /></span>`).join("")}
+        </div>
+      </div>
+    </div>`;
+    root.append(view);
+    const rail = view.querySelector(".shape-column__rail");
+    const track = view.querySelector(".shape-column__track");
+    const tiles = [...view.querySelectorAll(".shape-column__frame")];
+    const rows = [...view.querySelectorAll(".shape-column__chapters li")];
+    let target = 0;
+    let at = 0;
+    let frame = 0;
+    let current = "";
+    const travel = () => Math.max(0, track.offsetHeight - rail.offsetHeight);
+    const draw = () => {
+        at += (target - at) * (shapeStill ? 1 : 0.1);
+        track.style.transform = `translate3d(0, ${(-at * travel()).toFixed(1)}px, 0)`;
+        // The chapter whose frame sits across the middle of the rail leads.
+        const middle = rail.getBoundingClientRect().top + rail.offsetHeight / 2;
+        let chapter = tiles[0].dataset.chapter ?? "01";
+        tiles.forEach((tile) => {
+            if (tile.getBoundingClientRect().top < middle)
+                chapter = tile.dataset.chapter ?? chapter;
+        });
+        if (chapter !== current) {
+            current = chapter;
+            rows.forEach((row) => row.classList.toggle("is-active", row.querySelector("a")?.dataset.chapter === chapter));
+        }
+        frame = Math.abs(target - at) > 0.0005 ? requestAnimationFrame(draw) : 0;
+    };
+    // The page's scroll through the section runs the column.
+    const progress = () => {
+        const box = view.getBoundingClientRect();
+        return Math.min(1, Math.max(0, -box.top / Math.max(1, box.height - window.innerHeight)));
+    };
+    onShapeScroll(() => {
+        target = progress();
+        if (!frame)
+            frame = requestAnimationFrame(draw);
+    });
+    // Pointing at a chapter glides the page to its first frame.
+    rows.forEach((row) => {
+        const link = row.querySelector("a");
+        link?.addEventListener("pointerenter", () => {
+            if (!shapeHover)
+                return;
+            const first = tiles.findIndex((tile) => tile.dataset.chapter === link.dataset.chapter);
+            const share = Math.min(1, (tiles[first].offsetTop) / Math.max(1, travel()));
+            const box = view.getBoundingClientRect();
+            window.scrollTo({ top: window.scrollY + box.top + share * (box.height - window.innerHeight) + 2, behavior: "smooth" });
+        });
     });
 };
 /* Choosing ---------------------------------------------------------------- */
@@ -319,6 +392,7 @@ if (shapeRoot && shapeList) {
             backdrop: mountShapeBackdrop,
             brief: mountShapeBrief,
             wheel: mountShapeWheel,
+            column: mountShapeColumn,
         })[shapeOption](shapeRoot, shapeItems(shapeList));
     // Temporary picker for comparing them, shown while the section is in view.
     const picker = document.createElement("div");
