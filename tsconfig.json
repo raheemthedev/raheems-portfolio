@@ -26,7 +26,6 @@
     "shape.ts",
     "about-intro.ts",
     "footer-wordmark.ts",
-    "home-layouts.ts",
-    "shape-options.ts"
+    "home-layouts.ts"
   ]
 }
